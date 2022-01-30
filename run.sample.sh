@@ -1,0 +1,7 @@
+
+MQTT_USERNAME=username \
+MQTT_PASSWORD=password \
+MQTT_HOST=192.168.1.1 \
+***REMOVED***
+***REMOVED***
+***REMOVED***

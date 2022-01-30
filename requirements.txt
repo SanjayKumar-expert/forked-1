@@ -1,0 +1,4 @@
+#mqtt-hass-base==1.2.0
+git+https://gitlab.com/ttblt-hass/mqtt-hass-base.git@master
+#PyYAML==5.3.1 # PyYaml is profided by homeassistant throught mqtt-hass-base dependency
+git+https://gitlab.com/hydroqc/hydroqc.git@refactoring

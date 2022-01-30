@@ -1,0 +1,11 @@
+# 10 seconds
+sync_frequency: 10
+contracts:
+  - username: USERNAME
+    password: PASSWORD
+    name: maison
+    customer: customer_id
+    account: account_id
+    contract: contract_id
+    sensors:
+      - balance
