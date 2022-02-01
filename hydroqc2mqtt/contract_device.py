@@ -27,7 +27,7 @@ BINARY_SENSORS = {
     "wc_critical": {
         "data_source": "contract.winter_credit.value_state_critical",
         # https://www.home-assistant.io/integrations/binary_sensor/#device-class
-        "device_class": "running",
+        # "device_class": "running",
         # TODO: https://developers.home-assistant.io/docs/core/entity/#generic-properties
         #"entity_category": "???",
         "expire_after": 0,
@@ -134,7 +134,7 @@ class HydroqcContractDevice(MqttDevice):
                 data_obj = getattr(data_obj, el)
                 # If it's the last element of the datasource then it's the value
                 if index + 1 == len(datasource[1:]):
-                    value = data_obj
+                    value = "ON" if data_obj else "OFF"
             if value is None:
                 raise Exception("Can not find value")
 
