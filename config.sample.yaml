@@ -9,3 +9,5 @@ contracts:
     contract: "contract_id"
     sensors:
       - balance
+    binary_sensors:
+      - wc_critical
