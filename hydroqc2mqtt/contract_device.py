@@ -170,11 +170,18 @@ class HydroqcContractDevice(MqttDevice):
             )
         self.logger.info("added %s ...", self.name)
 
+    async def init_session(self):
+        if self._webuser.session_expired:
+            print("LOGIN")
+            await self._webuser.login()
+        else:
+            print("REFRESH")
+            await self._webuser.refresh_session()
+
     async def update(self):
         """Update Home Assistant entities."""
         self.logger.info("Updating %s ...", self.name)
         # Fetch latest data
-        await self._webuser.login()
         await self._webuser.get_info()
         # TODO fetch consumption and wintercredits
         customer = self._webuser.get_customer(self._customer_id)
