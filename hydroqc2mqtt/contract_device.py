@@ -9,6 +9,7 @@ from hydroqc2mqtt.__version__ import VERSION
 
 SENSORS = {
     "balance": {
+        "name": "Balance",
         "data_source": "account.balance",
         #"data_source": "contract.winter_credit.contract_id",
         # https://www.home-assistant.io/integrations/sensor/#device-class
@@ -21,19 +22,91 @@ SENSORS = {
         # TODO validated: https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes
         "state_class": "measurement",
         "unit": "$",
+    },
+    "wc_next_anchor_start": {
+        "name": "Next Anchor Period Start",
+        # TODO: Set data_source topic
+        "data_source": "TODO",
+        "device_class": "timestamp",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:clock-start"
+
+    },
+    "wc_next_anchor_end": {
+        "name": "Next Anchor Period End",
+        # TODO: Set data_source topic
+        "data_source": "TODO",
+        "device_class": "timestamp",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:clock-end"
+
+    },
+    "wc_next_peak_start": {
+        "name": "Next Peak Period Start",
+        # TODO: Set data_source topic
+        "data_source": "TODO",
+        "device_class": "timestamp",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:clock-start"
+
+    },
+    "wc_next_peak_end": {
+        "name": "Next Peak Period End",
+        # TODO: Set data_source topic
+        "data_source": "TODO",
+        "device_class": "timestamp",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:clock-end",
+
+    },
+    "wc_next_critical_event_start": {
+        "name": "Next Critical Event Start",
+        # TODO: Set data_source topic
+        "data_source": "TODO",
+        "device_class": "timestamp",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:clock-start"
+    },
+    "wc_next_critical_event_end": {
+        "name": "Next Critical Event End",
+        # TODO: Set data_source topic
+        "data_source": "TODO",
+        "device_class": "timestamp",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:clock-end",
+
     }
 }
 BINARY_SENSORS = {
     "wc_critical": {
         "data_source": "contract.winter_credit.value_state_critical",
-        # https://www.home-assistant.io/integrations/binary_sensor/#device-class
-        # "device_class": "running",
-        # TODO: https://developers.home-assistant.io/docs/core/entity/#generic-properties
-        #"entity_category": "???",
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi:flash-alert",
+        "icon": "mdi:flash-alert"
+    },
+    "wc_next_anchor_critical": {
+        "name": "Next Anchor Period Critical",
+        # TODO: Set data_source topic
+        "data_source": "TODO",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:flash-alert"
+    },
+    "wc_next_peak_critical": {
+        "name": "Next Peak Period Critical",
+        # TODO: Set data_source topic
+        "data_source": "TODO",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:flash-alert"
     }
+    
 }
 
 class HydroqcContractDevice(MqttDevice):
