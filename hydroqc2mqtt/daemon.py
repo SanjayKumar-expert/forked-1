@@ -43,6 +43,10 @@ class Hydroqc2Mqtt(MqttClientDaemon):
 
     async def _main_loop(self):
         """Run main loop."""
+        # TODO refreshing session using a setting in the config yaml file
+        for contract in self.contracts:
+            await contract.init_session()
+
         for contract in self.contracts:
             await contract.update()
 
