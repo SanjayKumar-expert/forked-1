@@ -148,7 +148,7 @@ class HydroqcContractDevice(MqttDevice):
 
             setattr(
                 self,
-                sensor_name,
+                sensor_key,
                 self.add_entity(
                     "sensor",
                     f"{self.name}_{sensor_name}",
@@ -165,7 +165,7 @@ class HydroqcContractDevice(MqttDevice):
 
             setattr(
                 self,
-                sensor_name,
+                sensor_key,
                 self.add_entity(
                     "binarysensor",
                     f"{self.name}_{sensor_name}",
@@ -193,8 +193,8 @@ class HydroqcContractDevice(MqttDevice):
         contract = account.get_contract(self._contract_id)
         await contract.winter_credit.refresh_data()
         # Send sensor state one by one ...
-        for sensor_name in self._config.get("sensors", []):
-            datasource = SENSORS[sensor_name]["data_source"].split(".")
+        for sensor_key in self._config.get("sensors", []):
+            datasource = SENSORS[sensor_key]["data_source"].split(".")
             data_obj = locals()[datasource[0]]
             value = None
             for index, el in enumerate(datasource[1:]):
@@ -205,13 +205,13 @@ class HydroqcContractDevice(MqttDevice):
             if value is None:
                 raise Exception("Can not find value")
 
-            entity = getattr(self, sensor_name)
+            entity = getattr(self, sensor_key)
             entity.send_state(value, {})
             entity.send_available()
 
 
-        for sensor_name in self._config.get("binary_sensors", []):
-            datasource = BINARY_SENSORS[sensor_name]["data_source"].split(".")
+        for sensor_key in self._config.get("binary_sensors", []):
+            datasource = BINARY_SENSORS[sensor_key]["data_source"].split(".")
             data_obj = locals()[datasource[0]]
             value = None
             for index, el in enumerate(datasource[1:]):
@@ -222,7 +222,7 @@ class HydroqcContractDevice(MqttDevice):
             if value is None:
                 raise Exception("Can not find value")
 
-            entity = getattr(self, sensor_name)
+            entity = getattr(self, sensor_key)
             entity.send_state(value, {})
             entity.send_available()
         # TODO: Find a way to create a loop to reduce de code ...
