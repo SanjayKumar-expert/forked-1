@@ -11,22 +11,26 @@ SENSORS = {
     "balance": {
         "name": "Balance",
         "data_source": "account.balance",
-        #"data_source": "contract.winter_credit.contract_id",
-        # https://www.home-assistant.io/integrations/sensor/#device-class
         "device_class": "monetary",
-        # TODO: https://developers.home-assistant.io/docs/core/entity/#generic-properties
-        #"entity_category": "???",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:currency-usd",
-        # TODO validated: https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes
+        "state_class": "measurement",
+        "unit": "$",
+    },
+    "wc_cumulated_credit": {
+        "name": "Cumulated Winter Credit",
+        "data_source": "contract.winter_credit.value_cumulated_credit",
+        "device_class": "monetary",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:currency-usd",
         "state_class": "measurement",
         "unit": "$",
     },
     "wc_next_anchor_start": {
         "name": "Next Anchor Period Start",
-        # TODO: Set data_source topic
-        "data_source": "TODO",
+        "data_source": "contract.winter_credit.value_next_periods_anchor_start_iso",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -35,8 +39,7 @@ SENSORS = {
     },
     "wc_next_anchor_end": {
         "name": "Next Anchor Period End",
-        # TODO: Set data_source topic
-        "data_source": "TODO",
+        "data_source": "contract.winter_credit.value_next_periods_anchor_end_iso",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -45,8 +48,7 @@ SENSORS = {
     },
     "wc_next_peak_start": {
         "name": "Next Peak Period Start",
-        # TODO: Set data_source topic
-        "data_source": "TODO",
+        "data_source": "contract.winter_credit.value_next_periods_peak_start_iso",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -55,8 +57,7 @@ SENSORS = {
     },
     "wc_next_peak_end": {
         "name": "Next Peak Period End",
-        # TODO: Set data_source topic
-        "data_source": "TODO",
+        "data_source": "contract.winter_credit.value_next_periods_peak_end_iso",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -65,8 +66,7 @@ SENSORS = {
     },
     "wc_next_critical_event_start": {
         "name": "Next Critical Event Start",
-        # TODO: Set data_source topic
-        "data_source": "TODO",
+        "data_source": "contract.winter_credit.value_next_start_iso",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -74,8 +74,7 @@ SENSORS = {
     },
     "wc_next_critical_event_end": {
         "name": "Next Critical Event End",
-        # TODO: Set data_source topic
-        "data_source": "TODO",
+        "data_source": "contract.winter_credit.value_next_end_iso",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -85,23 +84,36 @@ SENSORS = {
 }
 BINARY_SENSORS = {
     "wc_critical": {
+        "name" : "Critical",
         "data_source": "contract.winter_credit.value_state_critical",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:flash-alert"
+    },
+    "wc_event_in_progress": {
+        "name": "Event In Progress",
+        "data_source": "contract.winter_credit.value_state_event_in_progress",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:flash-alert"
+    },
+    "wc_pre_heat": {
+        "name": "Pre-heat In Progress",
+        "data_source": "contract.winter_credit.value_state_pre_heat",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert"
     },
     "wc_next_anchor_critical": {
         "name": "Next Anchor Period Critical",
-        # TODO: Set data_source topic
-        "data_source": "TODO",
+        "data_source": "contract.winter_credit.value_next_periods_anchor_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert"
     },
     "wc_next_peak_critical": {
         "name": "Next Peak Period Critical",
-        # TODO: Set data_source topic
-        "data_source": "TODO",
+        "data_source": "contract.winter_credit.value_next_periods_peak_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert"
