@@ -69,7 +69,7 @@ class HydroqcContractDevice(MqttDevice):
             if sensor_key not in SENSORS:
                 raise
             entity_settings = SENSORS[sensor_key].copy()
-            sensor_name = entity_settings["data_source"]["name"].lower()
+            sensor_name = entity_settings["name"].lower()
             del(entity_settings["data_source"])
             del(entity_settings["name"])
 
@@ -86,7 +86,7 @@ class HydroqcContractDevice(MqttDevice):
             if sensor_key not in BINARY_SENSORS:
                 raise
             entity_settings = BINARY_SENSORS[sensor_key].copy()
-            sensor_name = entity_settings["data_source"]["name"].lower()
+            sensor_name = entity_settings["name"].lower()
             del(entity_settings["data_source"])
             del(entity_settings["name"])
 
