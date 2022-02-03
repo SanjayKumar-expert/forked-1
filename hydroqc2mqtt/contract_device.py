@@ -65,11 +65,13 @@ class HydroqcContractDevice(MqttDevice):
 
     def add_entities(self):
         """Add Home Assistant entities."""
-        for sensor_name in self._config.get("sensors", []):
-            if sensor_name not in SENSORS:
+        for sensor_key in self._config.get("sensors", []):
+            if sensor_key not in SENSORS:
                 raise
-            entity_settings = SENSORS[sensor_name].copy()
+            entity_settings = SENSORS[sensor_key].copy()
+            sensor_name = entity_settings["data_source"]["name"].lower()
             del(entity_settings["data_source"])
+            del(entity_settings["name"])
 
             setattr(
                 self,
@@ -80,11 +82,13 @@ class HydroqcContractDevice(MqttDevice):
                     entity_settings,
                 ),
             )
-        for sensor_name in self._config.get("binary_sensors", []):
-            if sensor_name not in BINARY_SENSORS:
+        for sensor_key in self._config.get("binary_sensors", []):
+            if sensor_key not in BINARY_SENSORS:
                 raise
-            entity_settings = BINARY_SENSORS[sensor_name].copy()
+            entity_settings = BINARY_SENSORS[sensor_key].copy()
+            sensor_name = entity_settings["data_source"]["name"].lower()
             del(entity_settings["data_source"])
+            del(entity_settings["name"])
 
             setattr(
                 self,
