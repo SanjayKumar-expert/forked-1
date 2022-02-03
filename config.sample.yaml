@@ -7,7 +7,23 @@ contracts:
     customer: "customer_id"
     account: "account_id"
     contract: "contract_id"
+
+    # This will configure sensors available in home assistant
+    # 
+    # Sensors starting with wc_ are related to wintercredits, comment what you don't want
     sensors:
       - balance
+      - wc_cumulated_credit
+      - wc_next_anchor_start
+      - wc_next_anchor_end
+      - wc_next_peak_start
+      - wc_next_peak_end
+      - wc_next_critical_event_start
+      - wc_next_critical_event_end
     binary_sensors:
       - wc_critical
+      - wc_event_in_progress
+      - wc_pre_heat
+      - wc_next_anchor_critical
+      - wc_next_peak_critical
+
