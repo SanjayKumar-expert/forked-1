@@ -77,4 +77,4 @@ class Hydroqc2Mqtt(MqttClientDaemon):
     async def _loop_stopped(self):
         """Run after the end of the main loop."""
         for contract in self.contracts:
-            contract.close()
+            await contract.close()

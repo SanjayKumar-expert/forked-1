@@ -17,6 +17,7 @@ SENSORS = {
         "icon": "mdi:currency-usd",
         "state_class": "measurement",
         "unit": "$",
+        "sub_mqtt_topic": "acccount/state",
     },
     "wc_cumulated_credit": {
         "name": "Cumulated Winter Credit",
@@ -27,6 +28,7 @@ SENSORS = {
         "icon": "mdi:currency-usd",
         "state_class": "measurement",
         "unit": "$",
+        "sub_mqtt_topic": "wintercredits/state",
     },
     "wc_next_anchor_start": {
         "name": "Next Anchor Period Start",
@@ -34,7 +36,8 @@ SENSORS = {
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi:clock-start"
+        "icon": "mdi:clock-start",
+        "sub_mqtt_topic": "wintercredits/next/anchor",
 
     },
     "wc_next_anchor_end": {
@@ -43,7 +46,8 @@ SENSORS = {
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi:clock-end"
+        "icon": "mdi:clock-end",
+        "sub_mqtt_topic": "wintercredits/next/anchor",
 
     },
     "wc_next_peak_start": {
@@ -52,7 +56,8 @@ SENSORS = {
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi:clock-start"
+        "icon": "mdi:clock-start",
+        "sub_mqtt_topic": "wintercredits/next/peak",
 
     },
     "wc_next_peak_end": {
@@ -62,6 +67,7 @@ SENSORS = {
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:clock-end",
+        "sub_mqtt_topic": "wintercredits/next/peak",
 
     },
     "wc_next_critical_event_start": {
@@ -70,7 +76,8 @@ SENSORS = {
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi:clock-start"
+        "icon": "mdi:clock-start",
+        "sub_mqtt_topic": "wintercredits/next/event",
     },
     "wc_next_critical_event_end": {
         "name": "Next Critical Event End",
@@ -79,7 +86,7 @@ SENSORS = {
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:clock-end",
-
+        "sub_mqtt_topic": "wintercredits/next/event",
     }
 }
 BINARY_SENSORS = {
@@ -88,35 +95,40 @@ BINARY_SENSORS = {
         "data_source": "contract.winter_credit.value_state_critical",
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi:flash-alert"
+        "icon": "mdi:flash-alert",
+        "sub_mqtt_topic": "wintercredits/state",
     },
     "wc_event_in_progress": {
         "name": "Event In Progress",
         "data_source": "contract.winter_credit.value_state_event_in_progress",
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi:flash-alert"
+        "icon": "mdi:flash-alert",
+        "sub_mqtt_topic": "wintercredits/state",
     },
     "wc_pre_heat": {
         "name": "Pre-heat In Progress",
         "data_source": "contract.winter_credit.value_state_pre_heat",
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi:flash-alert"
+        "icon": "mdi:flash-alert",
+        "sub_mqtt_topic": "wintercredits/state",
     },
     "wc_next_anchor_critical": {
         "name": "Next Anchor Period Critical",
         "data_source": "contract.winter_credit.value_next_periods_anchor_critical",
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi:flash-alert"
+        "icon": "mdi:flash-alert",
+        "sub_mqtt_topic": "wintercredits/state",
     },
     "wc_next_peak_critical": {
         "name": "Next Peak Period Critical",
         "data_source": "contract.winter_credit.value_next_periods_peak_critical",
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi:flash-alert"
+        "icon": "mdi:flash-alert",
+        "sub_mqtt_topic": "wintercredits/state",
     }
     
 }
@@ -146,7 +158,8 @@ class HydroqcContractDevice(MqttDevice):
         for conn in connections:
             self.connections = conn
         self.identifiers = config['contract']
-        self.name = f"hydroqc_{name}"
+        self._base_name = name
+        self.name = f"hydroqc_{self._base_name}"
 
     def add_entities(self):
         """Add Home Assistant entities."""
@@ -155,8 +168,10 @@ class HydroqcContractDevice(MqttDevice):
                 raise
             entity_settings = SENSORS[sensor_key].copy()
             sensor_name = entity_settings["name"].lower()
+            sub_mqtt_topic = entity_settings["sub_mqtt_topic"].lower().strip("/")
             del(entity_settings["data_source"])
             del(entity_settings["name"])
+            del(entity_settings["sub_mqtt_topic"])
 
             setattr(
                 self,
@@ -165,6 +180,7 @@ class HydroqcContractDevice(MqttDevice):
                     "sensor",
                     f"{self.name}_{sensor_name}",
                     entity_settings,
+                    sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}"
                 ),
             )
         for sensor_key in self._config.get("binary_sensors", []):
@@ -172,8 +188,10 @@ class HydroqcContractDevice(MqttDevice):
                 raise
             entity_settings = BINARY_SENSORS[sensor_key].copy()
             sensor_name = entity_settings["name"].lower()
+            sub_mqtt_topic = entity_settings["sub_mqtt_topic"].lower().strip("/")
             del(entity_settings["data_source"])
             del(entity_settings["name"])
+            del(entity_settings["sub_mqtt_topic"])
 
             setattr(
                 self,
@@ -182,6 +200,7 @@ class HydroqcContractDevice(MqttDevice):
                     "binarysensor",
                     f"{self.name}_{sensor_name}",
                     entity_settings,
+                    sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}"
                 ),
             )
         self.logger.info("added %s ...", self.name)
