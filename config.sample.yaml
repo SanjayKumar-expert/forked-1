@@ -13,6 +13,19 @@ contracts:
     # Sensors starting with wc_ are related to wintercredits, comment what you don't want
     sensors:
       - balance
+      - current_period_current_days
+      - current_period_duration
+      - current_period_projected_bill
+      - current_period_daily_bill_mean
+      - current_period_daily_consumption_mean
+      - current_period_total_consumption
+      - current_period_projected_total_consumption
+      - current_period_projected_total_consumption
+      - current_period_higher_price_consumption
+      - current_period_lower_price_consumption
+      - current_period_average_temperature
+      - current_period_kwh_cost_mean
+      - current_period_rate
       - wc_cumulated_credit
       - wc_next_anchor_start
       - wc_next_anchor_end
@@ -21,9 +34,9 @@ contracts:
       - wc_next_critical_event_start
       - wc_next_critical_event_end
     binary_sensors:
+      - current_period_epp_enabled
       - wc_critical
       - wc_event_in_progress
       - wc_pre_heat
       - wc_next_anchor_critical
       - wc_next_peak_critical
-
