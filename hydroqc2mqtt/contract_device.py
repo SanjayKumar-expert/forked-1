@@ -110,7 +110,7 @@ class HydroqcContractDevice(MqttDevice):
                 if index + 1 == len(datasource[1:]):
                     value = data_obj
             if value is None:
-                raise Exception("Can not find value")
+                raise Exception(f"Can not find value for: {sensor_key}")
 
             entity = getattr(self, sensor_key)
             entity.send_state(value, {})
