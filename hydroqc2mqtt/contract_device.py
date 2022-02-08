@@ -47,17 +47,20 @@ class HydroqcContractDevice(MqttDevice):
             del(entity_settings["data_source"])
             del(entity_settings["name"])
             del(entity_settings["sub_mqtt_topic"])
+            entity_settings["object_id"] = f"{self.name}_{sensor_name}"
 
             setattr(
                 self,
                 sensor_key,
                 self.add_entity(
                     "sensor",
-                    f"{self.name}_{sensor_name}",
+                    sensor_name,
+                    f"{self._contract_id}-{sensor_name}",
                     entity_settings,
                     sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}"
                 ),
             )
+
         for sensor_key in self._config.get("binary_sensors", []):
             if sensor_key not in BINARY_SENSORS:
                 raise
@@ -67,13 +70,15 @@ class HydroqcContractDevice(MqttDevice):
             del(entity_settings["data_source"])
             del(entity_settings["name"])
             del(entity_settings["sub_mqtt_topic"])
+            entity_settings["object_id"] = f"{self.name}_{sensor_name}"
 
             setattr(
                 self,
                 sensor_key,
                 self.add_entity(
                     "binarysensor",
-                    f"{self.name}_{sensor_name}",
+                    sensor_name,
+                    f"{self._contract_id}-{sensor_name}",
                     entity_settings,
                     sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}"
                 ),

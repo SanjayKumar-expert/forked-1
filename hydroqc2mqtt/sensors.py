@@ -163,7 +163,7 @@ SENSORS = {
         "device_class": None,
         "expire_after": 0,
         "force_update": False,
-        "icon": "mdi: playlist-check",
+        "icon": "mdi:playlist-check",
         "state_class": None,
         "unit": None,
         "sub_mqtt_topic": "contract/state",
