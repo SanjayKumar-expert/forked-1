@@ -9,7 +9,7 @@ SENSORS = {
         "icon": "mdi:currency-usd",
         "state_class": "measurement",
         "unit": "$",
-        "sub_mqtt_topic": "acccount/state",
+        "sub_mqtt_topic": "account/state",
     },
     # Contract
     "current_period_current_days": {
