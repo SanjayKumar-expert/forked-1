@@ -1,11 +1,25 @@
-# 10 seconds
-sync_frequency: 10
+# 10 minutes
+# Refresh interval of the data in seconds
+# Do not set this too low! The data does not change often. Between 10 and 14 minutea is a good starting point
+sync_frequency: 600
+
+# Multiple contracts can be defined here
 contracts:
-  - username: USERNAME
+  - name: maison # This will be used as the device name in HA and in the topic structure in MQTT
+    username: USERNAME
     password: PASSWORD
-    name: maison
+    
+    # Customer number (Numéro de facture) from your invoice. 10 digits
+    # 10 digits, you may need to add a leading 0 to the value!!!
+    # Ex: "987 654 321" will be "0987654321"
     customer: "customer_id"
+    
+    # Account Number (Numéro de compte) from your invoice
     account: "account_id"
+
+    # Contract Number (Numéro de contrat) from your invoice
+    # 10 digits, you may need to add a leading 0 to the value!!!
+    # Ex: "123 456 789" will be "0123456789"
     contract: "contract_id"
 
     # This will configure sensors available in home assistant
@@ -40,3 +54,15 @@ contracts:
       - wc_pre_heat
       - wc_next_anchor_critical
       - wc_next_peak_critical
+
+# Example of a second contract configuration
+#  - name: chalet
+#    username: USERNAME
+#    password: PASSWORD
+#    customer: "customer_id"
+#    account: "account_id"
+#    contract: "contract_id"
+#    sensors:
+#      - current_period_daily_consumption_mean
+#    binary_sensors:
+#      - wc_next_peak_critical
