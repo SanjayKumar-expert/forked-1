@@ -21,7 +21,6 @@ At the moment the only supported method of running the project is via shell, mor
 1. Clone the repo
 
    ```bash
-   
    git clone https://gitlab.com/hydroqc/hydroqc2mqtt
    ```
 
