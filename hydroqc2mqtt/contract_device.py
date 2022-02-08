@@ -9,22 +9,22 @@ from hydroqc2mqtt.sensors import SENSORS, BINARY_SENSORS
 
 
 class HydroqcContractDevice(MqttDevice):
-
     def __init__(self, name: str, logger: logging.Logger, config: Dict):
         """Create a new MQTT Sensor Facebook object."""
         MqttDevice.__init__(self, name, logger)
         self._config = config
-        self._webuser = WebUser(config["username"],
-                                config["password"],
-                                config.get("verify_ssl", True),
-                                log_level=config.get("log_level", "WARNING"),
-                                http_log_level=config.get("http_log_level", "WARNING")
-                                )
+        self._webuser = WebUser(
+            config["username"],
+            config["password"],
+            config.get("verify_ssl", True),
+            log_level=config.get("log_level", "WARNING"),
+            http_log_level=config.get("http_log_level", "WARNING"),
+        )
         self.sw_version = VERSION
         self.manufacturer = "hydroqc"
         self._customer_id = str(self._config["customer"])
-        self._account_id = str(config['account'])
-        self._contract_id = str(config['contract'])
+        self._account_id = str(config["account"])
+        self._contract_id = str(config["contract"])
         connections = [
             ["customer", self._customer_id],
             ["account", self._account_id],
@@ -32,7 +32,7 @@ class HydroqcContractDevice(MqttDevice):
         ]
         for conn in connections:
             self.connections = conn
-        self.identifiers = config['contract']
+        self.identifiers = config["contract"]
         self._base_name = name
         self.name = f"hydroqc_{self._base_name}"
 
@@ -44,9 +44,9 @@ class HydroqcContractDevice(MqttDevice):
             entity_settings = SENSORS[sensor_key].copy()
             sensor_name = entity_settings["name"].lower()
             sub_mqtt_topic = entity_settings["sub_mqtt_topic"].lower().strip("/")
-            del(entity_settings["data_source"])
-            del(entity_settings["name"])
-            del(entity_settings["sub_mqtt_topic"])
+            del entity_settings["data_source"]
+            del entity_settings["name"]
+            del entity_settings["sub_mqtt_topic"]
             entity_settings["object_id"] = f"{self.name}_{sensor_name}"
 
             setattr(
@@ -57,7 +57,7 @@ class HydroqcContractDevice(MqttDevice):
                     sensor_name,
                     f"{self._contract_id}-{sensor_name}",
                     entity_settings,
-                    sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}"
+                    sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
                 ),
             )
 
@@ -67,9 +67,9 @@ class HydroqcContractDevice(MqttDevice):
             entity_settings = BINARY_SENSORS[sensor_key].copy()
             sensor_name = entity_settings["name"].lower()
             sub_mqtt_topic = entity_settings["sub_mqtt_topic"].lower().strip("/")
-            del(entity_settings["data_source"])
-            del(entity_settings["name"])
-            del(entity_settings["sub_mqtt_topic"])
+            del entity_settings["data_source"]
+            del entity_settings["name"]
+            del entity_settings["sub_mqtt_topic"]
             entity_settings["object_id"] = f"{self.name}_{sensor_name}"
 
             setattr(
@@ -80,7 +80,7 @@ class HydroqcContractDevice(MqttDevice):
                     sensor_name,
                     f"{self._contract_id}-{sensor_name}",
                     entity_settings,
-                    sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}"
+                    sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
                 ),
             )
         self.logger.info("added %s ...", self.name)
@@ -121,7 +121,6 @@ class HydroqcContractDevice(MqttDevice):
             entity.send_state(value, {})
             entity.send_available()
 
-
         for sensor_key in self._config.get("binary_sensors", []):
             datasource = BINARY_SENSORS[sensor_key]["data_source"].split(".")
             data_obj = locals()[datasource[0]]
@@ -139,11 +138,11 @@ class HydroqcContractDevice(MqttDevice):
             entity.send_available()
         # TODO: Find a way to create a loop to reduce de code ...
         # Balance
-        #self.balance.send_state(account.balance, {})
-        #self.balance.send_available()
+        # self.balance.send_state(account.balance, {})
+        # self.balance.send_available()
         # Winter credit critical
-        #self.wc_critical.send_state(bool(contract.whc.critical))
-        #self.wc_critical.send_available()
+        # self.wc_critical.send_state(bool(contract.whc.critical))
+        # self.wc_critical.send_available()
         self.logger.info("Updated %s ...", self.name)
 
     async def close(self):

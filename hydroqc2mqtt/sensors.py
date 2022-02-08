@@ -13,7 +13,7 @@ SENSORS = {
     },
     # Contract
     "current_period_current_days": {
-         # TODO find a better name
+        # TODO find a better name
         "name": "Current period current days",
         "data_source": "contract.cp_current_days",
         "device_class": None,
@@ -35,8 +35,8 @@ SENSORS = {
         "unit": "days",
         "sub_mqtt_topic": "contract/state",
     },
-     "current_period_current_bill": {
-         # TODO find a better name
+    "current_period_current_bill": {
+        # TODO find a better name
         "name": "Current period current bill",
         "data_source": "contract.cp_current_bill",
         "device_class": "monetary",
@@ -188,7 +188,6 @@ SENSORS = {
         "force_update": False,
         "icon": "mdi:clock-start",
         "sub_mqtt_topic": "wintercredits/next/anchor",
-
     },
     "wc_next_anchor_end": {
         "name": "Next Anchor Period End",
@@ -198,7 +197,6 @@ SENSORS = {
         "force_update": False,
         "icon": "mdi:clock-end",
         "sub_mqtt_topic": "wintercredits/next/anchor",
-
     },
     "wc_next_peak_start": {
         "name": "Next Peak Period Start",
@@ -208,7 +206,6 @@ SENSORS = {
         "force_update": False,
         "icon": "mdi:clock-start",
         "sub_mqtt_topic": "wintercredits/next/peak",
-
     },
     "wc_next_peak_end": {
         "name": "Next Peak Period End",
@@ -218,7 +215,6 @@ SENSORS = {
         "force_update": False,
         "icon": "mdi:clock-end",
         "sub_mqtt_topic": "wintercredits/next/peak",
-
     },
     "wc_next_critical_event_start": {
         "name": "Next Critical Event Start",
@@ -237,7 +233,7 @@ SENSORS = {
         "force_update": False,
         "icon": "mdi:clock-end",
         "sub_mqtt_topic": "wintercredits/next/event",
-    }
+    },
 }
 BINARY_SENSORS = {
     # Contracts
@@ -252,7 +248,7 @@ BINARY_SENSORS = {
     },
     # Winter credits
     "wc_critical": {
-        "name" : "Critical",
+        "name": "Critical",
         "data_source": "contract.winter_credit.value_state_critical",
         "expire_after": 0,
         "force_update": False,
@@ -290,5 +286,5 @@ BINARY_SENSORS = {
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
-    }
+    },
 }

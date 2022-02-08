@@ -27,19 +27,17 @@ class Hydroqc2Mqtt(MqttClientDaemon):
             self.config.get("sync_frequency", MAIN_LOOP_WAIT_TIME)
         )
         # Handle contracts
-        for contract_config in self.config['contracts']:
+        for contract_config in self.config["contracts"]:
             contract = HydroqcContractDevice(
-                    contract_config['name'],
-                    self.logger,
-                    contract_config
-                    )
+                contract_config["name"], self.logger, contract_config
+            )
             contract.add_entities()
             self.contracts.append(contract)
 
     async def _init_main_loop(self):
         """Init before starting main loop."""
         for contract in self.contracts:
-            contract.set_mqtt_client(self.mqtt_client) 
+            contract.set_mqtt_client(self.mqtt_client)
 
     async def _main_loop(self):
         """Run main loop."""
