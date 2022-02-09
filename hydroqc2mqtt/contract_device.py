@@ -3,6 +3,7 @@ from typing import Dict
 
 from mqtt_hass_base.device import MqttDevice
 from hydroqc.webuser import WebUser
+import hydroqc
 
 from hydroqc2mqtt.__version__ import VERSION
 from hydroqc2mqtt.sensors import SENSORS, BINARY_SENSORS
@@ -87,18 +88,24 @@ class HydroqcContractDevice(MqttDevice):
 
     async def init_session(self):
         if self._webuser.session_expired:
-            print("LOGIN")
+            self.logger.info("Login")
             await self._webuser.login()
         else:
-            print("REFRESH")
-            await self._webuser.refresh_session()
+            try:
+                await self._webuser.refresh_session()
+                self.logger.info("Refreshing session")
+            except hydroqc.error.HydroQcHTTPError:
+                # Try to login if the refresh session didn't work
+                self.logger.info("Refreshing session failed, try to login")
+                await self._webuser.login()
 
     async def update(self):
         """Update Home Assistant entities."""
         self.logger.info("Updating %s ...", self.name)
+        # TODO if any api calls failed, we should NOT crash and set sensors to not_available
         # Fetch latest data
         await self._webuser.get_info()
-        # TODO fetch consumption and wintercredits
+        # fetch consumption and wintercredits
         customer = self._webuser.get_customer(self._customer_id)
         account = customer.get_account(self._account_id)
         contract = account.get_contract(self._contract_id)
@@ -114,12 +121,13 @@ class HydroqcContractDevice(MqttDevice):
                 # If it's the last element of the datasource then it's the value
                 if index + 1 == len(datasource[1:]):
                     value = data_obj
-            if value is None:
-                raise Exception(f"Can not find value for: {sensor_key}")
-
             entity = getattr(self, sensor_key)
-            entity.send_state(value, {})
-            entity.send_available()
+            if value is None:
+                entity.send_available()
+                raise Exception(f"Can not find value for: {sensor_key}")
+            else:
+                entity.send_state(value, {})
+                entity.send_available()
 
         for sensor_key in self._config.get("binary_sensors", []):
             datasource = BINARY_SENSORS[sensor_key]["data_source"].split(".")
@@ -136,13 +144,7 @@ class HydroqcContractDevice(MqttDevice):
             entity = getattr(self, sensor_key)
             entity.send_state(value, {})
             entity.send_available()
-        # TODO: Find a way to create a loop to reduce de code ...
-        # Balance
-        # self.balance.send_state(account.balance, {})
-        # self.balance.send_available()
-        # Winter credit critical
-        # self.wc_critical.send_state(bool(contract.whc.critical))
-        # self.wc_critical.send_available()
+
         self.logger.info("Updated %s ...", self.name)
 
     async def close(self):

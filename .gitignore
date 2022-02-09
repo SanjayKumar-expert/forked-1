@@ -130,3 +130,7 @@ dmypy.json
 /hydro-env/
 config.yaml
 .idea/
+
+
+run.sh
+config.yaml
