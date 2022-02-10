@@ -2,6 +2,9 @@
 
 This module extracts data from your Hydro-Quebec account using the [Hydro Quebec API Wrapper](https://gitlab.com/hydroqc/hydroqc) and will post it to your MQTT server. Home-Assistant MQTT Discovery topics are also provided, automating the creation of your sensors in Home-Assistant.
 
+We started a discord server for the project where you can come to discuss and find help with the project [https://discord.gg/JaRfRJEByz](https://discord.gg/JaRfRJEByz)
+
+
 ## Disclaimer
 
 **Pre-release**
