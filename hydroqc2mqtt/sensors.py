@@ -294,5 +294,37 @@ BINARY_SENSORS = {
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
+    },
+    "wc_upcoming_event_today_morning": {
+        "name": "Upcoming event today morning",
+        "data_source": "contract.winter_credit.value_state_morning_event_today",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:message-flash",
+        "sub_mqtt_topic": "wintercredits/state",
+    },
+    "wc_upcoming_event_today_evening": {
+        "name": "Upcoming event today evening",
+        "data_source": "contract.winter_credit.value_state_evening_event_today",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:message-flash",
+        "sub_mqtt_topic": "wintercredits/state",
+    },
+    "wc_upcoming_event_tomorrow_morning": {
+        "name": "Upcoming event tomorrow morning",
+        "data_source": "contract.winter_credit.value_state_morning_event_tomorrow",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:message-flash",
+        "sub_mqtt_topic": "wintercredits/state",
+    },
+    "wc_upcoming_event_tomorrow_evening": {
+        "name": "Upcoming event tomorrow evening",
+        "data_source": "contract.winter_credit.value_state_evening_event_tomorrow",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:message-flash",
+        "sub_mqtt_topic": "wintercredits/state",
     }
 }
