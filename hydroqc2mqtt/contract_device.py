@@ -129,10 +129,11 @@ class HydroqcContractDevice(MqttDevice):
                 # If it's the last element of the datasource then it's the value
                 if index + 1 == len(datasource[1:]):
                     value = data_obj
+
             entity = getattr(self, sensor_key)
             if value is None:
                 entity.send_available()
-                raise Exception(f"Can not find value for: {sensor_key}")
+                self.logger.warning("Can not find value for: %s", sensor_key)
             else:
                 entity.send_state(value, {})
                 entity.send_available()
@@ -146,12 +147,14 @@ class HydroqcContractDevice(MqttDevice):
                 # If it's the last element of the datasource then it's the value
                 if index + 1 == len(datasource[1:]):
                     value = "ON" if data_obj else "OFF"
-            if value is None:
-                raise Exception(f"Can not find value for: {sensor_key}")
 
             entity = getattr(self, sensor_key)
-            entity.send_state(value, {})
-            entity.send_available()
+            if value is None:
+                entity.send_available()
+                self.logger.warning("Can not find value for: %s", sensor_key)
+            else:
+                entity.send_state(value, {})
+                entity.send_available()
 
         self.logger.info("Updated %s ...", self.name)
 
