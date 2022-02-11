@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 
 import yaml
 
@@ -21,8 +22,18 @@ class Hydroqc2Mqtt(MqttClientDaemon):
     def read_config(self):
         """Read env vars."""
         self.config_file = os.environ["CONFIG_YAML"]
+
         with open(self.config_file, "rb") as fhc:
             self.config = yaml.safe_load(fhc)
+
+        # Override hydroquebec username and password from env var if exists
+        for env_var, value in os.environ.items():
+            match_res = re.match("H2M_CONTRACTS_(\d*)_(USERNAME|PASSWORD)", env_var)
+            if match_res and len(match_res.groups()) == 2:
+                index = int(match_res.group(1))
+                kind = match_res.group(2).lower()  # "username" or "password"
+                self.config["contracts"][index][kind] = value
+
         self.sync_frequency = int(
             self.config.get("sync_frequency", MAIN_LOOP_WAIT_TIME)
         )

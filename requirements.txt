@@ -1,4 +1,3 @@
 mqtt-hass-base==2.0.1
-#PyYAML==5.3.1 # PyYaml is profided by homeassistant throught mqtt-hass-base dependency
-#mqtt-hass-base@https://gitlab.com/ttblt-hass/mqtt-hass-base/-/archive/master/mqtt-hass-base-master.zip#mqtt-hass-base
-Hydro_Quebec_API_Wrapper@https://gitlab.com/hydroqc/hydroqc/-/archive/refactoring/hydroqc-refactoring.zip#egg=Hydro_Quebec_API_Wrapper
+#PyYAML==5.3.1 # PyYaml is profided by homeassistant through mqtt-hass-base dependency
+Hydro_Quebec_API_Wrapper==0.2.0
