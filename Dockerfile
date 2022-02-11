@@ -9,7 +9,6 @@ COPY requirements.txt ./
 RUN pip install -r requirements.txt --force-reinstall --no-cache-dir
 
 COPY ./docker/entrypoint.sh .
-RUN mkdir /etc/hydroqc2mqtt/
 COPY ./config.sample.yaml /etc/hydroqc2mqtt/config.yaml
 
 COPY . .
