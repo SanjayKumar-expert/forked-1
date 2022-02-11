@@ -9,6 +9,7 @@ from hydroqc2mqtt.contract_device import HydroqcContractDevice
 
 
 MAIN_LOOP_WAIT_TIME = 300
+OVERRIDE_REGEX = re.compile("HQ2M_CONTRACTS_(\d*)_(USERNAME|PASSWORD|CUSTOMER|ACCOUNT|CONTRACT|NAME)")
 
 
 class Hydroqc2Mqtt(MqttClientDaemon):
@@ -28,7 +29,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
 
         # Override hydroquebec username and password from env var if exists
         for env_var, value in os.environ.items():
-            match_res = re.match("H2M_CONTRACTS_(\d*)_(USERNAME|PASSWORD)", env_var)
+            match_res = OVERRIDE_REGEX.match(env_var)
             if match_res and len(match_res.groups()) == 2:
                 index = int(match_res.group(1))
                 kind = match_res.group(2).lower()  # "username" or "password"
@@ -36,6 +37,10 @@ class Hydroqc2Mqtt(MqttClientDaemon):
 
         self.sync_frequency = int(
             self.config.get("sync_frequency", MAIN_LOOP_WAIT_TIME)
+        )
+
+        self.unregister_on_stop = bool(
+            self.config.get("unregister_on_stop", False)
         )
         # Handle contracts
         for contract_config in self.config["contracts"]:
@@ -77,8 +82,9 @@ class Hydroqc2Mqtt(MqttClientDaemon):
 
     def _signal_handler(self, signal_, frame):
         """Handle SIGKILL."""
-        for contract in self.contracts:
-            contract.unregister()
+        if self.unregister_on_stop:
+            for contract in self.contracts:
+                contract.unregister()
 
     def _on_message(self, client, userdata, msg):
         """Do nothing."""

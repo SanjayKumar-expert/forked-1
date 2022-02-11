@@ -3,6 +3,8 @@
 # Do not set this too low! The data does not change often. Between 10 and 14 minutea is a good starting point
 sync_frequency: 600
 
+unregister_on_stop: false
+
 # Multiple contracts can be defined here
 contracts:
   - name: maison # This will be used as the device name in HA and in the topic structure in MQTT
