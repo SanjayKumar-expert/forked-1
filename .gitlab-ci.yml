@@ -6,7 +6,50 @@
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
 - test
+- docker
 sast:
   stage: test
 include:
 - template: Security/SAST.gitlab-ci.yml
+
+test:
+  image: python:3.9-bullseye
+  stage: test
+  before_script:
+    - pip install -r requirements.txt
+    #- pip install -r test_requirements.txt
+  script:
+    #- pylint --rcfile=.pylintrc mqtt_sensor_feed
+    #- flake8 mqtt_sensor_feed
+    #- pydocstyle mqtt_sensor_feed
+  except:
+    - tags
+
+docker:
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  stage: docker
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - export CI_COMMIT_SHORT_SHA=$(echo $CI_COMMIT_SHA | cut -c1-7)
+    - echo /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:main
+  only:
+  - master
+
+
+docker_tag:
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  stage: docker
+  script:
+    #- export APP_VERSION="v$(python -c "from mqtt_sensor_feed.__version__ import VERSION;print(VERSION)")"
+    #- if [ "${APP_VERSION}" != "${CI_COMMIT_TAG}" ] ; then echo "Code tag and git tag not equal" && exit 1; fi 
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest
+  only:
+  - tags

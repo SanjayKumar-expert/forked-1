@@ -28,11 +28,18 @@ class Hydroqc2Mqtt(MqttClientDaemon):
             self.config = yaml.safe_load(fhc)
 
         # Override hydroquebec username and password from env var if exists
+        self.config.setdefault("contracts", [])
         for env_var, value in os.environ.items():
             match_res = OVERRIDE_REGEX.match(env_var)
             if match_res and len(match_res.groups()) == 2:
                 index = int(match_res.group(1))
                 kind = match_res.group(2).lower()  # "username" or "password"
+                # TODO improve me
+                try:
+                    # Check if the contracts is set in the config file
+                    self.config["contracts"][index]
+                except IndexError:
+                    self.config["contracts"].append({})
                 self.config["contracts"][index][kind] = value
 
         self.sync_frequency = int(
