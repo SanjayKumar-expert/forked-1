@@ -26,6 +26,27 @@ class HydroqcContractDevice(MqttDevice):
         self._customer_id = str(self._config["customer"])
         self._account_id = str(config["account"])
         self._contract_id = str(config["contract"])
+
+        # By default we load all sensors
+        self._sensor_list = SENSORS.keys()
+        if "sensors" in self._config:
+            # If sensors key is in the config file, we load only the ones listed there
+            # Check if sensor exists
+            for sensor_key in self._config["sensors"]:
+                if sensor_key not in SENSORS:
+                    raise Exception(f"Sensor {sensor_key} doesn't exist. Fix your config.")
+            self._sensor_list = self._config["sensors"]
+
+        # By default we load all binary sensors
+        self._binary_sensor_list = BINARY_SENSORS.keys()
+        if "binary_sensors" in self._config:
+            # If binary_sensors key is in the config file, we load only the ones listed there
+            # Check if sensor exists
+            for sensor_key in self._config["binary_sensors"]:
+                if sensor_key not in BINARY_SENSORS:
+                    raise Exception(f"Binary sensor {sensor_key} doesn't exist. Fix your config.")
+            self._binary_sensor_list = self._config["binary_sensors"]
+
         connections = [
             ["customer", self._customer_id],
             ["account", self._account_id],
@@ -39,13 +60,7 @@ class HydroqcContractDevice(MqttDevice):
 
     def add_entities(self):
         """Add Home Assistant entities."""
-        if "sensors" in self._config:
-            sensor_list = self._config["sensors"]
-        else:
-            sensor_list = SENSORS.keys()
-        for sensor_key in sensor_list:
-            if sensor_key not in SENSORS:
-                raise
+        for sensor_key in self._sensor_list:
             entity_settings = SENSORS[sensor_key].copy()
             sensor_name = entity_settings["name"].capitalize()
             sub_mqtt_topic = entity_settings["sub_mqtt_topic"].lower().strip("/")
@@ -66,13 +81,7 @@ class HydroqcContractDevice(MqttDevice):
                 ),
             )
 
-        if "binary_sensors" in self._config:
-            sensor_list = self._config["binary_sensors"]
-        else:
-            sensor_list = BINARY_SENSORS.keys()
-        for sensor_key in sensor_list:
-            if sensor_key not in BINARY_SENSORS:
-                raise
+        for sensor_key in self._binary_sensor_list:
             entity_settings = BINARY_SENSORS[sensor_key].copy()
             sensor_name = entity_settings["name"].capitalize()
             sub_mqtt_topic = entity_settings["sub_mqtt_topic"].lower().strip("/")
@@ -107,54 +116,63 @@ class HydroqcContractDevice(MqttDevice):
                 self.logger.info("Refreshing session failed, try to login")
                 await self._webuser.login()
 
+
+    def _update_sensors(self, sensor_list, customer, account, contract, sensor_type):
+        if sensor_type == "SENSORS":
+            self.logger.debug("Updating sensors")
+            sensor_config = SENSORS
+        elif sensor_type == "BINARY_SENSORS":
+            self.logger.debug("Updating binary sensors")
+            sensor_config = BINARY_SENSORS
+        else:
+            raise Exception(f"Sensor type {sensor_type} not supported")
+
+        for sensor_key in sensor_list:
+            # Get current entity
+            entity = getattr(self, sensor_key)
+            # Get object path to get the value of the current entity
+            datasource = sensor_config[sensor_key]["data_source"].split(".")
+            # Example: datasource = "contract.winter_credit.value_state_evening_event_today"
+            # datasource = ["contract", "winter_credit", "value_state_evening_event_today"]
+            # Here we try get the value of the attribut "value_state_evening_event_today"
+            # of the object "winter_credit" which is an attribute of the object "contract"
+            data_obj = locals()[datasource[0]]
+            value = None
+            for index, el in enumerate(datasource[1:]):
+                if not hasattr(data_obj, el):
+                    entity.send_not_available()
+                    self.logger.warning("The object %s doesn't have the attribute %s. Maybe your contract doesn't have this data ?", data_obj, el)
+                    break
+                data_obj = getattr(data_obj, el)
+                # If it's the last element of the datasource that means, it's the value
+                if index + 1 == len(datasource[1:]):
+                    if sensor_type == "BINARY_SENSORS":
+                        value = "ON" if data_obj else "OFF"
+                    else:
+                        value = data_obj
+
+            if value is None:
+                entity.send_not_available()
+                self.logger.warning("Can not find value for: %s", sensor_key)
+            else:
+                entity.send_state(value, {})
+                entity.send_available()
+
     async def update(self):
         """Update Home Assistant entities."""
-        self.logger.info("Updating %s ...", self.name)
+        self.logger.info("Updating ...")
         # TODO if any api calls failed, we should NOT crash and set sensors to not_available
         # Fetch latest data
         await self._webuser.get_info()
-        # fetch consumption and wintercredits
         customer = self._webuser.get_customer(self._customer_id)
         account = customer.get_account(self._account_id)
         contract = account.get_contract(self._contract_id)
+        # fetch consumption and wintercredits
         await contract.get_periods_info()
         await contract.winter_credit.refresh_data()
-        # Send sensor state one by one ...
-        for sensor_key in self._config.get("sensors", []):
-            datasource = SENSORS[sensor_key]["data_source"].split(".")
-            data_obj = locals()[datasource[0]]
-            value = None
-            for index, el in enumerate(datasource[1:]):
-                data_obj = getattr(data_obj, el)
-                # If it's the last element of the datasource then it's the value
-                if index + 1 == len(datasource[1:]):
-                    value = data_obj
 
-            entity = getattr(self, sensor_key)
-            if value is None:
-                entity.send_available()
-                self.logger.warning("Can not find value for: %s", sensor_key)
-            else:
-                entity.send_state(value, {})
-                entity.send_available()
-
-        for sensor_key in self._config.get("binary_sensors", []):
-            datasource = BINARY_SENSORS[sensor_key]["data_source"].split(".")
-            data_obj = locals()[datasource[0]]
-            value = None
-            for index, el in enumerate(datasource[1:]):
-                data_obj = getattr(data_obj, el)
-                # If it's the last element of the datasource then it's the value
-                if index + 1 == len(datasource[1:]):
-                    value = "ON" if data_obj else "OFF"
-
-            entity = getattr(self, sensor_key)
-            if value is None:
-                entity.send_available()
-                self.logger.warning("Can not find value for: %s", sensor_key)
-            else:
-                entity.send_state(value, {})
-                entity.send_available()
+        self._update_sensors(self._sensor_list, customer, account, contract, "SENSORS")
+        self._update_sensors(self._binary_sensor_list, customer, account, contract, "BINARY_SENSORS")
 
         self.logger.info("Updated %s ...", self.name)
 
