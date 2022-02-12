@@ -29,6 +29,9 @@ class Hydroqc2Mqtt(MqttClientDaemon):
 
         # Override hydroquebec username and password from env var if exists
         self.config.setdefault("contracts", [])
+        if self.config["contracts"] is None:
+            self.config["contracts"] = []
+
         for env_var, value in os.environ.items():
             match_res = OVERRIDE_REGEX.match(env_var)
             if match_res and len(match_res.groups()) == 2:

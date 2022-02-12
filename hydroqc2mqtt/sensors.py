@@ -289,7 +289,7 @@ BINARY_SENSORS = {
     },
     "wc_upcoming_critical_event": {
         "name": "Upcoming Critical Event",
-        "data_source": "contract.winter_credit.value_upcoming_event",
+        "data_source": "contract.winter_credit.value_state_upcoming_event",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
