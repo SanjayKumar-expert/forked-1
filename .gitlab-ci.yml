@@ -47,8 +47,12 @@ docker_tag:
     entrypoint: [""]
   stage: docker
   script:
-    #- export APP_VERSION="v$(python -c "from mqtt_sensor_feed.__version__ import VERSION;print(VERSION)")"
-    #- if [ "${APP_VERSION}" != "${CI_COMMIT_TAG}" ] ; then echo "Code tag and git tag not equal" && exit 1; fi 
+    - CURRENT_VERSION=$(grep VERSION hydroqc2mqtt/__version__.py | sed 's/.*VERSION = "\([^"]*\)"/\1/')
+    - |
+      if [ "${CURRENT_VERSION}" != "${CI_COMMIT_TAG}" ]
+      then
+        echo "Tag '${CI_COMMIT_TAG}' and version '${CURRENT_VERSION}' defined in version.py are different. Please fix it." && exit 1
+      fi
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest
