@@ -1,7 +1,4 @@
 FROM python:3.9-slim-bullseye
-ENV CONFIG_YAML=/etc/hydroqc2mqtt/config.yaml
-ENV MQTT_DISCOVERY_DATA_TOPIC="homeassistant"
-ENV MQTT_DATA_ROOT_TOPIC="hydroqc"
 
 RUN apt update && \
     DEBIAN_FRONTEND=noninteractive apt install -y gcc musl-dev
