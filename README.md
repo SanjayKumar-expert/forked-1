@@ -34,8 +34,9 @@ docker run -d --rm --name hydroqc2mqtt \
 -e HQ2M_CONTRACTS_0_CUSTOMER="HQCustomerNo" \
 -e HQ2M_CONTRACTS_0_ACCOUNT="HQAccountNo" \
 -e HQ2M_CONTRACTS_0_CONTRACT="HQContractNo" \
-registry.gitlab.com/hydroqc/hydroqc2mqtt:main
+registry.gitlab.com/hydroqc/hydroqc2mqtt:main  ## You can also specify a version that work well for you here (registry.gitlab.com/hydroqc/hydroqc2mqtt:0.1.1)
 ```
+
 
 The HQ2M values define your various contracts. They all have a numer "\_0_" that can be incremented if you have more than one contract.
 
