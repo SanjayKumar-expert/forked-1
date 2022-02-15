@@ -14,6 +14,10 @@ This a pre-release of a project that is being actively developped. Breaking chan
 
 This is a non official way to extract your data from Hydro-Quebec, while it works now it may break at anytime if or when Hydro-Quebec change their systems.
 
+### **Special message to Hydro-Quebec's employees**
+
+We would very much like to improve this module and it's [API](https://gitlab.com/hydroqc). We tried to reach out to HQ but never were able to get in contact with anyone there interested in discussing this project. If you have some feedback, complaints or are interested to discuss this project, please reach out to us on our [development discord channel](https://discord.gg/NWnfdfRZ7T).
+
 ## Installation steps
 
 You can run the project via docker or via shell.
@@ -34,9 +38,9 @@ docker run -d --rm --name hydroqc2mqtt \
 -e HQ2M_CONTRACTS_0_CUSTOMER='HQCustomerNo' \
 -e HQ2M_CONTRACTS_0_ACCOUNT='HQAccountNo' \
 -e HQ2M_CONTRACTS_0_CONTRACT='HQContractNo' \
-registry.gitlab.com/hydroqc/hydroqc2mqtt:main  ## You can also specify a version that work well for you here (registry.gitlab.com/hydroqc/hydroqc2mqtt:0.1.1)
+registry.gitlab.com/hydroqc/hydroqc2mqtt:0.1.6
 ```
-
+A list of all container version and their tags can be found here: [https://gitlab.com/hydroqc/hydroqc2mqtt/container_registry/2746219](https://gitlab.com/hydroqc/hydroqc2mqtt/container_registry/2746219). Try to avoid :latest or :main for now since they are not updating properly for now
 
 The HQ2M values define your various contracts. They all have a numer "\_0_" that can be incremented if you have more than one contract.
 
@@ -79,6 +83,7 @@ HQ2M_CONTRACTS_1_CONTRACT='0133446729'
 
    ```bash
    git clone https://gitlab.com/hydroqc/hydroqc2mqtt
+   cd hydroqc2mqtt
    ```
 
 2. Create a python virtual env and activate it
