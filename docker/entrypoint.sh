@@ -17,4 +17,9 @@ then
     export MQTT_DATA_ROOT_TOPIC="hydroqc"
 fi
 
+if [ -z "$TZ" ]
+then
+    export TZ="America/Toronto"
+fi
+
 /usr/local/bin/hydroqc2mqtt
