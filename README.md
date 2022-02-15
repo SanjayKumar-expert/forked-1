@@ -24,16 +24,16 @@ A docker image is now available to run hydroqc2mqtt. All configuration options n
 
 ```bash
 docker run -d --rm --name hydroqc2mqtt \
--e MQTT_USERNAME=yourmqttusername \
--e MQTT_PASSWORD=yourmqttpassword \
--e MQTT_HOST=yourmqttserver \
--e MQTT_PORT=1883 \
--e HQ2M_CONTRACTS_0_NAME="maison" \
--e HQ2M_CONTRACTS_0_USERNAME="HQUsername" \
--e HQ2M_CONTRACTS_0_PASSWORD="HQPassword" \
--e HQ2M_CONTRACTS_0_CUSTOMER="HQCustomerNo" \
--e HQ2M_CONTRACTS_0_ACCOUNT="HQAccountNo" \
--e HQ2M_CONTRACTS_0_CONTRACT="HQContractNo" \
+-e MQTT_USERNAME='yourmqttusername' \ # Leave empty if no auth is needed
+-e MQTT_PASSWORD='yourmqttpassword' \ # Leave empty if no auth is needed
+-e MQTT_HOST='yourmqttserver' \
+-e MQTT_PORT='1883' \
+-e HQ2M_CONTRACTS_0_NAME='maison' \
+-e HQ2M_CONTRACTS_0_USERNAME='HQUsername' \
+-e HQ2M_CONTRACTS_0_PASSWORD='HQPassword' \
+-e HQ2M_CONTRACTS_0_CUSTOMER='HQCustomerNo' \
+-e HQ2M_CONTRACTS_0_ACCOUNT='HQAccountNo' \
+-e HQ2M_CONTRACTS_0_CONTRACT='HQContractNo' \
 registry.gitlab.com/hydroqc/hydroqc2mqtt:main  ## You can also specify a version that work well for you here (registry.gitlab.com/hydroqc/hydroqc2mqtt:0.1.1)
 ```
 
@@ -43,34 +43,34 @@ The HQ2M values define your various contracts. They all have a numer "\_0_" that
 
 ```
 # Name of the contract, will appear in Home Assistant and in the hydroqc topics.
-HQ2M_CONTRACTS_0_NAME="maison" \
+HQ2M_CONTRACTS_0_NAME='maison' \
 
 # Username for your HQ account
-HQ2M_CONTRACTS_0_USERNAME="email@domain.tld"
+HQ2M_CONTRACTS_0_USERNAME='email@domain.tld'
 
 # Your HQ account password
-HQ2M_CONTRACTS_0_PASSWORD="Password"
+HQ2M_CONTRACTS_0_PASSWORD='Password'
 
 # Customer number (Numéro de facture) from your invoice.
 # 10 digits, you may need to add a leading 0 to the value!!!
-# Ex: "987 654 321" will be "0987654321"
-HQ2M_CONTRACTS_0_CUSTOMER="0987654321"
+# Ex: '987 654 321' will be '0987654321'
+HQ2M_CONTRACTS_0_CUSTOMER='0987654321'
 
 # Account Number (Numéro de compte) from your invoice
-HQ2M_CONTRACTS_0_ACCOUNT="654321987654"
+HQ2M_CONTRACTS_0_ACCOUNT='654321987654'
 
 # Contract Number (Numéro de contrat) from your invoice
 # 10 digits, you may need to add a leading 0 to the value!!!
-# Ex: "123 456 789" will be "0123456789"
-HQ2M_CONTRACTS_0_CONTRACT="0123456789"
+# Ex: '123 456 789' will be '0123456789'
+HQ2M_CONTRACTS_0_CONTRACT='0123456789'
 
 ## 2nd contract example
-HQ2M_CONTRACTS_1_NAME="chalet"
-HQ2M_CONTRACTS_1_USERNAME="email@domain.tld"
-HQ2M_CONTRACTS_1_PASSWORD="Password"
-HQ2M_CONTRACTS_1_CUSTOMER="0987654321"
-HQ2M_CONTRACTS_1_ACCOUNT="654321987654"
-HQ2M_CONTRACTS_1_CONTRACT="0133446729"
+HQ2M_CONTRACTS_1_NAME='chalet'
+HQ2M_CONTRACTS_1_USERNAME='email@domain.tld'
+HQ2M_CONTRACTS_1_PASSWORD='Password'
+HQ2M_CONTRACTS_1_CUSTOMER='0987654321'
+HQ2M_CONTRACTS_1_ACCOUNT='654321987654'
+HQ2M_CONTRACTS_1_CONTRACT='0133446729'
 ```
 
 ### Shell
