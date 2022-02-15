@@ -24,12 +24,12 @@ You can run the project via docker or via shell.
 
 ### Docker
 
-A docker image is now available to run hydroqc2mqtt. All configuration options need to be provided as environement variable.
+A docker image is now available to run hydroqc2mqtt. All configuration options need to be provided as environement variable. If your MQTT server does not require auth leave the MQTT_USERNAME and MQTT_PASSWORD values empty
 
 ```bash
 docker run -d --rm --name hydroqc2mqtt \
--e MQTT_USERNAME='yourmqttusername' \ # Leave empty if no auth is needed
--e MQTT_PASSWORD='yourmqttpassword' \ # Leave empty if no auth is needed
+-e MQTT_USERNAME='yourmqttusername' \
+-e MQTT_PASSWORD='yourmqttpassword' \
 -e MQTT_HOST='yourmqttserver' \
 -e MQTT_PORT='1883' \
 -e HQ2M_CONTRACTS_0_NAME='maison' \
@@ -106,7 +106,7 @@ HQ2M_CONTRACTS_1_CONTRACT='0133446729'
    cp config.sample.yaml config.yaml
    ```
 
-5. Copy and adapt run.sh to your MQTT configuration
+5. Copy and adapt run.sh to your MQTT configuration. If your MQTT server does not require auth leave the MQTT_USERNAME and MQTT_PASSWORD values empty
 
    ```bash
    cp run.sample.sh run.sh
