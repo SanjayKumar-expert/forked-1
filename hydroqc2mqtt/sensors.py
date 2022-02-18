@@ -12,10 +12,9 @@ SENSORS = {
         "sub_mqtt_topic": "account/state",
     },
     # Contract
-    "current_period_current_days": {
-        # TODO find a better name
-        "name": "Current period current days",
-        "data_source": "contract.cp_current_days",
+    "current_billing_period_current_day": {
+        "name": "Current billing period current day",
+        "data_source": "contract.cp_current_day",
         "device_class": None,
         "expire_after": 0,
         "force_update": False,
@@ -24,8 +23,8 @@ SENSORS = {
         "unit": "days",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_duration": {
-        "name": "Current period duration",
+    "current_billing_period_duration": {
+        "name": "Current billing period duration",
         "data_source": "contract.cp_duration",
         "device_class": None,
         "expire_after": 0,
@@ -35,9 +34,8 @@ SENSORS = {
         "unit": "days",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_current_bill": {
-        # TODO find a better name
-        "name": "Current period current bill",
+    "current_billing_period_total_to_date": {
+        "name": "Current billing period total to date",
         "data_source": "contract.cp_current_bill",
         "device_class": "monetary",
         "expire_after": 0,
@@ -47,8 +45,8 @@ SENSORS = {
         "unit": "$",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_projected_bill": {
-        "name": "Current period projected bill",
+    "current_billing_period_projected_bill": {
+        "name": "Current billing period projected bill",
         "data_source": "contract.cp_projected_bill",
         "device_class": "monetary",
         "expire_after": 0,
@@ -58,8 +56,8 @@ SENSORS = {
         "unit": "$",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_daily_bill_mean": {
-        "name": "Current period daily bill mean",
+    "current_billing_period_daily_bill_mean": {
+        "name": "Current billing period daily bill mean",
         "data_source": "contract.cp_daily_bill_mean",
         "device_class": "monetary",
         "expire_after": 0,
@@ -69,8 +67,8 @@ SENSORS = {
         "unit": "$",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_daily_consumption_mean": {
-        "name": "Current period daily consumption mean",
+    "current_billing_period_daily_consumption_mean": {
+        "name": "Current billing period daily consumption mean",
         "data_source": "contract.cp_daily_consumption_mean",
         "device_class": "energy",
         "expire_after": 0,
@@ -80,8 +78,8 @@ SENSORS = {
         "unit": "kWh",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_total_consumption": {
-        "name": "Current period total consumption",
+    "current_billing_period_total_consumption": {
+        "name": "Current billing period total consumption",
         "data_source": "contract.cp_total_consumption",
         "device_class": "energy",
         "expire_after": 0,
@@ -91,8 +89,8 @@ SENSORS = {
         "unit": "kWh",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_projected_total_consumption": {
-        "name": "Current period projected total consumption",
+    "current_billing_period_projected_total_consumption": {
+        "name": "Current billing period projected total consumption",
         "data_source": "contract.cp_projected_total_consumption",
         "device_class": "energy",
         "expire_after": 0,
@@ -102,8 +100,8 @@ SENSORS = {
         "unit": "kWh",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_projected_total_consumption": {
-        "name": "Current period projected total consumption",
+    "current_billing_period_projected_total_consumption": {
+        "name": "Current billing period projected total consumption",
         "data_source": "contract.cp_projected_total_consumption",
         "device_class": "energy",
         "expire_after": 0,
@@ -113,8 +111,8 @@ SENSORS = {
         "unit": "kWh",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_higher_price_consumption": {
-        "name": "Current period higher price consumption",
+    "current_billing_period_higher_price_consumption": {
+        "name": "Current billing period higher price consumption",
         "data_source": "contract.cp_higher_price_consumption",
         "device_class": "energy",
         "expire_after": 0,
@@ -124,8 +122,8 @@ SENSORS = {
         "unit": "kWh",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_lower_price_consumption": {
-        "name": "Current period lower price consumption",
+    "current_billing_period_lower_price_consumption": {
+        "name": "Current billing period lower price consumption",
         "data_source": "contract.cp_lower_price_consumption",
         "device_class": "energy",
         "expire_after": 0,
@@ -135,8 +133,8 @@ SENSORS = {
         "unit": "kWh",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_average_temperature": {
-        "name": "Current period average temperature",
+    "current_billing_period_average_temperature": {
+        "name": "Current billing period average temperature",
         "data_source": "contract.cp_average_temperature",
         "device_class": "temperature",
         "expire_after": 0,
@@ -146,8 +144,8 @@ SENSORS = {
         "unit": "°C",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_kwh_cost_mean": {
-        "name": "Current period kwh cost mean",
+    "current_billing_period_kwh_cost_mean": {
+        "name": "Current billing period kwh cost mean",
         "data_source": "contract.cp_kwh_cost_mean",
         "device_class": "monetary",
         "expire_after": 0,
@@ -157,8 +155,8 @@ SENSORS = {
         "unit": "$",
         "sub_mqtt_topic": "contract/state",
     },
-    "current_period_rate": {
-        "name": "Current period rate",
+    "current_billing_period_rate": {
+        "name": "Current billing period rate",
         "data_source": "contract.cp_rate",
         "device_class": None,
         "expire_after": 0,
@@ -169,9 +167,20 @@ SENSORS = {
         "sub_mqtt_topic": "contract/state",
     },
     # Winter credits
+    "wc_state": {
+        "name": "Current WC period detail",
+        "data_source": "contract.winter_credit.current_state",
+        "device_class": None,
+        "expire_after": 0,
+        "force_update": False,
+        "icon": None,
+        "state_class": "measurement",
+        "unit": None,
+        "sub_mqtt_topic": "wintercredits/state",
+    },
     "wc_cumulated_credit": {
-        "name": "Cumulated Winter Credit",
-        "data_source": "contract.winter_credit.value_cumulated_credit",
+        "name": "Cumulated winter credit",
+        "data_source": "contract.winter_credit.cumulated_credit",
         "device_class": "monetary",
         "expire_after": 0,
         "force_update": False,
@@ -181,8 +190,8 @@ SENSORS = {
         "sub_mqtt_topic": "wintercredits/state",
     },
     "wc_next_anchor_start": {
-        "name": "Next Anchor Period Start",
-        "data_source": "contract.winter_credit.value_next_periods_anchor_start_iso",
+        "name": "Next anchor start",
+        "data_source": "contract.winter_credit.next_peak.anchor.start_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -190,8 +199,8 @@ SENSORS = {
         "sub_mqtt_topic": "wintercredits/next/anchor",
     },
     "wc_next_anchor_end": {
-        "name": "Next Anchor Period End",
-        "data_source": "contract.winter_credit.value_next_periods_anchor_end_iso",
+        "name": "Next anchor end",
+        "data_source": "contract.winter_credit.next_peak.anchor.end_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -199,8 +208,8 @@ SENSORS = {
         "sub_mqtt_topic": "wintercredits/next/anchor",
     },
     "wc_next_peak_start": {
-        "name": "Next Peak Period Start",
-        "data_source": "contract.winter_credit.value_next_periods_peak_start_iso",
+        "name": "Next peak start",
+        "data_source": "contract.winter_credit.next_peak.start_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -208,31 +217,112 @@ SENSORS = {
         "sub_mqtt_topic": "wintercredits/next/peak",
     },
     "wc_next_peak_end": {
-        "name": "Next Peak Period End",
-        "data_source": "contract.winter_credit.value_next_periods_peak_end_iso",
+        "name": "Next peak end",
+        "data_source": "contract.winter_credit.next_peak.end_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:clock-end",
         "sub_mqtt_topic": "wintercredits/next/peak",
     },
-    "wc_next_critical_event_start": {
-        "name": "Next Critical Event Start",
-        "data_source": "contract.winter_credit.value_next_start_iso",
+    "wc_next_critical_peak_start": {
+        "name": "Next critical peak start",
+        "data_source": "contract.winter_credit.next_critical_peak.start_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:clock-start",
-        "sub_mqtt_topic": "wintercredits/next/event",
+        "sub_mqtt_topic": "wintercredits/next/critical",
     },
-    "wc_next_critical_event_end": {
-        "name": "Next Critical Event End",
-        "data_source": "contract.winter_credit.value_next_end_iso",
+    "wc_next_critical_peak_end": {
+        "name": "Next critical peak end",
+        "data_source": "contract.winter_credit.next_critical_peak.end_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:clock-end",
-        "sub_mqtt_topic": "wintercredits/next/event",
+        "sub_mqtt_topic": "wintercredits/next/critical",
+    },
+    # Yesterday
+    "wc_yesterday_morning_peak_credit": {
+        "name": "Yesterday morning peak saved credit",
+        "data_source": "contract.winter_credit.yesterday_morning_peak.credit",
+        "device_class": "monetary",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:currency-usd",
+        "unit": "$",
+        "sub_mqtt_topic": "wintercredits/yesterday",
+    },
+    "wc_yesterday_morning_peak_actual_consumption": {
+        "name": "Yesterday morning peak actual consumtion",
+        "data_source": "contract.winter_credit.yesterday_morning_peak.actual_consumption",
+        "device_class": "energy",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:home-lightning-bolt",
+        "unit": "kWh",
+        "sub_mqtt_topic": "wintercredits/yesterday",
+    },
+    "wc_yesterday_morning_peak_ref_consumption": {
+        "name": "Yesterday morning peak reference consumtion",
+        "data_source": "contract.winter_credit.yesterday_morning_peak.ref_consumption",
+        "device_class": "energy",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:home-lightning-bolt",
+        "unit": "kWh",
+        "sub_mqtt_topic": "wintercredits/yesterday",
+    },
+    "wc_yesterday_morning_peak_saved_consumption": {
+        "name": "Yesterday morning peak saved consumtion",
+        "data_source": "contract.winter_credit.yesterday_morning_peak.saved_consumption",
+        "device_class": "energy",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:home-lightning-bolt",
+        "unit": "kWh",
+        "sub_mqtt_topic": "wintercredits/yesterday",
+    },
+    "wc_yesterday_evening_peak_credit": {
+        "name": "Yesterday evening peak saved credit",
+        "data_source": "contract.winter_credit.yesterday_evening_peak.credit",
+        "device_class": "monetary",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:currency-usd",
+        "unit": "$",
+        "sub_mqtt_topic": "wintercredits/yesterday",
+    },
+    "wc_yesterday_evening_peak_actual_consumption": {
+        "name": "Yesterday evening peak actual consumtion",
+        "data_source": "contract.winter_credit.yesterday_evening_peak.actual_consumption",
+        "device_class": "energy",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:home-lightning-bolt",
+        "unit": "kWh",
+        "sub_mqtt_topic": "wintercredits/yesterday",
+    },
+    "wc_yesterday_evening_peak_ref_consumption": {
+        "name": "Yesterday evening peak reference consumtion",
+        "data_source": "contract.winter_credit.yesterday_evening_peak.ref_consumption",
+        "device_class": "energy",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:home-lightning-bolt",
+        "unit": "kWh",
+        "sub_mqtt_topic": "wintercredits/yesterday",
+    },
+    "wc_yesterday_evening_peak_saved_consumption": {
+        "name": "Yesterday evening peak saved consumtion",
+        "data_source": "contract.winter_credit.yesterday_evening_peak.saved_consumption",
+        "device_class": "energy",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:home-lightning-bolt",
+        "unit": "kWh",
+        "sub_mqtt_topic": "wintercredits/yesterday",
     },
 }
 BINARY_SENSORS = {
@@ -248,16 +338,17 @@ BINARY_SENSORS = {
     },
     # Winter credits
     "wc_critical": {
+        # == wc_next_peak_critical
         "name": "Critical",
-        "data_source": "contract.winter_credit.value_state_critical",
+        "data_source": "contract.winter_credit.next_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
     },
-    "wc_event_in_progress": {
-        "name": "Event In Progress",
-        "data_source": "contract.winter_credit.value_state_event_in_progress",
+    "wc_critical_peak_in_progress": {
+        "name": "Critical peak in progress",
+        "data_source": "contract.winter_credit.current_peak_is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
@@ -265,7 +356,7 @@ BINARY_SENSORS = {
     },
     "wc_pre_heat": {
         "name": "Pre-heat In Progress",
-        "data_source": "contract.winter_credit.value_state_pre_heat",
+        "data_source": "contract.winter_credit.preheat_in_progress",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
@@ -273,55 +364,59 @@ BINARY_SENSORS = {
     },
     "wc_next_anchor_critical": {
         "name": "Next Anchor Period Critical",
-        "data_source": "contract.winter_credit.value_next_periods_anchor_critical",
+         # Est-ce que la période d'ancrage à venir est lié à une pointe critique"
+        "data_source": "contract.winter_credit.next_anchor.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
     },
     "wc_next_peak_critical": {
+        # == wc_critical
+        # Est-ce que la prochaine période de pointe est critique true/false
         "name": "Next Peak Period Critical",
-        "data_source": "contract.winter_credit.value_next_periods_peak_critical",
+        "data_source": "contract.winter_credit.next_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
     },
-    "wc_upcoming_critical_event": {
-        "name": "Upcoming Critical Event",
-        "data_source": "contract.winter_credit.value_state_upcoming_event",
+    "wc_upcoming_critical_peak": {
+        # True si au moins un peaks donnés par l'API d'hydroQuebec n'est pas encore terminé
+        "name": "Upcoming Critical Peak",
+        "data_source": "contract.winter_credit.is_any_critical_peak_coming",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
     },
-    "wc_upcoming_event_today_morning": {
-        "name": "Upcoming event today morning",
-        "data_source": "contract.winter_credit.value_state_morning_event_today",
+    "wc_critical_morning_peak_today": {
+        "name": "Critical Morning Peak Today",
+        "data_source": "contract.winter_credit.today_morning_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:message-flash",
         "sub_mqtt_topic": "wintercredits/state",
     },
-    "wc_upcoming_event_today_evening": {
-        "name": "Upcoming event today evening",
-        "data_source": "contract.winter_credit.value_state_evening_event_today",
+    "wc_critical_evening_peak_today": {
+        "name": "Critical Evening Peak Today",
+        "data_source": "contract.winter_credit.today_evening_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:message-flash",
         "sub_mqtt_topic": "wintercredits/state",
     },
-    "wc_upcoming_event_tomorrow_morning": {
-        "name": "Upcoming event tomorrow morning",
-        "data_source": "contract.winter_credit.value_state_morning_event_tomorrow",
+    "wc_critical_morning_peak_tomorrow": {
+        "name": "Critical Morning Peak tomorrow",
+        "data_source": "contract.winter_credit.tomorrow_morning_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:message-flash",
         "sub_mqtt_topic": "wintercredits/state",
     },
-    "wc_upcoming_event_tomorrow_evening": {
-        "name": "Upcoming event tomorrow evening",
-        "data_source": "contract.winter_credit.value_state_evening_event_tomorrow",
+    "wc_critical_evening_peak_tomorrow": {
+        "name": "Critical Evening Peak tomorrow",
+        "data_source": "contract.winter_credit.tomorrow_evening_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:message-flash",
