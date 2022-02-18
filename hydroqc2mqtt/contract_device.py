@@ -1,4 +1,5 @@
 import logging
+import datetime
 from typing import Dict
 
 from mqtt_hass_base.device import MqttDevice
@@ -28,7 +29,7 @@ class HydroqcContractDevice(MqttDevice):
         self._contract_id = str(config["contract"])
 
         # By default we load all sensors
-        self._sensor_list = SENSORS.keys()
+        self._sensor_list = SENSORS
         if "sensors" in self._config:
             # If sensors key is in the config file, we load only the ones listed there
             # Check if sensor exists
@@ -38,7 +39,7 @@ class HydroqcContractDevice(MqttDevice):
             self._sensor_list = self._config["sensors"]
 
         # By default we load all binary sensors
-        self._binary_sensor_list = BINARY_SENSORS.keys()
+        self._binary_sensor_list = BINARY_SENSORS
         if "binary_sensors" in self._config:
             # If binary_sensors key is in the config file, we load only the ones listed there
             # Check if sensor exists
@@ -141,13 +142,17 @@ class HydroqcContractDevice(MqttDevice):
             for index, el in enumerate(datasource[1:]):
                 if not hasattr(data_obj, el):
                     entity.send_not_available()
-                    self.logger.warning("The object %s doesn't have the attribute %s. Maybe your contract doesn't have this data ?", data_obj, el)
+                    self.logger.warning("%s - The object %s doesn't have the attribute %s. Maybe your contract doesn't have this data ?", sensor_key, data_obj, el)
                     break
                 data_obj = getattr(data_obj, el)
                 # If it's the last element of the datasource that means, it's the value
                 if index + 1 == len(datasource[1:]):
                     if sensor_type == "BINARY_SENSORS":
                         value = "ON" if data_obj else "OFF"
+                    elif isinstance(data_obj, datetime.datetime):
+                        value = data_obj.isoformat()
+                    elif (isinstance(data_obj, float) or isinstance(data_obj, int)) and sensor_list[sensor_key]["device_class"] == "monetary":
+                        value = round(data_obj, 2)
                     else:
                         value = data_obj
 
@@ -163,6 +168,7 @@ class HydroqcContractDevice(MqttDevice):
         self.logger.info("Updating ...")
         # TODO if any api calls failed, we should NOT crash and set sensors to not_available
         # Fetch latest data
+        self.logger.info("Fetching data...")
         await self._webuser.get_info()
         customer = self._webuser.get_customer(self._customer_id)
         account = customer.get_account(self._account_id)
@@ -170,6 +176,7 @@ class HydroqcContractDevice(MqttDevice):
         # fetch consumption and wintercredits
         await contract.get_periods_info()
         await contract.winter_credit.refresh_data()
+        self.logger.info("Data fetched")
 
         self._update_sensors(self._sensor_list, customer, account, contract, "SENSORS")
         self._update_sensors(self._binary_sensor_list, customer, account, contract, "BINARY_SENSORS")
