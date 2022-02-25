@@ -55,7 +55,7 @@ HQ2M_CONTRACTS_0_USERNAME='email@domain.tld'
 # Your HQ account password
 HQ2M_CONTRACTS_0_PASSWORD='Password'
 
-# Customer number (Numéro de facture) from your invoice.
+# Customer number (Numéro de client) from your invoice.
 # 10 digits, you may need to add a leading 0 to the value!!!
 # Ex: '987 654 321' will be '0987654321'
 HQ2M_CONTRACTS_0_CUSTOMER='0987654321'
