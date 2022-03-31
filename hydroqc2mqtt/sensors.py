@@ -1,3 +1,5 @@
+"""Sensor definition list."""
+
 SENSORS = {
     # Account
     "balance": {
@@ -81,17 +83,6 @@ SENSORS = {
     "current_billing_period_total_consumption": {
         "name": "Current billing period total consumption",
         "data_source": "contract.cp_total_consumption",
-        "device_class": "energy",
-        "expire_after": 0,
-        "force_update": False,
-        "icon": "mdi:home-lightning-bolt",
-        "state_class": "measurement",
-        "unit": "kWh",
-        "sub_mqtt_topic": "contract/state",
-    },
-    "current_billing_period_projected_total_consumption": {
-        "name": "Current billing period projected total consumption",
-        "data_source": "contract.cp_projected_total_consumption",
         "device_class": "energy",
         "expire_after": 0,
         "force_update": False,
@@ -364,7 +355,7 @@ BINARY_SENSORS = {
     },
     "wc_next_anchor_critical": {
         "name": "Next Anchor Period Critical",
-         # Est-ce que la période d'ancrage à venir est lié à une pointe critique"
+        # Est-ce que la période d'ancrage à venir est lié à une pointe critique"
         "data_source": "contract.winter_credit.next_anchor.is_critical",
         "expire_after": 0,
         "force_update": False,

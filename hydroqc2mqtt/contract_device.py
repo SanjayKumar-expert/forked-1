@@ -1,3 +1,4 @@
+"""Module defining HydroQC Contract."""
 import logging
 import datetime
 from typing import Dict
@@ -11,6 +12,8 @@ from hydroqc2mqtt.sensors import SENSORS, BINARY_SENSORS
 
 
 class HydroqcContractDevice(MqttDevice):
+    """HydroQC Contract class."""
+
     def __init__(self, name: str, logger: logging.Logger, config: Dict,
                  mqtt_discovery_root_topic=None, mqtt_data_root_topic=None):
         """Create a new MQTT Sensor Facebook object."""
@@ -108,6 +111,7 @@ class HydroqcContractDevice(MqttDevice):
         self.logger.info("added %s ...", self.name)
 
     async def _login(self):
+        """Login to HydroQC website."""
         self.logger.info("Login")
         try:
             return await self._webuser.login()
@@ -117,19 +121,21 @@ class HydroqcContractDevice(MqttDevice):
         return True
 
     async def init_session(self):
+        """Initialize session on HydroQC website."""
         if self._webuser.session_expired:
             return await self._login()
-        else:
-            try:
-                await self._webuser.refresh_session()
-                self.logger.info("Refreshing session")
-            except hydroqc.error.HydroQcHTTPError:
-                # Try to login if the refresh session didn't work
-                self.logger.info("Refreshing session failed, try to login")
-                return await self._login()
+
+        try:
+            await self._webuser.refresh_session()
+            self.logger.info("Refreshing session")
+        except hydroqc.error.HydroQcHTTPError:
+            # Try to login if the refresh session didn't work
+            self.logger.info("Refreshing session failed, try to login")
+            return await self._login()
         return True
 
-    def _update_sensors(self, sensor_list, customer, account, contract, sensor_type):
+    def _update_sensors(self, sensor_list, sensor_type):
+        """Fetch contract data and update contract attributes."""
         if sensor_type == "SENSORS":
             self.logger.debug("Updating sensors")
             sensor_config = SENSORS
@@ -150,19 +156,22 @@ class HydroqcContractDevice(MqttDevice):
             # of the object "winter_credit" which is an attribute of the object "contract"
             data_obj = locals()[datasource[0]]
             value = None
-            for index, el in enumerate(datasource[1:]):
-                if not hasattr(data_obj, el):
+            for index, ele in enumerate(datasource[1:]):
+                if not hasattr(data_obj, ele):
                     entity.send_not_available()
-                    self.logger.warning("%s - The object %s doesn't have the attribute %s. Maybe your contract doesn't have this data ?", sensor_key, data_obj, el)
+                    self.logger.warning("%s - The object %s doesn't have the attribute %s. "
+                                        "Maybe your contract doesn't have this data ?",
+                                        sensor_key, data_obj, ele)
                     break
-                data_obj = getattr(data_obj, el)
+                data_obj = getattr(data_obj, ele)
                 # If it's the last element of the datasource that means, it's the value
                 if index + 1 == len(datasource[1:]):
                     if sensor_type == "BINARY_SENSORS":
                         value = "ON" if data_obj else "OFF"
                     elif isinstance(data_obj, datetime.datetime):
                         value = data_obj.isoformat()
-                    elif (isinstance(data_obj, float) or isinstance(data_obj, int)) and sensor_list[sensor_key]["device_class"] == "monetary":
+                    elif isinstance(data_obj, (int, float)) and \
+                            sensor_list[sensor_key]["device_class"] == "monetary":
                         value = round(data_obj, 2)
                     else:
                         value = data_obj
@@ -189,10 +198,11 @@ class HydroqcContractDevice(MqttDevice):
         await contract.winter_credit.refresh_data()
         self.logger.info("Data fetched")
 
-        self._update_sensors(self._sensor_list, customer, account, contract, "SENSORS")
-        self._update_sensors(self._binary_sensor_list, customer, account, contract, "BINARY_SENSORS")
+        self._update_sensors(self._sensor_list, "SENSORS")
+        self._update_sensors(self._binary_sensor_list, "BINARY_SENSORS")
 
         self.logger.info("Updated %s ...", self.name)
 
     async def close(self):
+        """Close HydroQC web session."""
         await self._webuser.close_session()

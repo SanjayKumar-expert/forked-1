@@ -6,6 +6,7 @@ from hydroqc2mqtt.daemon import Hydroqc2Mqtt
 
 
 def _parse_cmd():
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
             prog="hydroqc2mqtt",
             description='hydroqc2mqtt daemon')
@@ -79,7 +80,6 @@ def _parse_cmd():
 def main():
     """Entrypoint function."""
     cmd_args = _parse_cmd()
-    #import ipdb;ipdb.set_trace()
 
     dev = Hydroqc2Mqtt(
         mqtt_host=cmd_args.mqtt_host,
