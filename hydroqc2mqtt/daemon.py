@@ -1,3 +1,4 @@
+"""Mqtt Daemon module."""
 import asyncio
 import time
 import sys
@@ -11,13 +12,15 @@ from hydroqc2mqtt.contract_device import HydroqcContractDevice
 
 
 MAIN_LOOP_WAIT_TIME = 300
-OVERRIDE_REGEX = re.compile("HQ2M_CONTRACTS_(\d*)_(USERNAME|PASSWORD|CUSTOMER|ACCOUNT|CONTRACT|NAME)")
+OVERRIDE_REGEX = re.compile(r"HQ2M_CONTRACTS_(\d*)_"
+                            "(USERNAME|PASSWORD|CUSTOMER|ACCOUNT|CONTRACT|NAME)")
 
 
 class Hydroqc2Mqtt(MqttClientDaemon):
     """MQTT Sensor Feed."""
 
-    def __init__(self, mqtt_host, mqtt_port, mqtt_username, mqtt_password,
+    def __init__(self, mqtt_host, mqtt_port, mqtt_username,  # pylint: disable=too-many-arguments
+                 mqtt_password,
                  mqtt_discovery_root_topic, mqtt_data_root_topic,
                  config_file, run_once, log_level,
                  hq_username, hq_password, hq_name,
@@ -58,7 +61,8 @@ class Hydroqc2Mqtt(MqttClientDaemon):
             match_res = OVERRIDE_REGEX.match(env_var)
             if match_res and len(match_res.groups()) == 2:
                 index = int(match_res.group(1))
-                kind = match_res.group(2).lower()  # username|password|customer|account|contract|name
+                # username|password|customer|account|contract|name
+                kind = match_res.group(2).lower()
                 # TODO improve me
                 try:
                     # Check if the contracts is set in the config file
