@@ -37,6 +37,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         self._hq_account_id = hq_account_id
         self._hq_contract_id = hq_contract_id
         self._connected = False
+        self.config = {}
 
         MqttClientDaemon.__init__(
             self, "hydroqc2mqtt",
@@ -49,8 +50,9 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         if self.config_file is None:
             self.config_file = os.environ.get("CONFIG_YAML", "config.yaml")
 
-        with open(self.config_file, "rb") as fhc:
-            self.config = yaml.safe_load(fhc)
+        if os.path.exists(self.config_file):
+            with open(self.config_file, "rb") as fhc:
+                self.config = yaml.safe_load(fhc)
 
         # Override hydroquebec settings from env var if exists over config file
         self.config.setdefault("contracts", [])
@@ -126,6 +128,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
             await contract.update()
 
         if self._run_once:
+            self.must_run = False
             return
 
         i = 0

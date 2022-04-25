@@ -1,0 +1,38 @@
+{
+  "availability_topic": "hydroqc/home/account/state/sensor/balance/availability",
+  "device": {
+    "name": "hydroqc_home",
+    "connections": [
+      [
+        "customer",
+        "1111111111"
+      ],
+      [
+        "account",
+        "333333333333"
+      ],
+      [
+        "contract",
+        "4444444444"
+      ]
+    ],
+    "identifiers": [
+      "4444444444"
+    ],
+    "manufacturer": "hydroqc",
+    "sw_version": "0.3.0"
+  },
+  "expire_after": 0,
+  "force_update": false,
+  "json_attributes_topic": "hydroqc/home/account/state/sensor/balance/attributes",
+  "name": "Balance",
+  "payload_available": "online",
+  "payload_not_available": "offline",
+  "qos": 0,
+  "state_topic": "hydroqc/home/account/state/sensor/balance/state",
+  "unique_id": "4444444444-Balance",
+  "device_class": "monetary",
+  "icon": "mdi:currency-usd",
+  "unit_of_measurement": "$",
+  "object_id": "hydroqc_home_Balance"
+}
