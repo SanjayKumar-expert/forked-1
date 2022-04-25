@@ -134,7 +134,8 @@ class HydroqcContractDevice(MqttDevice):
             return await self._login()
         return True
 
-    def _update_sensors(self, sensor_list, sensor_type):
+    def _update_sensors(self, sensor_list, sensor_type,
+                        customer, account, contract):  # pylint: disable=unused-argument
         """Fetch contract data and update contract attributes."""
         if sensor_type == "SENSORS":
             self.logger.debug("Updating sensors")
@@ -198,8 +199,10 @@ class HydroqcContractDevice(MqttDevice):
         await contract.winter_credit.refresh_data()
         self.logger.info("Data fetched")
 
-        self._update_sensors(self._sensor_list, "SENSORS")
-        self._update_sensors(self._binary_sensor_list, "BINARY_SENSORS")
+        self._update_sensors(self._sensor_list, "SENSORS",
+                             customer, account, contract)
+        self._update_sensors(self._binary_sensor_list, "BINARY_SENSORS",
+                             customer, account, contract)
 
         self.logger.info("Updated %s ...", self.name)
 

@@ -13,40 +13,88 @@ include:
 - template: Security/SAST.gitlab-ci.yml
 
 test:
-  image: python:3.9-bullseye
   stage: test
-  before_script:
-    - pip install -r requirements.txt
-    - pip install -r test_requirements.txt
+  services:
+    - name: eclipse-mosquitto:2.0.11
+      alias: mqtt
+      entrypoint: 
+        - "/bin/sh"
+      command:
+        - -c
+        - cp mosquitto-no-auth.conf /mosquitto/config/mosquitto.conf && cat /mosquitto/config/mosquitto.conf && /docker-entrypoint.sh mosquitto -c /mosquitto/config/mosquitto.conf
+  tags:
+  - hydroqc
+  image: python:3.9-bullseye
+  variables:
+    MQTT_HOST: mqtt
+    MQTT_PORT: 1883
   script:
-    - python setup.py install
-    - hydroqc2mqtt --help
-    - pylint --rcfile=.pylintrc hydroqc2mqtt
-    - flake8 hydroqc2mqtt --max-line-length 100
-    - pydocstyle hydroqc2mqtt
-  except:
-    - tags
+    - pip install tox
+    - tox
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+      junit: tests_result_junit.xml
+    paths:
+      - htmlcov
+      - coverage.xml
+      - tests_result_junit.xml
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - when: on_success
 
-docker:
+docker_branch:
+  stage: docker
+  tags:
+  - hydroqc
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - export CI_COMMIT_SHORT_SHA=$(echo $CI_COMMIT_SHA | cut -c1-7)
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:${CI_COMMIT_REF_NAME}
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+      when: never
+    - when: on_success
+
+docker:
   stage: docker
+  tags:
+  - hydroqc
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
   script:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - export CI_COMMIT_SHORT_SHA=$(echo $CI_COMMIT_SHA | cut -c1-7)
     - echo /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
     #- /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:main
-  only:
-  - main
-
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+      when: on_success
+    - when: never
 
 docker_tag:
+  stage: docker
+  tags:
+  - hydroqc
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
-  stage: docker
   script:
     - CURRENT_VERSION=$(grep VERSION hydroqc2mqtt/__version__.py | sed 's/.*VERSION = "\([^"]*\)"/\1/')
     - |
@@ -57,5 +105,8 @@ docker_tag:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest
-  only:
-  - tags
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: on_success
+    - when: never
+

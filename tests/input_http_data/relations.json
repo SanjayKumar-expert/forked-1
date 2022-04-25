@@ -1,0 +1,29 @@
+[
+  {
+    "noPartenaireDemandeur": "0000000000",
+    "nom1Demandeur": "NAMED1",
+    "nom2Demandeur": "NAMED2",
+    "noPartenaireTitulaire": "1111111111",
+    "nom1Titulaire": "NAMET1",
+    "nom2Titulaire": "NAMET2",
+    "typeRelation": "",
+    "indEcActif": true,
+    "indFavori": false,
+    "nickname": ""
+  },
+  {
+    "noPartenaireDemandeur": "0000000000",
+    "nom1Demandeur": "NAMED1",
+    "nom2Demandeur": "NAMED2",
+    "noPartenaireTitulaire": "1111111111",
+    "nom1Titulaire": "NAMET1",
+    "nom2Titulaire": "NAMET2",
+    "typeRelation": "BUR003",
+    "indEcActif": true,
+    "indFavori": false,
+    "nickname": "",
+    "actif": true,
+    "dateDebutRelation": "2016-04-19",
+    "dateFinRelation": "9999-12-31"
+  }
+]
