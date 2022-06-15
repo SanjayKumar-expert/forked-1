@@ -5,9 +5,6 @@ RUN apt update && \
 
 WORKDIR /usr/src/app
 
-COPY requirements.txt ./
-RUN pip install -r requirements.txt --force-reinstall --no-cache-dir
-
 COPY ./docker/entrypoint.sh .
 COPY ./config.sample.yaml /etc/hydroqc2mqtt/config.yaml
 

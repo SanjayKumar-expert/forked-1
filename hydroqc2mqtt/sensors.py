@@ -1,6 +1,43 @@
 """Sensor definition list."""
+from typing import Dict, Union, TypedDict
 
-SENSORS = {
+# TODO: python 3.11 => uncomment Required
+# from typing_extensions import Required
+
+
+# TODO: python 3.11 => uncomment Required
+class SensorType(TypedDict, total=False):
+    """Sensor entity settings dict format."""
+
+    name: str
+    data_source: str
+    device_class: Union[str, None]
+    expire_after: int
+    force_update: bool
+    # device_class: Required[Union[str, None]]
+    # expire_after: Required[int]
+    # force_update: Required[bool]
+    icon: Union[str, None]
+    state_class: Union[str, None]
+    unit: Union[str, None]
+    sub_mqtt_topic: str
+    object_id: str
+
+
+class BinarySensorType(TypedDict, total=False):
+    """Binary sensor entity settings dict format."""
+
+    name: str
+    data_source: str
+    device_class: Union[str, None]
+    expire_after: int
+    force_update: bool
+    icon: str
+    sub_mqtt_topic: str
+    object_id: str
+
+
+SENSORS: Dict[str, SensorType] = {
     # Account
     "balance": {
         "name": "Balance",
@@ -316,12 +353,11 @@ SENSORS = {
         "sub_mqtt_topic": "wintercredits/yesterday",
     },
 }
-BINARY_SENSORS = {
+BINARY_SENSORS: Dict[str, BinarySensorType] = {
     # Contracts
     "current_period_epp_enabled": {
         "name": "Current period epp enabled",
         "data_source": "contract.cp_epp_enabled",
-        "device_class": None,
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:code-equal",
@@ -412,5 +448,5 @@ BINARY_SENSORS = {
         "force_update": False,
         "icon": "mdi:message-flash",
         "sub_mqtt_topic": "wintercredits/state",
-    }
+    },
 }
