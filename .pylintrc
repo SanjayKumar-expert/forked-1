@@ -17,6 +17,16 @@ persistent=yes
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
 load-plugins=
+    pylint.extensions.check_elif,
+    pylint.extensions.bad_builtin,
+    pylint.extensions.docparams,
+    pylint.extensions.for_any_all,
+    pylint.extensions.set_membership,
+    pylint.extensions.code_style,
+    pylint.extensions.overlapping_exceptions,
+    pylint.extensions.typing,
+    pylint.extensions.redefined_variable_type,
+    pylint.extensions.comparison_placement,
 
 [MESSAGES CONTROL]
 
@@ -35,14 +45,13 @@ load-plugins=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 
-# C1001 : *Old-style class defined.*. Reenable when cPickle is dropped
 # I0011 : *Locally disabling %s (%s)* Try to reduce that.
 # W0511 : *FIXME or XXX is detected.* Reenable when done. To link with roadmap
 # W0212 : *Access to a protected member %s of a client class*. Reenable when _id replace by uuid
 # W0201 : *Attribute %r defined outside __init__*. Because we instanciate object with properties dict
-# C0330 : *Wrong %s indentation%s%s.* Conflict with pep8
 # E0203 : *Access to member %r before its definition line %s*. Because we instanciate object with properties dict
-disable=C1001,W0201,W0212,I0011,W0511,C0330,E0203
+# R0801 : duplicate-code
+disable=W0201,W0212,I0011,W0511,E0203,R0801
 
 
 [REPORTS]
@@ -51,11 +60,6 @@ disable=C1001,W0201,W0212,I0011,W0511,C0330,E0203
 # (visual studio) and html. You can also give a reporter class, eg
 # mypackage.mymodule.MyReporterClass.
 output-format=text
-
-# Put messages in a separate file for each module / package specified on the
-# command line instead of printing them on stdout. Reports (if any) will be
-# written in a file name "pylint_global.[txt|html]".
-files-output=no
 
 # Tells whether to display a full report or only the messages
 reports=no
@@ -96,65 +100,24 @@ include-naming-hint=no
 # Regular expression matching correct function names
 function-rgx=[a-z_][a-z0-9_]{2,40}$
 
-# Naming hint for function names
-function-name-hint=[a-z_][a-z0-9_]{2,40}$
-
 # Regular expression matching correct variable names
 variable-rgx=[a-z_][a-z0-9_]{2,30}$
-
-# Naming hint for variable names
-variable-name-hint=[a-z_][a-z0-9_]{2,30}$
 
 # Regular expression matching correct constant names
 const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
 
-# Naming hint for constant names
-const-name-hint=(([A-Z_][A-Z0-9_]*)|(__.*__))$
-
 # Regular expression matching correct attribute names
 attr-rgx=[a-z_][a-z0-9_]{2,40}$
-
-# Naming hint for attribute names
-attr-name-hint=[a-z_][a-z0-9_]{2,40}$
 
 # Regular expression matching correct argument names
 argument-rgx=[a-z_][a-z0-9_]{2,30}$
 
-# Naming hint for argument names
-argument-name-hint=[a-z_][a-z0-9_]{2,30}$
-
 # Regular expression matching correct class attribute names
 class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
-
-# Naming hint for class attribute names
-class-attribute-name-hint=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
 
 # Regular expression matching correct inline iteration names
 inlinevar-rgx=[A-Za-z_][A-Za-z0-9_]*$
 
-# Naming hint for inline iteration names
-inlinevar-name-hint=[A-Za-z_][A-Za-z0-9_]*$
-
-# Regular expression matching correct class names
-class-rgx=[A-Z_][a-zA-Z0-9]+$
-
-# Naming hint for class names
-class-name-hint=[A-Z_][a-zA-Z0-9]+$
-
-# Regular expression matching correct module names
-module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
-
-# Naming hint for module names
-module-name-hint=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
-
-# Regular expression matching correct method names
-method-rgx=[a-z_][a-z0-9_]{2,45}$
-
-# Naming hint for method names
-method-name-hint=[a-z_][a-z0-9_]{2,45}$
-
-# Regular expression which should only match function or class names that do
-# not require a docstring.
 no-docstring-rgx=__.*__
 
 # Minimum line length for functions/classes that require docstrings, shorter
@@ -237,9 +200,6 @@ ignore-long-lines=^\s*(# )?<?https?://\S+>?$
 # else.
 single-line-if-stmt=no
 
-# List of optional constructs for which whitespace checking is disabled
-no-space-check=trailing-comma,dict-separator
-
 # Maximum number of lines in a module
 max-module-lines=1500
 
@@ -263,20 +223,20 @@ valid-metaclass-classmethod-first-arg=mcs
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=11
+max-args=15
 
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore
 ignored-argument-names=_.*
 
 # Maximum number of locals for function / method body
-max-locals=26
+max-locals=25
 
 # Maximum number of return / yield for function / method body
 max-returns=10
 
 # Maximum number of branch for function / method body
-max-branches=22
+max-branches=20
 
 # Maximum number of statements in function / method body
 max-statements=80

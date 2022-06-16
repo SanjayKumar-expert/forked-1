@@ -1,29 +1,29 @@
 """Base tests for hydroqc2mqtt."""
-import os
 import base64
 import json
+import os
 import re
 import sys
 import time
+from typing import Any, Union
 
-from aioresponses import aioresponses
 import paho.mqtt.client as mqtt
+from aioresponses import aioresponses
 from hydroqc.hydro_api.consts import (
     AUTH_URL,
-    SECURITY_URL,
-    LOGIN_URL_6,
-    SESSION_URL,
-    PORTRAIT_URL,
-    PERIOD_DATA_URL,
-    CUSTOMER_INFO_URL,
-    RELATION_URL,
-    SESSION_REFRESH_URL,
     AUTHORIZE_URL,
+    CUSTOMER_INFO_URL,
     GET_WINTER_CREDIT_API_URL,
+    LOGIN_URL_6,
+    PERIOD_DATA_URL,
+    PORTRAIT_URL,
+    RELATION_URL,
+    SECURITY_URL,
+    SESSION_REFRESH_URL,
+    SESSION_URL,
 )
 
 from hydroqc2mqtt.__main__ import main
-
 
 CONTRACT_ID = os.environ["HQ2M_CONTRACTS_0_CONTRACT"]
 MQTT_USERNAME = os.environ.get("MQTT_USERNAME", None)
@@ -36,7 +36,7 @@ MQTT_DISCOVERY_ROOT_TOPIC = os.environ.get(
 MQTT_DATA_ROOT_TOPIC = os.environ.get("MQTT_DATA_ROOT_TOPIC", "homeassistant")
 
 
-def test_base():  # pylint: disable=too-many-locals
+def test_base() -> None:  # pylint: disable=too-many-locals
     """Base test for hydroqc2mqtt."""
     # Prepare MQTT Client
     client = mqtt.Client("hydroqc-test")
@@ -50,24 +50,33 @@ def test_base():  # pylint: disable=too-many-locals
             with open(filepath, "rb") as fht:
                 expected_results[key] = fht.read().strip()
 
-    def on_connect(client, userdata, flags, rc_):  # pylint: disable=unused-argument
+    def on_connect(
+        client: mqtt.Client,
+        userdata: Union[dict[str, Any], None],  # pylint: disable=unused-argument
+        flags: dict[str, Any],  # pylint: disable=unused-argument
+        rc_: int,  # pylint: disable=unused-argument
+    ) -> None:  # pylint: disable=unused-argument
         for topic in expected_results:
             client.subscribe(topic)
 
     collected_results = {}
 
-    def on_message(client, userdata, msg):  # pylint: disable=unused-argument
+    def on_message(
+        client: mqtt.Client,  # pylint: disable=unused-argument
+        userdata: Union[dict[str, Any]],  # pylint: disable=unused-argument
+        msg: mqtt.MQTTMessage,
+    ) -> None:
         collected_results[msg.topic] = msg.payload
 
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect_async(MQTT_HOST, MQTT_PORT, keepalive=60)
-    client.loop_start()
+    client.loop_start()  # type: ignore[no-untyped-call]
 
     time.sleep(1)
 
     # Prepare http mocking
-    with aioresponses() as mres:
+    with aioresponses() as mres:  # type: ignore[no-untyped-call]
         # LOGIN
         mres.post(
             AUTH_URL,

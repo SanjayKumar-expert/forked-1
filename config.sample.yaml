@@ -10,12 +10,12 @@ contracts:
   - name: maison # This will be used as the device name in HA and in the topic structure in MQTT
     username: USERNAME
     password: PASSWORD
-    
+
     # Customer number (Numéro de facture) from your invoice. 10 digits
     # 10 digits, you may need to add a leading 0 to the value!!!
     # Ex: "987 654 321" will be "0987654321"
     customer: "customer_id"
-    
+
     # Account Number (Numéro de compte) from your invoice
     account: "account_id"
 
@@ -25,7 +25,7 @@ contracts:
     contract: "contract_id"
 
 
-    # By default all sensors will be returned, including the one that are added in the future. 
+    # By default all sensors will be returned, including the one that are added in the future.
     # If you uncomment some of the sensors below, only the uncommented will be generated
     # This will configure sensors available in home assistant
     # Sensors starting with wc_ are related to wintercredits.

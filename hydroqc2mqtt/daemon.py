@@ -1,29 +1,28 @@
 """Mqtt Daemon module."""
 import asyncio
-import time
-import sys
 import os
 import re
+import sys
+import time
 from types import FrameType
-from typing import Any, Dict, Optional, List, TypedDict
+from typing import Any, Optional, TypedDict
+
+import paho.mqtt.client as mqtt
+import yaml
+from mqtt_hass_base.daemon import MqttClientDaemon
+
+from hydroqc2mqtt.contract_device import (
+    HydroqcContractConfigType,
+    HydroqcContractDevice,
+)
 
 # TODO: python 3.11 => uncomment NotRequired
 # from typing_extensions import NotRequired
 
-import paho.mqtt.client as mqtt
-
-import yaml
-
-from mqtt_hass_base.daemon import MqttClientDaemon
-from hydroqc2mqtt.contract_device import (
-    HydroqcContractDevice,
-    HydroqcContractConfigType,
-)
-
 
 MAIN_LOOP_WAIT_TIME = 300
 OVERRIDE_REGEX = re.compile(
-    r"HQ2M_CONTRACTS_(\d*)_" "(USERNAME|PASSWORD|CUSTOMER|ACCOUNT|CONTRACT|NAME)"
+    r"HQ2M_CONTRACTS_(\d*)_(USERNAME|PASSWORD|CUSTOMER|ACCOUNT|CONTRACT|NAME)"
 )
 
 
@@ -35,7 +34,7 @@ class ConfigType(TypedDict, total=False):
     # unregister_on_stop: notrequired[bool]
     sync_frequency: int
     unregister_on_stop: bool
-    contracts: List[HydroqcContractConfigType]
+    contracts: list[HydroqcContractConfigType]
 
 
 class Hydroqc2Mqtt(MqttClientDaemon):
@@ -60,7 +59,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         hq_contract_id: str,
     ):  # pylint: disable=too-many-arguments
         """Create a new MQTT Hydroqc Sensor object."""
-        self.contracts: List[HydroqcContractDevice] = []
+        self.contracts: list[HydroqcContractDevice] = []
         self.config_file = config_file
         self._run_once = run_once
         self._hq_username = hq_username
@@ -95,7 +94,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         self.config.setdefault("contracts", [])
 
         # Override hydroquebec settings from env var if exists over config file
-        config: Dict[str, Any] = {}
+        config: dict[str, Any] = {}
         config["contracts"] = self.config["contracts"]
         # if config["contracts"] is None:
         #    config["contracts"] = []
@@ -198,7 +197,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
     def _on_disconnect(
         self,
         client: mqtt.Client,
-        userdata: Optional[Dict[str, Any]],
+        userdata: Optional[dict[str, Any]],
         rc: int,  # pylint: disable=invalid-name
     ) -> None:
         """MQTT on disconnect callback."""
