@@ -1,0 +1,55 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "branchPrefix": "renovate-",
+  "pre-commit": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchManagers": ["pip-compile", "pip_requirements", "pip_setup", "pipenv", "poetry", "pyenv", "setup-cfg"],
+      "matchFiles": ["test_requirements.txt"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "pinDigest", "digest", "lockFileMaintenance", "rollback", "bump"],
+      "groupName": "Python devDependencies - non-major",
+      "groupSlug": "python-devdeps-nonmajor",
+      "automerge": true
+    },
+    {
+      "matchManagers": ["pip-compile", "pip_requirements", "pip_setup", "pipenv", "poetry", "pyenv", "setup-cfg"],
+      "matchFiles": ["test_requirements.txt"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Python devDependencies - major",
+      "groupSlug": "python-devdeps-major",
+      "automerge": false
+    },
+    {
+      "matchManagers": ["pip-compile", "pip_requirements", "pip_setup", "pipenv", "poetry", "pyenv", "setup-cfg"],
+      "matchFiles": ["setup.cfg"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "pinDigest", "digest", "lockFileMaintenance", "rollback", "bump"],
+      "groupName": "Python dependencies - non-major",
+      "groupSlug": "python-deps-nonmajor",
+      "automerge": true
+    },
+    {
+      "matchManagers": ["pip-compile", "pip_requirements", "pip_setup", "pipenv", "poetry", "pyenv", "setup-cfg"],
+      "matchFiles": ["setup.cfg"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Python dependencies - major",
+      "groupSlug": "python-deps-major",
+      "automerge": false
+    },
+    {
+      "matchManagers": ["pre-commit"],
+      "matchUpdateTypes": ["minor", "patch", "pin", "pinDigest", "digest", "lockFileMaintenance", "rollback", "bump"],
+      "groupName": "Pre-commit Dependencies - non-major",
+      "groupSlug": "precommit-deps-nonmajor",
+      "automerge": true
+    },
+    {
+      "matchManagers": ["pre-commit"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Pre-commit Dependencies - major",
+      "groupSlug": "precommit-deps-major",
+      "automerge": false
+    }
+  ]
+}
