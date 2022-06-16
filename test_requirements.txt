@@ -4,7 +4,7 @@ pylint==2.14.2
 pytest==7.1.2
 pytest-cov==3.0.0
 pytest-asyncio==0.18.3
-pytest-timeout==1.4.2
+pytest-timeout==2.1.0
 aioresponses==0.7.3
 black==22.3.0
 mypy==0.961
@@ -13,5 +13,5 @@ types-PyYAML==6.0.8
 #sphinx-rtd-theme==0.4.3
 #tox==3.9.0
 paho-mqtt-stubs==0.1.0
-homeassistant-stubs==2021.12.10
+homeassistant-stubs==2022.6.6
 lxml==4.9.0
