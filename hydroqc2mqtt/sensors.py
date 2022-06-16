@@ -1,5 +1,5 @@
 """Sensor definition list."""
-from typing import Dict, Union, TypedDict
+from typing import TypedDict, Union
 
 # TODO: python 3.11 => uncomment Required
 # from typing_extensions import Required
@@ -37,7 +37,9 @@ class BinarySensorType(TypedDict, total=False):
     object_id: str
 
 
-SENSORS: Dict[str, SensorType] = {
+SENSORS: dict[
+    str, SensorType
+] = {  # pylint: disable=consider-using-namedtuple-or-dataclass
     # Account
     "balance": {
         "name": "Balance",
@@ -353,7 +355,9 @@ SENSORS: Dict[str, SensorType] = {
         "sub_mqtt_topic": "wintercredits/yesterday",
     },
 }
-BINARY_SENSORS: Dict[str, BinarySensorType] = {
+BINARY_SENSORS: dict[
+    str, BinarySensorType
+] = {  # pylint: disable=consider-using-namedtuple-or-dataclass
     # Contracts
     "current_period_epp_enabled": {
         "name": "Current period epp enabled",

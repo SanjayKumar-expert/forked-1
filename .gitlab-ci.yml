@@ -17,7 +17,7 @@ test:
   services:
     - name: eclipse-mosquitto:2.0.11
       alias: mqtt
-      entrypoint: 
+      entrypoint:
         - "/bin/sh"
       command:
         - -c
@@ -109,4 +109,3 @@ docker_tag:
     - if: '$CI_COMMIT_TAG'
       when: on_success
     - when: never
-

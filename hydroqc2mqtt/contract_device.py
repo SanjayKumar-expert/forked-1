@@ -1,18 +1,18 @@
 """Module defining HydroQC Contract."""
-import logging
 import datetime
-from typing import Dict, cast, List, Union, TypedDict
+import logging
+from typing import TypedDict, Union, cast
+
+import hydroqc
+from hydroqc.webuser import WebUser
+from mqtt_hass_base.device import MqttDevice
+from mqtt_hass_base.entity import BinarySensorSettingsType, SensorSettingsType
+
+from hydroqc2mqtt.__version__ import VERSION
+from hydroqc2mqtt.sensors import BINARY_SENSORS, SENSORS, BinarySensorType, SensorType
 
 # TODO: python 3.11 => uncomment NotRequired
 # from typing_extensions import NotRequired
-
-from mqtt_hass_base.device import MqttDevice
-from mqtt_hass_base.entity import BinarySensorSettingsType, SensorSettingsType
-from hydroqc.webuser import WebUser
-import hydroqc
-
-from hydroqc2mqtt.__version__ import VERSION
-from hydroqc2mqtt.sensors import SENSORS, BINARY_SENSORS, SensorType, BinarySensorType
 
 
 # TODO: python 3.11 => remove total and uncomment NotRequired
@@ -28,13 +28,13 @@ class HydroqcContractConfigType(TypedDict, total=False):
     verify_ssl: bool
     log_level: str
     http_log_level: str
-    sensors: List[str]
-    binary_sensors: List[str]
+    sensors: list[str]
+    binary_sensors: list[str]
     # verify_ssl: NotRequired[bool]
     # log_level: NotRequired[str]
     # http_log_level: NotRequired[str]
-    # sensors: NotRequired[List[str]]
-    # binary_sensors: NotRequired[List[str]]
+    # sensors: NotRequired[list[str]]
+    # binary_sensors: NotRequired[list[str]]
 
 
 class HydroqcContractDevice(MqttDevice):
@@ -173,14 +173,14 @@ class HydroqcContractDevice(MqttDevice):
 
     def _update_sensors(
         self,
-        sensor_list: Union[Dict[str, SensorType], Dict[str, BinarySensorType]],
+        sensor_list: Union[dict[str, SensorType], dict[str, BinarySensorType]],
         sensor_type: str,
         customer: hydroqc.customer.Customer,  # pylint: disable=unused-argument
         account: hydroqc.account.Account,  # pylint: disable=unused-argument
         contract: hydroqc.contract.Contract,  # pylint: disable=unused-argument
     ) -> None:
         """Fetch contract data and update contract attributes."""
-        sensor_config: Union[Dict[str, SensorType], Dict[str, BinarySensorType]]
+        sensor_config: Union[dict[str, SensorType], dict[str, BinarySensorType]]
         if sensor_type == "SENSORS":
             self.logger.debug("Updating sensors")
             sensor_config = SENSORS
