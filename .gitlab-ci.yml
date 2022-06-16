@@ -15,7 +15,7 @@ include:
 test:
   stage: test
   services:
-    - name: eclipse-mosquitto:2.0.11
+    - name: eclipse-mosquitto:2.0.14
       alias: mqtt
       entrypoint:
         - "/bin/sh"
