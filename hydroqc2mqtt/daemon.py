@@ -5,7 +5,7 @@ import re
 import sys
 import time
 from types import FrameType
-from typing import Any, Optional, TypedDict
+from typing import Any, TypedDict
 
 import paho.mqtt.client as mqtt
 import yaml
@@ -182,7 +182,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
     def _on_connect(
         self,
         client: mqtt.Client,
-        userdata: Optional[dict[str, Any]],
+        userdata: dict[str, Any] | None,
         flags: dict[str, Any],
         rc: int,
     ) -> None:
@@ -197,20 +197,20 @@ class Hydroqc2Mqtt(MqttClientDaemon):
     def _on_disconnect(
         self,
         client: mqtt.Client,
-        userdata: Optional[dict[str, Any]],
+        userdata: dict[str, Any] | None,
         rc: int,  # pylint: disable=invalid-name
     ) -> None:
         """MQTT on disconnect callback."""
 
     def _on_publish(
-        self, client: mqtt.Client, userdata: Optional[dict[str, Any]], mid: int
+        self, client: mqtt.Client, userdata: dict[str, Any] | None, mid: int
     ) -> None:
         """MQTT on publish callback."""
 
     def _mqtt_subscribe(
         self,
         client: mqtt.Client,
-        userdata: Optional[dict[str, Any]],
+        userdata: dict[str, Any] | None,
         flags: dict[str, Any],
         rc: int,
     ) -> None:
@@ -225,7 +225,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
     def _on_message(
         self,
         client: mqtt.Client,
-        userdata: Optional[dict[str, Any]],
+        userdata: dict[str, Any] | None,
         msg: mqtt.MQTTMessage,
     ) -> None:
         """Do nothing."""

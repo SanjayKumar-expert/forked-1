@@ -1,7 +1,7 @@
-FROM python:3.9-slim-bullseye
+FROM debian:testing-20220527-slim
 
 RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive apt install -y gcc musl-dev
+    DEBIAN_FRONTEND=noninteractive apt install --no-install-recommends -y gcc musl-dev python3.10 python3.10-dev python3-venv python3-pip build-essential
 
 WORKDIR /usr/src/app
 
@@ -12,7 +12,7 @@ COPY . .
 
 RUN ["chmod", "+x", "./entrypoint.sh"]
 
-RUN python setup.py install
+RUN python3 setup.py install
 
 RUN apt-get clean && rm -rf /tmp/setup /var/lib/apt/lists/* /tmp/* /var/tmp/*
 

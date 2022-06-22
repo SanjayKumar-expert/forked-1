@@ -5,7 +5,7 @@ import os
 import re
 import sys
 import time
-from typing import Any, Union
+from typing import Any
 
 import paho.mqtt.client as mqtt
 from aioresponses import aioresponses
@@ -52,7 +52,7 @@ def test_base() -> None:  # pylint: disable=too-many-locals
 
     def on_connect(
         client: mqtt.Client,
-        userdata: Union[dict[str, Any], None],  # pylint: disable=unused-argument
+        userdata: dict[str, Any] | None,  # pylint: disable=unused-argument
         flags: dict[str, Any],  # pylint: disable=unused-argument
         rc_: int,  # pylint: disable=unused-argument
     ) -> None:  # pylint: disable=unused-argument
@@ -63,7 +63,7 @@ def test_base() -> None:  # pylint: disable=too-many-locals
 
     def on_message(
         client: mqtt.Client,  # pylint: disable=unused-argument
-        userdata: Union[dict[str, Any]],  # pylint: disable=unused-argument
+        userdata: dict[str, Any] | None,  # pylint: disable=unused-argument
         msg: mqtt.MQTTMessage,
     ) -> None:
         collected_results[msg.topic] = msg.payload
