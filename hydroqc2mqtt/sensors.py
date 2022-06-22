@@ -1,5 +1,5 @@
 """Sensor definition list."""
-from typing import TypedDict, Union
+from typing import TypedDict
 
 # TODO: python 3.11 => uncomment Required
 # from typing_extensions import Required
@@ -11,15 +11,15 @@ class SensorType(TypedDict, total=False):
 
     name: str
     data_source: str
-    device_class: Union[str, None]
+    device_class: str | None
     expire_after: int
     force_update: bool
-    # device_class: Required[Union[str, None]]
+    # device_class: Required[str | None]
     # expire_after: Required[int]
     # force_update: Required[bool]
-    icon: Union[str, None]
-    state_class: Union[str, None]
-    unit: Union[str, None]
+    icon: str | None
+    state_class: str | None
+    unit: str | None
     sub_mqtt_topic: str
     object_id: str
 
@@ -29,7 +29,7 @@ class BinarySensorType(TypedDict, total=False):
 
     name: str
     data_source: str
-    device_class: Union[str, None]
+    device_class: str | None
     expire_after: int
     force_update: bool
     icon: str

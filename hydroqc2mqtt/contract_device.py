@@ -1,7 +1,7 @@
 """Module defining HydroQC Contract."""
 import datetime
 import logging
-from typing import TypedDict, Union, cast
+from typing import TypedDict, cast
 
 import hydroqc
 from hydroqc.webuser import WebUser
@@ -173,14 +173,14 @@ class HydroqcContractDevice(MqttDevice):
 
     def _update_sensors(
         self,
-        sensor_list: Union[dict[str, SensorType], dict[str, BinarySensorType]],
+        sensor_list: dict[str, SensorType] | dict[str, BinarySensorType],
         sensor_type: str,
         customer: hydroqc.customer.Customer,  # pylint: disable=unused-argument
         account: hydroqc.account.Account,  # pylint: disable=unused-argument
         contract: hydroqc.contract.Contract,  # pylint: disable=unused-argument
     ) -> None:
         """Fetch contract data and update contract attributes."""
-        sensor_config: Union[dict[str, SensorType], dict[str, BinarySensorType]]
+        sensor_config: dict[str, SensorType] | dict[str, BinarySensorType]
         if sensor_type == "SENSORS":
             self.logger.debug("Updating sensors")
             sensor_config = SENSORS
