@@ -2,11 +2,11 @@
   "availability_topic": "hydroqc/home/account/state/sensor/balance/availability",
   "device": {
     "name": "hydroqc_home",
-    "connections": {
-        "customer": "1111111111",
-        "account": "333333333333",
-        "contract": "4444444444"
-    },
+    "connections": [
+        ["customer", "1111111111"],
+        ["account", "333333333333"],
+        ["contract", "4444444444"]
+    ],
     "identifiers": [
       "4444444444"
     ],
@@ -20,6 +20,7 @@
   "payload_available": "online",
   "payload_not_available": "offline",
   "qos": 0,
+  "state_class": "measurement",
   "state_topic": "hydroqc/home/account/state/sensor/balance/state",
   "unique_id": "4444444444-Balance",
   "device_class": "monetary",
