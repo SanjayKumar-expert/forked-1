@@ -24,6 +24,7 @@ from hydroqc.hydro_api.consts import (
 )
 
 from hydroqc2mqtt.__main__ import main
+from hydroqc2mqtt.__version__ import VERSION
 
 CONTRACT_ID = os.environ["HQ2M_CONTRACTS_0_CONTRACT"]
 MQTT_USERNAME = os.environ.get("MQTT_USERNAME", None)
@@ -187,10 +188,12 @@ def test_base() -> None:  # pylint: disable=too-many-locals
 
         # Check some data in MQTT
         time.sleep(1)
-        for topic, value in expected_results.items():
-            print(topic)
+        for topic, expected_value in expected_results.items():
             assert topic in collected_results
             try:
-                assert json.loads(collected_results[topic]) == json.loads(value)
+                expected_json_value = json.loads(expected_value)
+                if topic.endswith("/config"):
+                    expected_json_value["device"]["sw_version"] = VERSION
+                assert json.loads(collected_results[topic]) == expected_json_value
             except json.decoder.JSONDecodeError:
-                assert collected_results[topic].strip() == value.strip()
+                assert collected_results[topic].strip() == expected_value.strip()
