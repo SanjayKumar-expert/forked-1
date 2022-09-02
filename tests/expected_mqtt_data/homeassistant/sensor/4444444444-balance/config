@@ -25,6 +25,6 @@
   "unique_id": "4444444444-Balance",
   "device_class": "monetary",
   "icon": "mdi:currency-usd",
-  "unit_of_measurement": "$",
+  "unit_of_measurement": "CAD",
   "object_id": "hydroqc_home_Balance"
 }
