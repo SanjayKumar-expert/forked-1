@@ -49,7 +49,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:currency-usd",
         "state_class": "measurement",
-        "unit": "$",
+        "unit": "CAD",
         "sub_mqtt_topic": "account/state",
     },
     # Contract
@@ -83,7 +83,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:currency-usd",
         "state_class": "total_increasing",
-        "unit": "$",
+        "unit": "CAD",
         "sub_mqtt_topic": "contract/state",
     },
     "current_billing_period_projected_bill": {
@@ -94,7 +94,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:currency-usd",
         "state_class": "measurement",
-        "unit": "$",
+        "unit": "CAD",
         "sub_mqtt_topic": "contract/state",
     },
     "current_billing_period_daily_bill_mean": {
@@ -105,7 +105,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:currency-usd",
         "state_class": "measurement",
-        "unit": "$",
+        "unit": "CAD",
         "sub_mqtt_topic": "contract/state",
     },
     "current_billing_period_daily_consumption_mean": {
@@ -182,7 +182,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:currency-usd",
         "state_class": "measurement",
-        "unit": "$",
+        "unit": "CAD",
         "sub_mqtt_topic": "contract/state",
     },
     "current_billing_period_rate": {
@@ -216,7 +216,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:currency-usd",
         "state_class": "measurement",
-        "unit": "$",
+        "unit": "CAD",
         "sub_mqtt_topic": "wintercredits/state",
     },
     "wc_next_anchor_start": {
@@ -281,7 +281,7 @@ SENSORS: dict[
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:currency-usd",
-        "unit": "$",
+        "unit": "CAD",
         "sub_mqtt_topic": "wintercredits/yesterday",
     },
     "wc_yesterday_morning_peak_actual_consumption": {
@@ -321,7 +321,7 @@ SENSORS: dict[
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:currency-usd",
-        "unit": "$",
+        "unit": "CAD",
         "sub_mqtt_topic": "wintercredits/yesterday",
     },
     "wc_yesterday_evening_peak_actual_consumption": {
