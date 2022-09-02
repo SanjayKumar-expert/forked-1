@@ -20,7 +20,7 @@ from hydroqc2mqtt.contract_device import (
 # from typing_extensions import NotRequired
 
 
-MAIN_LOOP_WAIT_TIME = 300
+MAIN_LOOP_WAIT_TIME = 600
 OVERRIDE_REGEX = re.compile(
     r"HQ2M_CONTRACTS_(\d*)_(USERNAME|PASSWORD|CUSTOMER|ACCOUNT|CONTRACT|NAME)"
 )
@@ -101,6 +101,9 @@ class Hydroqc2Mqtt(MqttClientDaemon):
 
         # TODO we should ensure that  os.environ.items() are sorted abc...
         for env_var, value in os.environ.items():
+            if env_var == "HQ2M_SYNC_FREQUENCY":
+                self.config["sync_frequency"] = int(value)
+                continue
             match_res = OVERRIDE_REGEX.match(env_var)
             if match_res and len(match_res.groups()) == 2:
                 index = int(match_res.group(1))
