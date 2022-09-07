@@ -24,13 +24,12 @@ test:
         - cp mosquitto-no-auth.conf /mosquitto/config/mosquitto.conf && cat /mosquitto/config/mosquitto.conf && /docker-entrypoint.sh mosquitto -c /mosquitto/config/mosquitto.conf
   tags:
   - hydroqc
-  image: debian:testing-20220527-slim
+  image: 
+    name: registry.gitlab.com/hydroqc/hydroqc-test-container:20220907
   variables:
     MQTT_HOST: mqtt
     MQTT_PORT: 1883
   script:
-    - apt update && apt install --no-install-recommends -y git python3.10 python3.10-dev python3-venv python3-pip build-essential
-    - pip install tox
     - tox
   artifacts:
     reports:
@@ -50,7 +49,8 @@ test:
     - when: on_success
 
 docker_branch:
-  stage: docker
+  #stage: docker
+  stage: test
   tags:
   - hydroqc
   image:

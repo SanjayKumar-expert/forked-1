@@ -3,11 +3,9 @@ import asyncio
 import os
 import re
 import sys
-import time
-from types import FrameType
+from contextlib import AsyncExitStack
 from typing import Any, TypedDict
 
-import paho.mqtt.client as mqtt
 import yaml
 from mqtt_hass_base.daemon import MqttClientDaemon
 
@@ -22,7 +20,21 @@ from hydroqc2mqtt.contract_device import (
 
 MAIN_LOOP_WAIT_TIME = 600
 OVERRIDE_REGEX = re.compile(
-    r"HQ2M_CONTRACTS_(\d*)_(USERNAME|PASSWORD|CUSTOMER|ACCOUNT|CONTRACT|NAME)"
+    # TODO add env
+    (
+        r"^HQ2M_CONTRACTS_(\d*)_("
+        "USERNAME|"
+        "PASSWORD|"
+        "CUSTOMER|"
+        "ACCOUNT|"
+        "CONTRACT|"
+        "NAME|"
+        "SYNC_HOURLY_CONSUMPTION_ENABLED|"
+        "HOURLY_CONSUMPTION_SENSOR_NAME|"
+        "SYNC_HOURLY_CONSUMPTION_HISTORY_ENABLED|"
+        "HOME_ASSISTANT_WEBSOCKET_URL|"
+        "HOME_ASSISTANT_TOKEN)$"
+    )
 )
 
 
@@ -115,7 +127,13 @@ class Hydroqc2Mqtt(MqttClientDaemon):
                     config["contracts"][index]
                 except IndexError:
                     config["contracts"].append({})
-                config["contracts"][index][kind] = value
+                if env_var.endswith("_ENABLED"):
+                    # Handle boolean values
+                    config["contracts"][index][kind[: -len("_ENABLED")]] = (
+                        value.lower() == "true"
+                    )
+                else:
+                    config["contracts"][index][kind] = value
         # Override hydroquebec settings
         if self._hq_username:
             config["contracts"][0]["username"] = self._hq_username
@@ -137,6 +155,9 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         )
 
         self.unregister_on_stop = bool(self.config.get("unregister_on_stop", False))
+
+    async def _init_main_loop(self, stack: AsyncExitStack) -> None:
+        """Init before starting main loop."""
         # Handle contracts
         for contract_config in self.config["contracts"]:
             contract = HydroqcContractDevice(
@@ -145,26 +166,23 @@ class Hydroqc2Mqtt(MqttClientDaemon):
                 contract_config,
                 self.mqtt_discovery_root_topic,
                 self.mqtt_data_root_topic,
+                self.mqtt_client,
             )
             contract.add_entities()
             self.contracts.append(contract)
 
-    async def _set_devices_mqtt_client(self) -> None:
-        """Set mqtt_client to all devices."""
-        for contract in self.contracts:
-            contract.set_mqtt_client(self.mqtt_client)
-
-    async def _init_main_loop(self) -> None:
-        """Init before starting main loop."""
-        for contract in self.contracts:
             self._connected = await contract.init_session()
             if not self._connected:
                 self.logger.fatal(
                     "Can not start because we can not login at the startup."
                 )
                 sys.exit(1)
+            # Register contract's entities to mqtt
+            await contract.register()
+            # Subscribes
+            await contract.subscribe(self.tasks, stack)
 
-    async def _main_loop(self) -> None:
+    async def _main_loop(self, stack: AsyncExitStack) -> None:
         """Run main loop."""
         # TODO refreshing session using a setting in the config yaml file
         for contract in self.contracts:
@@ -172,6 +190,14 @@ class Hydroqc2Mqtt(MqttClientDaemon):
 
         for contract in self.contracts:
             await contract.update()
+
+        # Sync_consumption_statistics
+        for contract in self.contracts:
+            if (
+                contract.hourly_consumption_sync_enabled
+                and not contract.is_consumption_history_syncing
+            ):
+                await contract.sync_consumption_statistics()
 
         if self._run_once:
             self.must_run = False
@@ -182,58 +208,18 @@ class Hydroqc2Mqtt(MqttClientDaemon):
             await asyncio.sleep(1)
             i += 1
 
-    def _on_connect(
-        self,
-        client: mqtt.Client,
-        userdata: dict[str, Any] | None,
-        flags: dict[str, Any],
-        rc: int,
-    ) -> None:
-        """MQTT on connect callback."""
-        while not self._connected:
-            self.logger.info("Waiting for the HydroQC connection.")
-            time.sleep(1)
-
-        for contract in self.contracts:
-            contract.register()
-
-    def _on_disconnect(
-        self,
-        client: mqtt.Client,
-        userdata: dict[str, Any] | None,
-        rc: int,  # pylint: disable=invalid-name
-    ) -> None:
-        """MQTT on disconnect callback."""
-
-    def _on_publish(
-        self, client: mqtt.Client, userdata: dict[str, Any] | None, mid: int
-    ) -> None:
-        """MQTT on publish callback."""
-
-    def _mqtt_subscribe(
-        self,
-        client: mqtt.Client,
-        userdata: dict[str, Any] | None,
-        flags: dict[str, Any],
-        rc: int,
-    ) -> None:
-        """Subscribe to all needed MQTT topic."""
-
-    def _signal_handler(self, signal_: int, frame: FrameType) -> None:
-        """Handle SIGKILL."""
-        if self.unregister_on_stop:
-            for contract in self.contracts:
-                contract.unregister()
-
-    def _on_message(
-        self,
-        client: mqtt.Client,
-        userdata: dict[str, Any] | None,
-        msg: mqtt.MQTTMessage,
-    ) -> None:
-        """Do nothing."""
-
     async def _loop_stopped(self) -> None:
         """Run after the end of the main loop."""
         for contract in self.contracts:
             await contract.close()
+
+    async def _signal_handler(self, sig_name: str) -> None:
+        """Handle SIGKILL."""
+        if self.unregister_on_stop:
+            for contract in self.contracts:
+                await contract.unregister()
+
+    async def _on_disconnect(
+        self,
+    ) -> None:
+        """MQTT on disconnect callback."""
