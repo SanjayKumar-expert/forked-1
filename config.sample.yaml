@@ -24,6 +24,10 @@ contracts:
     # Ex: "123 456 789" will be "0123456789"
     contract: "contract_id"
 
+    # Home-Assistant energy statistics
+    sync_hourly_consumption_enabled: false
+    home_assistant_websocket_url: http://127.0.0.1:8123/api/websocket
+    home_assistant_token: "YOUR LONGLIVED ACCESS TOKEN"
 
     # By default all sensors will be returned, including the one that are added in the future.
     # If you uncomment some of the sensors below, only the uncommented will be generated

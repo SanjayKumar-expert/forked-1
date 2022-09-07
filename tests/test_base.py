@@ -162,9 +162,9 @@ def test_base() -> None:  # pylint: disable=too-many-locals
             payload_7 = json.load(fht)
         mres.get(url_7, payload=payload_7, repeat=True)
 
-        mres.get(SESSION_URL + "?mode=web")
+        mres.get(f"{SESSION_URL}?mode=web")
 
-        mres.get(PORTRAIT_URL)
+        mres.get(f"{PORTRAIT_URL}?noContrat={CONTRACT_ID}")
 
         with open(
             "tests/input_http_data/resourceObtenirDonneesPeriodesConsommation.json",

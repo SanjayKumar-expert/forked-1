@@ -1,15 +1,43 @@
 """Module defining HydroQC Contract."""
+import asyncio
 import datetime
+import json
 import logging
 from typing import TypedDict, cast
 
+import aiohttp
+import asyncio_mqtt as mqtt
 import hydroqc
+import paho.mqtt.client as paho
 from hydroqc.webuser import WebUser
 from mqtt_hass_base.device import MqttDevice
-from mqtt_hass_base.entity import BinarySensorSettingsType, SensorSettingsType
+from mqtt_hass_base.entity import (
+    BinarySensorSettingsType,
+    MqttBinarysensor,
+    MqttSensor,
+    MqttSwitch,
+    SensorSettingsType,
+    SwitchSettingsType,
+)
 
 from hydroqc2mqtt.__version__ import VERSION
-from hydroqc2mqtt.sensors import BINARY_SENSORS, SENSORS, BinarySensorType, SensorType
+from hydroqc2mqtt.sensors import (
+    BINARY_SENSORS,
+    HOURLY_CONSUMPTION_HISTORY_SWITCH,
+    HOURLY_CONSUMPTION_SENSOR,
+    SENSORS,
+    BinarySensorType,
+    SensorType,
+)
+
+
+class HAEnergyStatType(TypedDict):
+    """Home Assistant energy hourly stat dict format."""
+
+    start: str
+    state: float
+    sum: float
+
 
 # TODO: python 3.11 => uncomment NotRequired
 # from typing_extensions import NotRequired
@@ -25,6 +53,10 @@ class HydroqcContractConfigType(TypedDict, total=False):
     customer: str
     account: str
     contract: str
+    sync_hourly_consumption: bool
+    hourly_consumption_sensor_name: str | None
+    home_assistant_websocket_url: str
+    home_assistant_token: str
     verify_ssl: bool
     log_level: str
     http_log_level: str
@@ -40,6 +72,8 @@ class HydroqcContractConfigType(TypedDict, total=False):
 class HydroqcContractDevice(MqttDevice):
     """HydroQC Contract class."""
 
+    consumption_history_ent_switch: MqttSwitch
+
     def __init__(
         self,
         name: str,
@@ -47,11 +81,18 @@ class HydroqcContractDevice(MqttDevice):
         config: HydroqcContractConfigType,
         mqtt_discovery_root_topic: str,
         mqtt_data_root_topic: str,
+        mqtt_client: mqtt.Client,
     ):
         """Create a new MQTT Sensor Facebook object."""
         MqttDevice.__init__(
-            self, name, logger, mqtt_discovery_root_topic, mqtt_data_root_topic
+            self,
+            name,
+            logger,
+            mqtt_discovery_root_topic,
+            mqtt_data_root_topic,
+            mqtt_client,
         )
+        self._ws_query_id = 1
         self._config = config
         self._webuser = WebUser(
             config["username"],
@@ -65,6 +106,17 @@ class HydroqcContractDevice(MqttDevice):
         self._customer_id = str(self._config["customer"])
         self._account_id = str(config["account"])
         self._contract_id = str(config["contract"])
+        self._sync_hourly_consumption = config.get("sync_hourly_consumption", False)
+        # self._sync_hourly_consumption_history = config.get(
+        #    "sync_hourly_consumption_history", False
+        # )
+        self.hourly_consumption_sensor_name = config.get(
+            "hourly_consumption_sensor_name"
+        )
+        self._home_assistant_websocket_url = config.get("home_assistant_websocket_url")
+        self._home_assistant_token = config.get("home_assistant_token")
+        self._sync_hourly_consumption_history_task: asyncio.Task[None] | None = None
+        self._got_first_hourly_consumption_data: bool = False
 
         # By default we load all sensors
         self._sensor_list = SENSORS
@@ -102,6 +154,27 @@ class HydroqcContractDevice(MqttDevice):
         self._base_name = name
         self.name = f"hydroqc_{self._base_name}"
 
+    @property
+    def hourly_consumption_sync_enabled(self) -> bool:
+        """Check if the hourly consumption sync feature is enabled."""
+        if (
+            self._sync_hourly_consumption
+            and self._home_assistant_websocket_url
+            and self._home_assistant_token
+        ):
+            return True
+        return False
+
+    @property
+    def is_consumption_history_syncing(self) -> bool:
+        """Is the history syncing task running."""
+        if (
+            self._sync_hourly_consumption_history_task is not None
+            and not self._sync_hourly_consumption_history_task.done()
+        ):
+            return True
+        return False
+
     def add_entities(self) -> None:
         """Add Home Assistant entities."""
         for sensor_key in self._sensor_list:
@@ -116,12 +189,15 @@ class HydroqcContractDevice(MqttDevice):
             setattr(
                 self,
                 sensor_key,
-                self.add_entity(
-                    "sensor",
-                    sensor_name,
-                    f"{self._contract_id}-{sensor_name}",
-                    cast(SensorSettingsType, entity_settings),
-                    sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
+                cast(
+                    MqttSensor,
+                    self.add_entity(
+                        "sensor",
+                        sensor_name,
+                        f"{self._contract_id}-{sensor_name}",
+                        cast(SensorSettingsType, entity_settings),
+                        sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
+                    ),
                 ),
             )
 
@@ -137,14 +213,61 @@ class HydroqcContractDevice(MqttDevice):
             setattr(
                 self,
                 sensor_key,
+                cast(
+                    MqttBinarysensor,
+                    self.add_entity(
+                        "binarysensor",
+                        sensor_name,
+                        f"{self._contract_id}-{sensor_name}",
+                        cast(BinarySensorSettingsType, b_entity_settings),
+                        sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
+                    ),
+                ),
+            )
+
+        # HOURLY_CONSUMPTION_SENSOR
+        if self._sync_hourly_consumption:
+            self.logger.info("Consumption sync enabled")
+            entity_settings = HOURLY_CONSUMPTION_SENSOR.copy()
+            sensor_name = entity_settings["name"].capitalize()
+            sub_mqtt_topic = entity_settings["sub_mqtt_topic"].lower().strip("/")
+            del entity_settings["name"]
+            del entity_settings["sub_mqtt_topic"]
+            entity_settings["object_id"] = f"{self.name}_{sensor_name}"
+
+            self.hourly_consumption_entity = cast(
+                MqttSensor,
                 self.add_entity(
-                    "binarysensor",
+                    "sensor",
                     sensor_name,
                     f"{self._contract_id}-{sensor_name}",
-                    cast(BinarySensorSettingsType, b_entity_settings),
+                    cast(SensorSettingsType, entity_settings),
                     sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
                 ),
             )
+
+            # History switch
+            switch_entity_settings = HOURLY_CONSUMPTION_HISTORY_SWITCH.copy()
+            sensor_name = str(switch_entity_settings["name"]).capitalize()
+            sub_mqtt_topic = (
+                str(switch_entity_settings["sub_mqtt_topic"]).lower().strip("/")
+            )
+            del switch_entity_settings["name"]
+            del switch_entity_settings["sub_mqtt_topic"]
+            switch_entity_settings["object_id"] = f"{self.name}_{sensor_name}"
+
+            self.consumption_history_ent_switch = cast(
+                MqttSwitch,
+                self.add_entity(
+                    "switch",
+                    sensor_name,
+                    f"{self._contract_id}-{sensor_name}",
+                    cast(SwitchSettingsType, switch_entity_settings),
+                    sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
+                    subscriptions={"command_topic": self._command_callback},
+                ),
+            )
+
         self.logger.info("added %s ...", self.name)
 
     async def _login(self) -> bool:
@@ -171,7 +294,7 @@ class HydroqcContractDevice(MqttDevice):
             return await self._login()
         return True
 
-    def _update_sensors(
+    async def _update_sensors(
         self,
         sensor_list: dict[str, SensorType] | dict[str, BinarySensorType],
         sensor_type: str,
@@ -203,7 +326,7 @@ class HydroqcContractDevice(MqttDevice):
             value = None
             for index, ele in enumerate(datasource[1:]):
                 if not hasattr(data_obj, ele):
-                    entity.send_not_available()
+                    await entity.send_not_available()
                     self.logger.warning(
                         "%s - The object %s doesn't have the attribute %s. "
                         "Maybe your contract doesn't have this data ?",
@@ -229,11 +352,11 @@ class HydroqcContractDevice(MqttDevice):
                         value = data_obj
 
             if value is None:
-                entity.send_not_available()
+                await entity.send_not_available()
                 self.logger.warning("Can not find value for: %s", sensor_key)
             else:
-                entity.send_state(value, {})
-                entity.send_available()
+                await entity.send_state(value, {})
+                await entity.send_available()
 
     async def update(self) -> None:
         """Update Home Assistant entities."""
@@ -241,22 +364,262 @@ class HydroqcContractDevice(MqttDevice):
         # TODO if any api calls failed, we should NOT crash and set sensors to not_available
         # Fetch latest data
         self.logger.info("Fetching data...")
+        # if needed:
         await self._webuser.get_info()
         customer = self._webuser.get_customer(self._customer_id)
         account = customer.get_account(self._account_id)
         contract = account.get_contract(self._contract_id)
         # fetch consumption and wintercredits
+        # if needed:
         await contract.get_periods_info()
         await contract.winter_credit.refresh_data()
         self.logger.info("Data fetched")
 
-        self._update_sensors(self._sensor_list, "SENSORS", customer, account, contract)
-        self._update_sensors(
+        # history
+        if self.hourly_consumption_sync_enabled:
+            await self.consumption_history_ent_switch.send_available()
+            if self.is_consumption_history_syncing:
+                await self.consumption_history_ent_switch.send_on()
+            else:
+                await self.consumption_history_ent_switch.send_off()
+
+        await self._update_sensors(
+            self._sensor_list, "SENSORS", customer, account, contract
+        )
+        await self._update_sensors(
             self._binary_sensor_list, "BINARY_SENSORS", customer, account, contract
         )
-
         self.logger.info("Updated %s ...", self.name)
 
     async def close(self) -> None:
         """Close HydroQC web session."""
         await self._webuser.close_session()
+
+    @property
+    def hourly_consumption_entity_id(self) -> str:
+        """Get the entity_id of the Hourly consumption HA sensor."""
+        entity_id = f"{self.name}_hourly_consumption"
+        if self.hourly_consumption_sensor_name is not None:
+            entity_id = self.hourly_consumption_sensor_name
+        return f"sensor.{entity_id}"
+
+    async def sync_consumption_statistics(self) -> None:
+        """Sync hourly consumption statistics.
+
+        It synchronizes all the hourly data of yesterday and today.
+        """
+        if not self.hourly_consumption_sync_enabled:
+            # Feature disabled
+            return
+        if self.is_consumption_history_syncing:
+            # Historical stats currently syncing
+            # So we do nothing
+            return
+
+        await self._webuser.get_info()
+        customer = self._webuser.get_customer(self._customer_id)
+        account = customer.get_account(self._account_id)
+        contract = account.get_contract(self._contract_id)
+        # We send data for today and yesterday to be sure to not miss and data
+        yesterday = datetime.date.today() - datetime.timedelta(days=1)
+        await self.get_historical_statistics(contract, yesterday)
+        await self.hourly_consumption_entity.send_available()
+
+    async def _command_callback(
+        self,
+        msg: paho.MQTTMessage,
+    ) -> None:
+        """Do something on topic event."""
+        # Handle history sync switch turned on
+        if msg.topic == self.consumption_history_ent_switch.command_topic:
+            if msg.payload == b"ON":
+                if not self.is_consumption_history_syncing:
+                    await self.start_history_task()
+
+    async def start_history_task(self) -> None:
+        """Start a asyncio task to fetch all the hourly data stored by HydroQc."""
+        self.logger.info("Starting hourly consumption history sync task")
+        # import ipdb;ipdb.set_trace()
+        loop = asyncio.get_running_loop()
+        self._sync_hourly_consumption_history_task = loop.create_task(
+            self.get_hourly_consumption_history()
+        )
+
+    async def get_hourly_consumption_history(self) -> None:
+        """Fetch all history of the hourly consumption."""
+        await self.consumption_history_ent_switch.send_on()
+        await self._webuser.get_info()
+        customer = self._webuser.get_customer(self._customer_id)
+        account = customer.get_account(self._account_id)
+        contract = account.get_contract(self._contract_id)
+        contract_info = await contract.get_info()
+        # Get contract start date
+        contract_start_date = datetime.date.fromisoformat(
+            contract_info["dateDebutContrat"]
+        )
+        # Get two years ago plus few days
+        today = datetime.date.today()
+        oldest_data_date = today - datetime.timedelta(days=752)
+        # Get the youngest date between contract start date VS 2 years ago
+        start_date = (
+            contract_start_date
+            if contract_start_date > oldest_data_date
+            else oldest_data_date
+        )
+        await self.get_historical_statistics(contract, start_date)
+        await self.consumption_history_ent_switch.send_off()
+        self.logger.info("Hourly consumption history sync done.")
+
+    async def get_historical_statistics(
+        self, contract: hydroqc.contract.Contract, data_date: datetime.date
+    ) -> None:
+        """Fetch hourly data from a specific day to today and send it to Home Assistant.
+
+        It synchronizes all the hourly data of the data_date
+        - from HydroQc (using hydroqc lib)
+        - to Home assistant using websocket
+        """
+        today = datetime.date.today()
+        # We have 5 tries to fetch all historical data
+        retry = 5
+        while data_date <= today:
+            try:
+                raw_data = await contract.get_hourly_consumption(data_date.isoformat())
+            except hydroqc.error.HydroQcHTTPError as exp:
+                if not self._got_first_hourly_consumption_data:
+                    self.logger.info(
+                        "There is not data for on %s."
+                        "you can ignore the previous error message",
+                        data_date.isoformat(),
+                    )
+                    data_date += datetime.timedelta(days=1)
+                    continue
+                if retry > 0:
+                    self.logger.warning(
+                        "Failed to sync all historical data on %s. Retrying %s/5 in 30 seconds",
+                        data_date.isoformat(),
+                        retry,
+                    )
+                    await asyncio.sleep(30)
+                    self.logger.warning(
+                        "Retrying to sync all historical data on %s (%s/5)",
+                        data_date.isoformat(),
+                        retry,
+                    )
+                    # await self.init_session()
+                    await self._login()
+                    # await self.
+                    retry -= 1
+                    continue
+
+                self.logger.error(
+                    "Error getting historical consumption data on %s. Stopping import",
+                    data_date.isoformat(),
+                )
+                raise exp
+            self._got_first_hourly_consumption_data = True
+            stats: list[HAEnergyStatType] = []
+            for data in raw_data["results"]["listeDonneesConsoEnergieHoraire"]:
+                stat: HAEnergyStatType = {"start": "", "state": 0, "sum": 0}
+                data_date_str = data_date.isoformat()
+                date_hour_str = data["heure"]
+                stat["start"] = f"{data_date_str}T{date_hour_str}-04:00"
+                # TODO handle consoHaut and consoReg
+                stat["state"] = data["consoTotal"]
+                stats.append(stat)
+
+            await self.send_consumption_statistics(stats, data_date)
+            data_date += datetime.timedelta(days=1)
+        self.logger.info("Success - hourly consumption sync task")
+
+    async def send_consumption_statistics(
+        self, stats: list[HAEnergyStatType], data_date: datetime.date
+    ) -> None:
+        """Send all hourly data of a whole day to Home Assistant.
+
+        It uses websocket to send data to Home Assistant
+        """
+        # the consumption data are relative to the 00:00:00 of the give day
+        if not self.hourly_consumption_sync_enabled:
+            return
+        self._ws_query_id = 1
+        async with aiohttp.ClientSession() as client:
+            # Connection
+            try:
+                websocket = await client.ws_connect(
+                    str(self._home_assistant_websocket_url)
+                )
+            except aiohttp.client_exceptions.ClientConnectorError as exp:
+                self.logger.error(exp.strerror)
+                raise exp
+
+            response = await websocket.receive_json()
+            if response.get("type") != "auth_required":
+                str_response = json.dumps(response)
+                msg = f"Bad server response: ${str_response}"
+                self.logger.error(msg)
+                raise Exception(msg)
+
+            # Auth
+            await websocket.send_json(
+                {"type": "auth", "access_token": self._home_assistant_token}
+            )
+            response = await websocket.receive_json()
+            if response.get("type") != "auth_ok":
+                self.logger.error("Bad Home Assistant websocket token")
+                raise Exception("Bad Home Assistant websocket token")
+            # Get data from yesterday
+            data_start_date_str = (data_date - datetime.timedelta(days=1)).isoformat()
+            data_end_date_str = data_date.isoformat()
+
+            await websocket.send_json(
+                {
+                    "end_time": f"{data_end_date_str}T00:00:00-04:00",
+                    "id": self._ws_query_id,
+                    "period": "day",
+                    "start_time": f"{data_start_date_str}T00:00:00-04:00",
+                    # "statistic_ids": [f"sensor.{self.hourly_consumption_entity.object_id}"],
+                    "statistic_ids": [self.hourly_consumption_entity_id],
+                    "type": "history/statistics_during_period",
+                }
+            )
+            self._ws_query_id += 1
+            response = await websocket.receive_json()
+            if not response.get("result"):
+                base_sum = 0
+            else:
+                # Get sum from response
+                base_sum = response["result"][self.hourly_consumption_entity_id][-1][
+                    "sum"
+                ]
+            # Add sum from last yesterday's data
+            for index, stat in enumerate(stats):
+                if index == 0:
+                    stat["sum"] = base_sum + stat["state"]
+                else:
+                    stat["sum"] = stat["state"] + stats[index - 1]["sum"]
+
+            # Send today's data
+            await websocket.send_json(
+                {
+                    "id": self._ws_query_id,
+                    "type": "recorder/import_statistics",
+                    "metadata": {
+                        "has_mean": False,
+                        "has_sum": True,
+                        "name": None,
+                        "source": "recorder",
+                        "statistic_id": self.hourly_consumption_entity_id,
+                        "unit_of_measurement": "kWh",
+                    },
+                    "stats": stats,
+                }
+            )
+            self._ws_query_id += 1
+            response = await websocket.receive_json()
+            if response.get("success") is not True:
+                self.logger.error("Error trying to push consumption statistics")
+                raise Exception("Error trying to push consumption statistics")
+            self.logger.debug(
+                "Successfully import consumption statistics for %s", {data_end_date_str}
+            )

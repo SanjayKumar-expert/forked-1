@@ -2,6 +2,8 @@
 
 This module extracts data from your Hydro-Quebec account using the [Hydro Quebec API Wrapper](https://gitlab.com/hydroqc/hydroqc) and will post it to your MQTT server. Home-Assistant MQTT Discovery topics are also provided, automating the creation of your sensors in Home-Assistant.
 
+We have implemented a feature that will send historical hourly consumption from Hydro-Quebec to your Home-Assistant statistics to be used in the Energy Dashboard. This feature does not work over MQTT but send the information directly to Home-Assistant via Websocket.
+
 We started a discord server for the project where you can come to discuss and find help with the project [https://discord.gg/JaRfRJEByz](https://discord.gg/JaRfRJEByz)
 
 ## Disclaimer
@@ -42,44 +44,15 @@ docker run -d --rm --name hydroqc2mqtt \
 -e HQ2M_CONTRACTS_0_CUSTOMER='HQCustomerNo' \
 -e HQ2M_CONTRACTS_0_ACCOUNT='HQAccountNo' \
 -e HQ2M_CONTRACTS_0_CONTRACT='HQContractNo' \
-registry.gitlab.com/hydroqc/hydroqc2mqtt:0.1.6
+-e HQ2M_CONTRACTS_0_SYNC_HOURLY_CONSUMPTION_ENABLED: "true" \
+-e HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL: http://home-assistant:8123/api/websocket \
+-e HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN: dqwdq23dqwd34q234dr \
+registry.gitlab.com/hydroqc/hydroqc2mqtt
 ```
 
-A list of all container version and their tags can be found here: [https://gitlab.com/hydroqc/hydroqc2mqtt/container_registry/2746219](https://gitlab.com/hydroqc/hydroqc2mqtt/container_registry/2746219). Try to avoid :latest or :main for now since they are not updating properly for now
+A list of all container version and their tags can be found here: [https://gitlab.com/hydroqc/hydroqc2mqtt/container_registry/2746219](https://gitlab.com/hydroqc/hydroqc2mqtt/container_registry/2746219).
 
-The HQ2M values define your various contracts. They all have a numer "\_0_" that can be incremented if you have more than one contract.
 
-```
-# Name of the contract, will appear in Home Assistant and in the hydroqc topics.
-HQ2M_CONTRACTS_0_NAME='maison' \
-
-# Username for your HQ account
-HQ2M_CONTRACTS_0_USERNAME='email@domain.tld'
-
-# Your HQ account password
-HQ2M_CONTRACTS_0_PASSWORD='Password'
-
-# Customer number (Numéro de client) from your invoice.
-# 10 digits, you may need to add a leading 0 to the value!!!
-# Ex: '987 654 321' will be '0987654321'
-HQ2M_CONTRACTS_0_CUSTOMER='0987654321'
-
-# Account Number (Numéro de compte) from your invoice
-HQ2M_CONTRACTS_0_ACCOUNT='654321987654'
-
-# Contract Number (Numéro de contrat) from your invoice
-# 10 digits, you may need to add a leading 0 to the value!!!
-# Ex: '123 456 789' will be '0123456789'
-HQ2M_CONTRACTS_0_CONTRACT='0123456789'
-
-## 2nd contract example
-HQ2M_CONTRACTS_1_NAME='chalet'
-HQ2M_CONTRACTS_1_USERNAME='email@domain.tld'
-HQ2M_CONTRACTS_1_PASSWORD='Password'
-HQ2M_CONTRACTS_1_CUSTOMER='0987654321'
-HQ2M_CONTRACTS_1_ACCOUNT='654321987654'
-HQ2M_CONTRACTS_1_CONTRACT='0133446729'
-```
 
 ### Shell
 
@@ -124,6 +97,97 @@ HQ2M_CONTRACTS_1_CONTRACT='0133446729'
    ```
 
 To update you have to re-rerun the steps above. A simple git pull is not sufficient.
+
+## Configuration
+
+### MQTT
+
+Configuration options for the module to connect to your MQTT server
+```
+MQTT_USERNAME='yourmqttusername'
+MQTT_PASSWORD='yourmqttpassword'
+MQTT_HOST='yourmqttserver'
+MQTT_PORT='1883'
+```
+
+### Hydro Account
+The HQ2M values define your various contracts. They all have a numer "\_0_" that can be incremented if you have more than one contract.
+
+```
+# Name of the contract, will appear in Home Assistant and in the hydroqc topics.
+HQ2M_CONTRACTS_0_NAME='maison'
+
+# Username for your HQ account
+HQ2M_CONTRACTS_0_USERNAME='email@domain.tld'
+
+# Your HQ account password
+HQ2M_CONTRACTS_0_PASSWORD='Password'
+
+# Customer number (Numéro de client) from your invoice.
+# 10 digits, you may need to add a leading 0 to the value!!!
+# Ex: '987 654 321' will be '0987654321'
+HQ2M_CONTRACTS_0_CUSTOMER='0987654321'
+
+# Account Number (Numéro de compte) from your invoice
+HQ2M_CONTRACTS_0_ACCOUNT='654321987654'
+
+# Contract Number (Numéro de contrat) from your invoice
+# 10 digits, you may need to add a leading 0 to the value!!!
+# Ex: '123 456 789' will be '0123456789'
+HQ2M_CONTRACTS_0_CONTRACT='0123456789'
+
+```
+
+### Home-Assistant Energy Statistics
+
+We can send the hourly consumption available on HQ's website to Home-Assistant via websocket. For this to work you will need to generate a long lived access token in your Home-Assistant.
+
+Once this is enabled you will be able to configure the device in your energy dashboard and see your consumption.
+
+The hourly consumption will sync automatically when it is available from Hydro-Quebec. On the website you can only see the hourly consumption from the previous day. With this module you will sometime be able to see consumption of the current day. There is always a delay of a few hours before HQ publishes the information.
+
+There is also a configuration button in your MQTT device called "Sync hourly consumption history". Turning this switch on will sync the history of the previous 2 years. This can take about an hour. Once complete the switch will turn off.
+
+```
+
+#Enable importing hourly consumption from Hydro-Quebec (last 24h)
+HQ2M_CONTRACTS_0_SYNC_HOURLY_CONSUMPTION_ENABLED: "true"
+
+# URL to your Home-Assistant installation websocket API
+HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL: http://home-assistant:8123/api/websocket
+
+# Long-lived Home-Assistant access token to be used to access the API
+HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN: dqwdq23dqwd34q234dr
+
+```
+
+### Addtitionnal contracts
+
+We support having more than one contract configured to fetch from HQ. All the above options except MQTT can be entered several times by incrementing the contract number and using a different contract name.
+
+```
+HQ2M_CONTRACTS_0_NAME='maison' \
+HQ2M_CONTRACTS_0_USERNAME='email@domain.tld'
+HQ2M_CONTRACTS_0_PASSWORD='Password'
+HQ2M_CONTRACTS_0_CUSTOMER='0987654321'
+HQ2M_CONTRACTS_0_ACCOUNT='654321987654'
+HQ2M_CONTRACTS_0_CONTRACT='0123456789'
+
+HQ2M_CONTRACTS_1_NAME='chalet' \
+HQ2M_CONTRACTS_1_USERNAME='email@domain.tld'
+HQ2M_CONTRACTS_1_PASSWORD='Password'
+HQ2M_CONTRACTS_1_CUSTOMER='0912354321'
+HQ2M_CONTRACTS_1_ACCOUNT='654123987654'
+HQ2M_CONTRACTS_1_CONTRACT='0112356789'
+
+HQ2M_CONTRACTS_2_NAME='triplex' \
+HQ2M_CONTRACTS_2_USERNAME='email@domain.tld'
+HQ2M_CONTRACTS_2_PASSWORD='Password'
+HQ2M_CONTRACTS_2_CUSTOMER='0812354321'
+HQ2M_CONTRACTS_2_ACCOUNT='854123987654'
+HQ2M_CONTRACTS_2_CONTRACT='0122356789'
+```
+
 
 ## Sensor Description
 

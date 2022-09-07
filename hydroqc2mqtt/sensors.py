@@ -37,6 +37,25 @@ class BinarySensorType(TypedDict, total=False):
     object_id: str
 
 
+HOURLY_CONSUMPTION_HISTORY_SWITCH = {
+    "name": "Sync hourly consumption history",
+    "icon": "mdi:clipboard-text-clock",
+    "entity_category": "config",
+    "sub_mqtt_topic": "contract/state",
+    "optimistic": False,
+}
+
+HOURLY_CONSUMPTION_SENSOR: SensorType = {
+    "name": "Hourly consumption",
+    "device_class": "energy",
+    "expire_after": 0,
+    "force_update": False,
+    "icon": "mdi:lightning-bolt",
+    "state_class": "total",
+    "unit": "kWh",
+    "sub_mqtt_topic": "contract/state",
+}
+
 SENSORS: dict[
     str, SensorType
 ] = {  # pylint: disable=consider-using-namedtuple-or-dataclass
