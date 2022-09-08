@@ -43,6 +43,9 @@ def _parse_cmd() -> argparse.Namespace:
     )
     parser.add_argument("--log-level", required=False, default="info", help="Log level")
     parser.add_argument(
+        "--http-log-level", required=False, default="warning", help="HTTP Log level"
+    )
+    parser.add_argument(
         "--config",
         required=False,
         default=None,
@@ -95,6 +98,7 @@ def main() -> None:
         config_file=cmd_args.config,
         run_once=cmd_args.run_once,
         log_level=cmd_args.log_level,
+        http_log_level=cmd_args.http_log_level,
         hq_username=cmd_args.hq_username,
         hq_password=cmd_args.hq_password,
         hq_name=cmd_args.hq_name,

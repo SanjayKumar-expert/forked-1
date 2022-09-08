@@ -29,6 +29,8 @@ OVERRIDE_REGEX = re.compile(
         "ACCOUNT|"
         "CONTRACT|"
         "NAME|"
+        "LOG_LEVEL|"
+        "HTTP_LOG_LEVEL|"
         "SYNC_HOURLY_CONSUMPTION_ENABLED|"
         "HOURLY_CONSUMPTION_SENSOR_NAME|"
         "SYNC_HOURLY_CONSUMPTION_HISTORY_ENABLED|"
@@ -63,6 +65,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         config_file: str,
         run_once: bool,
         log_level: str,
+        http_log_level: str,
         hq_username: str,
         hq_password: str,
         hq_name: str,
@@ -81,6 +84,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         self._hq_account_id = hq_account_id
         self._hq_contract_id = hq_contract_id
         self._connected = False
+        self._http_log_level = http_log_level
         self.config: ConfigType = {}
 
         MqttClientDaemon.__init__(
@@ -99,7 +103,6 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         """Read env vars."""
         if self.config_file is None:
             self.config_file = os.environ.get("CONFIG_YAML", "config.yaml")
-
         if os.path.exists(self.config_file):
             with open(self.config_file, "rb") as fhc:
                 self.config = yaml.safe_load(fhc)
@@ -112,6 +115,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         #    config["contracts"] = []
 
         # TODO we should ensure that  os.environ.items() are sorted abc...
+
         for env_var, value in os.environ.items():
             if env_var == "HQ2M_SYNC_FREQUENCY":
                 self.config["sync_frequency"] = int(value)
@@ -134,6 +138,9 @@ class Hydroqc2Mqtt(MqttClientDaemon):
                     )
                 else:
                     config["contracts"][index][kind] = value
+        if "http_log_level" not in config["contracts"][0] and self._http_log_level:
+            config["contracts"][0]["http_log_level"] = self._http_log_level
+
         # Override hydroquebec settings
         if self._hq_username:
             config["contracts"][0]["username"] = self._hq_username

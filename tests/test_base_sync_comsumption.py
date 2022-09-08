@@ -588,28 +588,6 @@ class TestLiveConsumption:
                 f"{HOURLY_CONSUMPTION_API_URL}?date={TODAY_STR}", payload=payload_12
             )
 
-            # Run main loop once
-            #            del sys.argv[1:]
-            #            sys.argv.append("--run-once")
-            #            cmd_args = _parse_cmd()
-            #            daemon = Hydroqc2Mqtt(
-            #                mqtt_host=cmd_args.mqtt_host,
-            #                mqtt_port=cmd_args.mqtt_port,
-            #                mqtt_username=cmd_args.mqtt_username,
-            #                mqtt_password=cmd_args.mqtt_password,
-            #                mqtt_discovery_root_topic=cmd_args.mqtt_discovery_root_topic,
-            #                mqtt_data_root_topic=cmd_args.mqtt_data_root_topic,
-            #                config_file=cmd_args.config,
-            #                run_once=cmd_args.run_once,
-            #                log_level=cmd_args.log_level,
-            #                hq_username=cmd_args.hq_username,
-            #                hq_password=cmd_args.hq_password,
-            #                hq_name=cmd_args.hq_name,
-            #                hq_customer_id=cmd_args.hq_customer_id,
-            #                hq_account_id=cmd_args.hq_account_id,
-            #                hq_contract_id=cmd_args.hq_contract_id,
-            #            )
-            #            await daemon.async_run()
             del sys.argv[1:]
             sys.argv.append("--run-once")
             main()

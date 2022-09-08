@@ -206,3 +206,14 @@ Here is the description of some of the sensors we provide that we feel needed mo
 | wc upcoming critical peak today/tomorrow morning/evening | true/false | Is there a critical peak planed in the specified period. Will remain true/false until the end of the day |
 | wc yesterday morning/evening * | various | The values (credit, reference energy, erased energy, actual consumption) for the critical peaks that happened yesterday. Will be unavailable if there was no critical peak the day before. |
 | wc critical | true/false | Will be true from the end of the last peak to the end of the next peak if the next peak is critical. Since it is a duplicate of "next peak critical" it may be removed in the future|
+
+
+### Debugging
+
+Debug can be enabled through --log-level or --http_log_level
+It can also be set through env variables :
+
+```
+HQ2M_CONTRACTS_0_LOG_LEVEL=DEBUG 
+HQ2M_CONTRACTS_0_HTTP_LOG_LEVEL=DEBUG
+```

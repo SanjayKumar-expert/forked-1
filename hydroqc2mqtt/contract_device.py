@@ -98,7 +98,7 @@ class HydroqcContractDevice(MqttDevice):
             config["username"],
             config["password"],
             config.get("verify_ssl", True),
-            log_level=config.get("log_level", "WARNING"),
+            log_level=config.get("log_level", "INFO"),
             http_log_level=config.get("http_log_level", "WARNING"),
         )
         self.sw_version = VERSION
@@ -107,9 +107,6 @@ class HydroqcContractDevice(MqttDevice):
         self._account_id = str(config["account"])
         self._contract_id = str(config["contract"])
         self._sync_hourly_consumption = config.get("sync_hourly_consumption", False)
-        # self._sync_hourly_consumption_history = config.get(
-        #    "sync_hourly_consumption_history", False
-        # )
         self.hourly_consumption_sensor_name = config.get(
             "hourly_consumption_sensor_name"
         )
@@ -226,7 +223,7 @@ class HydroqcContractDevice(MqttDevice):
             )
 
         # HOURLY_CONSUMPTION_SENSOR
-        if self._sync_hourly_consumption:
+        if self.hourly_consumption_sync_enabled:
             self.logger.info("Consumption sync enabled")
             entity_settings = HOURLY_CONSUMPTION_SENSOR.copy()
             sensor_name = entity_settings["name"].capitalize()
