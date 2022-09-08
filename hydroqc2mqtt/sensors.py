@@ -14,6 +14,7 @@ class SensorType(TypedDict, total=False):
     device_class: str | None
     expire_after: int
     force_update: bool
+    entity_category: str | None
     # device_class: Required[str | None]
     # expire_after: Required[int]
     # force_update: Required[bool]
@@ -49,6 +50,7 @@ HOURLY_CONSUMPTION_SENSOR: SensorType = {
     "name": "Hourly consumption",
     "device_class": "energy",
     "expire_after": 0,
+    "entity_category": "diagnostic",
     "force_update": False,
     "icon": "mdi:lightning-bolt",
     "state_class": "total",
