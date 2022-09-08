@@ -12,6 +12,14 @@ sast:
 include:
 - template: Security/SAST.gitlab-ci.yml
 
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  key: pip-cache
+  paths:
+    - .cache/pip
+
 test:
   stage: test
   services:
@@ -30,7 +38,7 @@ test:
     MQTT_HOST: mqtt
     MQTT_PORT: 1883
   script:
-    - tox
+    - tox --parallel auto
   artifacts:
     reports:
       coverage_report:
