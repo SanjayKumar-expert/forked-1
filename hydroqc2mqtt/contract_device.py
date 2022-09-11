@@ -21,6 +21,7 @@ from mqtt_hass_base.entity import (
 )
 
 from hydroqc2mqtt.__version__ import VERSION
+from hydroqc2mqtt.error import Hydroqc2MqttError, Hydroqc2MqttWSError
 from hydroqc2mqtt.sensors import (
     BINARY_SENSORS,
     HOURLY_CONSUMPTION_HISTORY_SWITCH,
@@ -123,8 +124,8 @@ class HydroqcContractDevice(MqttDevice):
             # Check if sensor exists
             for sensor_key in self._config["sensors"]:
                 if sensor_key not in SENSORS:
-                    raise Exception(
-                        f"Sensor {sensor_key} doesn't exist. Fix your config."
+                    raise Hydroqc2MqttError(
+                        f"E0001: Sensor {sensor_key} doesn't exist. Fix your config."
                     )
                 self._sensor_list[sensor_key] = SENSORS[sensor_key]
 
@@ -136,8 +137,8 @@ class HydroqcContractDevice(MqttDevice):
             # Check if sensor exists
             for sensor_key in self._config["binary_sensors"]:
                 if sensor_key not in BINARY_SENSORS:
-                    raise Exception(
-                        f"Binary sensor {sensor_key} doesn't exist. Fix your config."
+                    raise Hydroqc2MqttError(
+                        f"E0002: Binary sensor {sensor_key} doesn't exist. Fix your config."
                     )
                 self._binary_sensor_list[sensor_key] = BINARY_SENSORS[sensor_key]
 
@@ -308,7 +309,7 @@ class HydroqcContractDevice(MqttDevice):
             self.logger.debug("Updating binary sensors")
             sensor_config = BINARY_SENSORS
         else:
-            raise Exception(f"Sensor type {sensor_type} not supported")
+            raise Hydroqc2MqttError(f"E0003: Sensor type {sensor_type} not supported")
 
         for sensor_key in sensor_list:
             # Get current entity
@@ -513,7 +514,7 @@ class HydroqcContractDevice(MqttDevice):
                     "Error getting historical consumption data on %s. Stopping import",
                     data_date.isoformat(),
                 )
-                raise exp
+                raise Hydroqc2MqttError(f"E0004: {exp}") from exp
             self._got_first_hourly_consumption_data = True
             stats: list[HAEnergyStatType] = []
             for data in raw_data["results"]["listeDonneesConsoEnergieHoraire"]:
@@ -540,83 +541,92 @@ class HydroqcContractDevice(MqttDevice):
         if not self.hourly_consumption_sync_enabled:
             return
         self._ws_query_id = 1
-        async with aiohttp.ClientSession() as client:
-            # Connection
-            try:
-                websocket = await client.ws_connect(
-                    str(self._home_assistant_websocket_url)
+        try:
+            async with aiohttp.ClientSession() as client:
+                # Connection
+                try:
+                    websocket = await client.ws_connect(
+                        str(self._home_assistant_websocket_url)
+                    )
+                except aiohttp.client_exceptions.ClientConnectorError as exp:
+                    raise Hydroqc2MqttWSError(
+                        f"E0005: Error Websocket connection error - {exp.strerror}"
+                    ) from exp
+
+                response = await websocket.receive_json()
+                if response.get("type") != "auth_required":
+                    str_response = json.dumps(response)
+                    raise Hydroqc2MqttWSError(
+                        f"E0006: Bad server response: ${str_response}"
+                    )
+
+                # Auth
+                await websocket.send_json(
+                    {"type": "auth", "access_token": self._home_assistant_token}
                 )
-            except aiohttp.client_exceptions.ClientConnectorError as exp:
-                self.logger.error(exp.strerror)
-                raise exp
+                response = await websocket.receive_json()
+                if response.get("type") != "auth_ok":
+                    raise Hydroqc2MqttWSError(
+                        "E0007: Bad Home Assistant websocket token"
+                    )
+                # Get data from yesterday
+                data_start_date_str = (
+                    data_date - datetime.timedelta(days=1)
+                ).isoformat()
+                data_end_date_str = data_date.isoformat()
 
-            response = await websocket.receive_json()
-            if response.get("type") != "auth_required":
-                str_response = json.dumps(response)
-                msg = f"Bad server response: ${str_response}"
-                self.logger.error(msg)
-                raise Exception(msg)
-
-            # Auth
-            await websocket.send_json(
-                {"type": "auth", "access_token": self._home_assistant_token}
-            )
-            response = await websocket.receive_json()
-            if response.get("type") != "auth_ok":
-                self.logger.error("Bad Home Assistant websocket token")
-                raise Exception("Bad Home Assistant websocket token")
-            # Get data from yesterday
-            data_start_date_str = (data_date - datetime.timedelta(days=1)).isoformat()
-            data_end_date_str = data_date.isoformat()
-
-            await websocket.send_json(
-                {
-                    "end_time": f"{data_end_date_str}T00:00:00-04:00",
-                    "id": self._ws_query_id,
-                    "period": "day",
-                    "start_time": f"{data_start_date_str}T00:00:00-04:00",
-                    # "statistic_ids": [f"sensor.{self.hourly_consumption_entity.object_id}"],
-                    "statistic_ids": [self.hourly_consumption_entity_id],
-                    "type": "history/statistics_during_period",
-                }
-            )
-            self._ws_query_id += 1
-            response = await websocket.receive_json()
-            if not response.get("result"):
-                base_sum = 0
-            else:
-                # Get sum from response
-                base_sum = response["result"][self.hourly_consumption_entity_id][-1][
-                    "sum"
-                ]
-            # Add sum from last yesterday's data
-            for index, stat in enumerate(stats):
-                if index == 0:
-                    stat["sum"] = base_sum + stat["state"]
+                await websocket.send_json(
+                    {
+                        "end_time": f"{data_end_date_str}T00:00:00-04:00",
+                        "id": self._ws_query_id,
+                        "period": "day",
+                        "start_time": f"{data_start_date_str}T00:00:00-04:00",
+                        "statistic_ids": [self.hourly_consumption_entity_id],
+                        "type": "history/statistics_during_period",
+                    }
+                )
+                self._ws_query_id += 1
+                response = await websocket.receive_json()
+                if not response.get("result"):
+                    base_sum = 0
                 else:
-                    stat["sum"] = stat["state"] + stats[index - 1]["sum"]
+                    # Get sum from response
+                    base_sum = response["result"][self.hourly_consumption_entity_id][
+                        -1
+                    ]["sum"]
+                # Add sum from last yesterday's data
+                for index, stat in enumerate(stats):
+                    if index == 0:
+                        stat["sum"] = base_sum + stat["state"]
+                    else:
+                        stat["sum"] = stat["state"] + stats[index - 1]["sum"]
 
-            # Send today's data
-            await websocket.send_json(
-                {
-                    "id": self._ws_query_id,
-                    "type": "recorder/import_statistics",
-                    "metadata": {
-                        "has_mean": False,
-                        "has_sum": True,
-                        "name": None,
-                        "source": "recorder",
-                        "statistic_id": self.hourly_consumption_entity_id,
-                        "unit_of_measurement": "kWh",
-                    },
-                    "stats": stats,
-                }
-            )
-            self._ws_query_id += 1
-            response = await websocket.receive_json()
-            if response.get("success") is not True:
-                self.logger.error("Error trying to push consumption statistics")
-                raise Exception("Error trying to push consumption statistics")
-            self.logger.debug(
-                "Successfully import consumption statistics for %s", {data_end_date_str}
-            )
+                # Send today's data
+                await websocket.send_json(
+                    {
+                        "id": self._ws_query_id,
+                        "type": "recorder/import_statistics",
+                        "metadata": {
+                            "has_mean": False,
+                            "has_sum": True,
+                            "name": None,
+                            "source": "recorder",
+                            "statistic_id": self.hourly_consumption_entity_id,
+                            "unit_of_measurement": "kWh",
+                        },
+                        "stats": stats,
+                    }
+                )
+                self._ws_query_id += 1
+                response = await websocket.receive_json()
+                if response.get("success") is not True:
+                    raise Hydroqc2MqttWSError(
+                        "E0008: Error trying to push consumption statistics"
+                    )
+                self.logger.debug(
+                    "Successfully import consumption statistics for %s",
+                    {data_end_date_str},
+                )
+
+        except Exception as exp:
+            raise Hydroqc2MqttWSError(f"E0009: {exp}") from exp

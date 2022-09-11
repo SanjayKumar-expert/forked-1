@@ -6,13 +6,17 @@ import sys
 from contextlib import AsyncExitStack
 from typing import Any, TypedDict
 
+import asyncio_mqtt as mqtt
+import hydroqc
 import yaml
 from mqtt_hass_base.daemon import MqttClientDaemon
+from mqtt_hass_base.error import MQTTHassBaseError
 
 from hydroqc2mqtt.contract_device import (
     HydroqcContractConfigType,
     HydroqcContractDevice,
 )
+from hydroqc2mqtt.error import Hydroqc2MqttError, Hydroqc2MqttWSError
 
 # TODO: python 3.11 => uncomment NotRequired
 # from typing_extensions import NotRequired
@@ -85,6 +89,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         self._hq_contract_id = hq_contract_id
         self._connected = False
         self._http_log_level = http_log_level
+        self._needs_mqtt_reconnection: bool = False
         self.config: ConfigType = {}
 
         MqttClientDaemon.__init__(
@@ -191,20 +196,43 @@ class Hydroqc2Mqtt(MqttClientDaemon):
 
     async def _main_loop(self, stack: AsyncExitStack) -> None:
         """Run main loop."""
-        # TODO refreshing session using a setting in the config yaml file
-        for contract in self.contracts:
-            await contract.init_session()
+        try:
+            # Handle reconnection needed
+            if self._needs_mqtt_reconnection:
+                self.logger.info("Mqtt trying to reconnect")
+                await self._mqtt_connect(stack)
+                self.logger.info("Reinit contracts objects")
+                for contract in self.contracts:
+                    contract.set_mqtt_client(self.mqtt_client)
+                self._needs_mqtt_reconnection = False
 
-        for contract in self.contracts:
-            await contract.update()
+            # Connect to contracts
+            for contract in self.contracts:
+                await contract.init_session()
 
-        # Sync_consumption_statistics
-        for contract in self.contracts:
-            if (
-                contract.hourly_consumption_sync_enabled
-                and not contract.is_consumption_history_syncing
-            ):
-                await contract.sync_consumption_statistics()
+            # Get contract data
+            for contract in self.contracts:
+                await contract.update()
+
+            # Sync_consumption_statistics
+            for contract in self.contracts:
+                if (
+                    contract.hourly_consumption_sync_enabled
+                    and not contract.is_consumption_history_syncing
+                ):
+                    await contract.sync_consumption_statistics()
+
+        except hydroqc.error.HydroQcHTTPError as exp:
+            self.logger.error("E0010: Hydroqc lib error: %s", exp)
+        except Hydroqc2MqttWSError as exp:
+            self.logger.error(exp)
+        except Hydroqc2MqttError as exp:
+            self.logger.error(exp)
+        except (mqtt.MqttError, MQTTHassBaseError) as exp:
+            self.logger.error("E0011: %s", exp)
+            # Reconnect to Mqtt
+            self._needs_mqtt_reconnection = True
+            self.logger.warning("We will try to reconnect to MQTT server.")
 
         if self._run_once:
             self.must_run = False
