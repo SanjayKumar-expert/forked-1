@@ -38,4 +38,11 @@ repos:
   hooks:
   - id: mypy
     args: [--strict, --pretty, --show-error-codes]
-    additional_dependencies: ["types-PyYAML==6.0.11", "pytest-stub==1.1.0", "paho-mqtt-stubs==0.1.0", "homeassistant-stubs==2022.8.7", "Hydro_Quebec_API_Wrapper==0.6.3", "mqtt-hass-base==4.0.6", "aioresponses==0.7.3"]
+    additional_dependencies:
+      - "types-PyYAML==6.0.11"
+      - "pytest-stub==1.1.0"
+      - "paho-mqtt-stubs==0.1.0"
+      - "homeassistant-stubs==2022.8.7"
+      - "Hydro_Quebec_API_Wrapper==0.6.3"
+      - "mqtt-hass-base==4.0.6"
+      - "aioresponses==0.7.3"

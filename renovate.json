@@ -4,18 +4,31 @@
   "pre-commit": {
     "enabled": true
   },
+  "regexManagers": [
+     {
+       "fileMatch": [
+         ".pre-commit-config.yaml"
+       ],
+       "matchStrings": [
+         " *- \"(?<depName>[^\n=]*?)==(?<currentValue>[v0-9\.]*?)\"",
+         " *- \"(?<depName>[^\n=]*?)==(?<currentValue>[v0-9\.]*?)\"\n"
+       ],
+       "datasourceTemplate": "pypi",
+       "versioningTemplate": "pep440"
+     }
+  ],
   "packageRules": [
     {
-      "matchManagers": ["pip-compile", "pip_requirements", "pip_setup", "pipenv", "poetry", "pyenv", "setup-cfg"],
-      "matchFiles": ["test_requirements.txt"],
+      "matchManagers": ["pip-compile", "pip_requirements", "pip_setup", "pipenv", "poetry", "pyenv", "setup-cfg", "regex"],
+      "matchFiles": ["test_requirements.txt", ".pre-commit-config.yaml"],
       "matchUpdateTypes": ["minor", "patch", "pin", "pinDigest", "digest", "lockFileMaintenance", "rollback", "bump"],
       "groupName": "Python devDependencies - non-major",
       "groupSlug": "python-devdeps-nonmajor",
       "automerge": true
     },
     {
-      "matchManagers": ["pip-compile", "pip_requirements", "pip_setup", "pipenv", "poetry", "pyenv", "setup-cfg"],
-      "matchFiles": ["test_requirements.txt"],
+      "matchManagers": ["pip-compile", "pip_requirements", "pip_setup", "pipenv", "poetry", "pyenv", "setup-cfg", "regex"],
+      "matchFiles": ["test_requirements.txt", ".pre-commit-config.yaml"],
       "matchUpdateTypes": ["major"],
       "groupName": "Python devDependencies - major",
       "groupSlug": "python-devdeps-major",
