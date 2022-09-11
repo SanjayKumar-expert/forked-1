@@ -10,8 +10,8 @@
          ".pre-commit-config.yaml"
        ],
        "matchStrings": [
-         " *- \"(?<depName>[^\n=]*?)==(?<currentValue>[v0-9\.]*?)\"",
-         " *- \"(?<depName>[^\n=]*?)==(?<currentValue>[v0-9\.]*?)\"\n"
+         " *- \"(?<depName>[^\n=]*?)==(?<currentValue>[v0-9.]*?)\"",
+         " *- \"(?<depName>[^\n=]*?)==(?<currentValue>[v0-9.]*?)\"\n"
        ],
        "datasourceTemplate": "pypi",
        "versioningTemplate": "pep440"
