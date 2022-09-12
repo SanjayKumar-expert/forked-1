@@ -144,6 +144,8 @@ We can send the hourly consumption available on HQ's website to Home-Assistant v
 
 Once this is enabled you will be able to configure the device in your energy dashboard and see your consumption.
 
+**Be aware, the "Houly Consumption" sensor will always have a state of "unknown". We do not have a state for it, we need to create it in order to push the statistics to it and for it to be available to add to the Energy Dashboard, but there will never be a value for it.**
+
 The hourly consumption will sync automatically when it is available from Hydro-Quebec. On the website you can only see the hourly consumption from the previous day. With this module you will sometime be able to see consumption of the current day. There is always a delay of a few hours before HQ publishes the information.
 
 There is also a configuration button in your MQTT device called "Sync hourly consumption history". Turning this switch on will sync the history of the previous 2 years. This can take about an hour. Once complete the switch will turn off.
