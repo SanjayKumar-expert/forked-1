@@ -457,7 +457,7 @@ class HydroqcContractDevice(MqttDevice):
         )
         # Get two years ago plus few days
         today = datetime.date.today()
-        oldest_data_date = today - datetime.timedelta(days=752)
+        oldest_data_date = today - datetime.timedelta(days=730)
         # Get the youngest date between contract start date VS 2 years ago
         start_date = (
             contract_start_date
