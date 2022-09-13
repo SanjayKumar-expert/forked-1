@@ -9,6 +9,7 @@ import aiohttp
 import asyncio_mqtt as mqtt
 import hydroqc
 import paho.mqtt.client as paho
+from dateutil.relativedelta import relativedelta
 from hydroqc.webuser import WebUser
 from mqtt_hass_base.device import MqttDevice
 from mqtt_hass_base.entity import (
@@ -457,7 +458,7 @@ class HydroqcContractDevice(MqttDevice):
         )
         # Get two years ago plus few days
         today = datetime.date.today()
-        oldest_data_date = today - datetime.timedelta(days=730)
+        oldest_data_date = today - relativedelta(years=2)
         # Get the youngest date between contract start date VS 2 years ago
         start_date = (
             contract_start_date
