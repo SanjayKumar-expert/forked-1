@@ -400,7 +400,7 @@ class HydroqcContractDevice(MqttDevice):
         entity_id = f"{self.name}_hourly_consumption"
         if self.hourly_consumption_sensor_name is not None:
             entity_id = self.hourly_consumption_sensor_name
-        return f"sensor.{entity_id}"
+        return f"sensor.{entity_id}".lower()
 
     async def sync_consumption_statistics(self) -> None:
         """Sync hourly consumption statistics.
