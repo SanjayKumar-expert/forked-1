@@ -34,7 +34,7 @@ test:
   tags:
   - hydroqc
   image: 
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container:20220908
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container:20220913
   variables:
     MQTT_HOST: mqtt
     MQTT_PORT: 1883
