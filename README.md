@@ -44,9 +44,9 @@ docker run -d --rm --name hydroqc2mqtt \
 -e HQ2M_CONTRACTS_0_CUSTOMER='HQCustomerNo' \
 -e HQ2M_CONTRACTS_0_ACCOUNT='HQAccountNo' \
 -e HQ2M_CONTRACTS_0_CONTRACT='HQContractNo' \
--e HQ2M_CONTRACTS_0_SYNC_HOURLY_CONSUMPTION_ENABLED: "true" \
--e HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL: http://home-assistant:8123/api/websocket \
--e HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN: dqwdq23dqwd34q234dr \
+-e HQ2M_CONTRACTS_0_SYNC_HOURLY_CONSUMPTION_ENABLED="true" \
+-e HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL=http://home-assistant:8123/api/websocket \
+-e HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN=dqwdq23dqwd34q234dr \
 registry.gitlab.com/hydroqc/hydroqc2mqtt
 ```
 
@@ -153,13 +153,13 @@ There is also a configuration button in your MQTT device called "Sync hourly con
 ```
 
 #Enable importing hourly consumption from Hydro-Quebec (last 24h)
-HQ2M_CONTRACTS_0_SYNC_HOURLY_CONSUMPTION_ENABLED: "true"
+HQ2M_CONTRACTS_0_SYNC_HOURLY_CONSUMPTION_ENABLED="true"
 
 # URL to your Home-Assistant installation websocket API
-HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL: http://home-assistant:8123/api/websocket
+HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL=http://home-assistant:8123/api/websocket
 
 # Long-lived Home-Assistant access token to be used to access the API
-HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN: dqwdq23dqwd34q234dr
+HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN=dqwdq23dqwd34q234dr
 
 ```
 
