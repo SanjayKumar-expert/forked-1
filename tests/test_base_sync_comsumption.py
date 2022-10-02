@@ -1,15 +1,19 @@
 """Base tests for hydroqc2mqtt."""
+import asyncio
 import base64
 import json
-import logging
+
+# import logging
 import os
 import re
 import sys
-import threading
+
+# import threading
 import time
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
+import aiohttp
 import paho.mqtt.client as mqtt
 from aioresponses import aioresponses
 from hydroqc.hydro_api.consts import (
@@ -26,7 +30,7 @@ from hydroqc.hydro_api.consts import (
     SESSION_REFRESH_URL,
     SESSION_URL,
 )
-from websocket_server import WebSocketHandler, WebsocketServer  # type: ignore
+from packaging import version
 
 from hydroqc2mqtt.__main__ import main
 from hydroqc2mqtt.__version__ import VERSION
@@ -41,10 +45,6 @@ MQTT_DISCOVERY_ROOT_TOPIC = os.environ.get(
 )
 MQTT_DATA_ROOT_TOPIC = os.environ.get("MQTT_DATA_ROOT_TOPIC", "homeassistant")
 
-WS_SERVER_HOST = "127.0.0.1"
-WS_SERVER_PORT = 18123
-WS_SERVER_URL = f"http://{WS_SERVER_HOST}:{WS_SERVER_PORT}"
-
 TODAY = datetime.today()
 YESTERDAY = TODAY - timedelta(days=1)
 YESTERDAY2 = TODAY - timedelta(days=2)
@@ -53,374 +53,51 @@ YESTERDAY_STR = YESTERDAY.strftime("%Y-%m-%d")
 YESTERDAY2_STR = YESTERDAY2.strftime("%Y-%m-%d")
 
 
+async def check_data_in_hass() -> None:
+    """Check stats data in hass."""
+    query_id = 1
+    ws_server_url = os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL"]
+    hass_token = os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN"]
+    async with aiohttp.ClientSession() as client:
+        websocket = await client.ws_connect(ws_server_url)
+        print("DDDDDDDDDD")
+        response = await websocket.receive_json()
+        ha_version = response["ha_version"]
+        print(response)
+        # Auth
+        await websocket.send_json({"type": "auth", "access_token": hass_token})
+        response = await websocket.receive_json()
+        print(response)
+        # Get data from yesterday
+        data_date = date.today()
+        data_start_date_str = (data_date - timedelta(days=1)).isoformat()
+        data_end_date_str = data_date.isoformat()
+
+        websocket_call_type = (
+            "history/statistics_during_period"
+            if version.parse(ha_version) < version.parse("2022.10.0")
+            else "recorder/statistics_during_period"
+        )
+        await websocket.send_json(
+            {
+                "end_time": f"{data_end_date_str}T00:00:00-04:00",
+                "id": query_id,
+                "period": "day",
+                "start_time": f"{data_start_date_str}T00:00:00-04:00",
+                "statistic_ids": ["sensor.hydroqc_home_hourly_consumption"],
+                "type": websocket_call_type,
+            }
+        )
+        response = await websocket.receive_json()
+        print(response)
+        assert (
+            response["result"]["sensor.hydroqc_home_hourly_consumption"][1]["sum"]
+            == 61.94
+        )
+
+
 class TestLiveConsumption:
     """Test class for Live consumption feature."""
-
-    ws_client_id = 0
-    ws_client_connected = False
-    ws_client_responses = {
-        # Message 1
-        json.dumps({"type": "auth", "access_token": "fake_token"}): [
-            False,
-            {"type": "auth_ok"},
-        ],
-        # Message 2
-        json.dumps(
-            {
-                "end_time": f"{YESTERDAY_STR}T00:00:00-04:00",
-                "id": 1,
-                "period": "day",
-                "start_time": f"{YESTERDAY2_STR}T00:00:00-04:00",
-                "statistic_ids": ["sensor.hydroqc_home_hourly_consumption"],
-                "type": "history/statistics_during_period",
-            }
-        ): [
-            False,
-            {
-                "result": {
-                    "sensor.hydroqc_home_hourly_consumption": [{"sum": 0}, {"sum": 1}]
-                }
-            },
-        ],
-        # Message 3
-        json.dumps(
-            {
-                "id": 2,
-                "type": "recorder/import_statistics",
-                "metadata": {
-                    "has_mean": False,
-                    "has_sum": True,
-                    "name": None,
-                    "source": "recorder",
-                    "statistic_id": "sensor.hydroqc_home_hourly_consumption",
-                    "unit_of_measurement": "kWh",
-                },
-                "stats": [
-                    {
-                        "start": f"{YESTERDAY_STR}T00:00:00-04:00",
-                        "state": 2.23,
-                        "sum": 3.23,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T01:00:00-04:00",
-                        "state": 2.22,
-                        "sum": 5.45,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T02:00:00-04:00",
-                        "state": 2.21,
-                        "sum": 7.66,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T03:00:00-04:00",
-                        "state": 2.06,
-                        "sum": 9.72,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T04:00:00-04:00",
-                        "state": 1.36,
-                        "sum": 11.08,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T05:00:00-04:00",
-                        "state": 1.81,
-                        "sum": 12.89,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T06:00:00-04:00",
-                        "state": 1.36,
-                        "sum": 14.25,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T07:00:00-04:00",
-                        "state": 1.79,
-                        "sum": 16.04,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T08:00:00-04:00",
-                        "state": 2.93,
-                        "sum": 18.97,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T09:00:00-04:00",
-                        "state": 3.6,
-                        "sum": 22.57,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T10:00:00-04:00",
-                        "state": 2.36,
-                        "sum": 24.93,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T11:00:00-04:00",
-                        "state": 3.03,
-                        "sum": 27.96,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T12:00:00-04:00",
-                        "state": 3.14,
-                        "sum": 31.1,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T13:00:00-04:00",
-                        "state": 2.6,
-                        "sum": 33.7,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T14:00:00-04:00",
-                        "state": 2.58,
-                        "sum": 36.28,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T15:00:00-04:00",
-                        "state": 2.12,
-                        "sum": 38.4,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T16:00:00-04:00",
-                        "state": 1.7,
-                        "sum": 40.1,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T17:00:00-04:00",
-                        "state": 2.1,
-                        "sum": 42.2,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T18:00:00-04:00",
-                        "state": 5.04,
-                        "sum": 47.24,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T19:00:00-04:00",
-                        "state": 3.33,
-                        "sum": 50.57,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T20:00:00-04:00",
-                        "state": 3.15,
-                        "sum": 53.72,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T21:00:00-04:00",
-                        "state": 3.63,
-                        "sum": 57.35,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T22:00:00-04:00",
-                        "state": 2.69,
-                        "sum": 60.04,
-                    },
-                    {
-                        "start": f"{YESTERDAY_STR}T23:00:00-04:00",
-                        "state": 2.9,
-                        "sum": 62.94,
-                    },
-                ],
-            }
-        ): [False, {"success": True}],
-        # Message 4
-        json.dumps(
-            {
-                "end_time": f"{TODAY_STR}T00:00:00-04:00",
-                "id": 1,
-                "period": "day",
-                "start_time": f"{YESTERDAY_STR}T00:00:00-04:00",
-                "statistic_ids": ["sensor.hydroqc_home_hourly_consumption"],
-                "type": "history/statistics_during_period",
-            }
-        ): [
-            False,
-            {
-                "result": {
-                    "sensor.hydroqc_home_hourly_consumption": [
-                        {"sum": 60.04},
-                        {"sum": 62.94},
-                    ]
-                }
-            },
-        ],
-        # Message 5
-        json.dumps(
-            {
-                "id": 2,
-                "type": "recorder/import_statistics",
-                "metadata": {
-                    "has_mean": False,
-                    "has_sum": True,
-                    "name": None,
-                    "source": "recorder",
-                    "statistic_id": "sensor.hydroqc_home_hourly_consumption",
-                    "unit_of_measurement": "kWh",
-                },
-                "stats": [
-                    {
-                        "start": f"{TODAY_STR}T00:00:00-04:00",
-                        "state": 2.23,
-                        "sum": 65.17,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T01:00:00-04:00",
-                        "state": 2.22,
-                        "sum": 67.39,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T02:00:00-04:00",
-                        "state": 2.21,
-                        "sum": 69.6,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T03:00:00-04:00",
-                        "state": 2.06,
-                        "sum": 71.66,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T04:00:00-04:00",
-                        "state": 1.36,
-                        "sum": 73.02,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T05:00:00-04:00",
-                        "state": 1.81,
-                        "sum": 74.83,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T06:00:00-04:00",
-                        "state": 1.36,
-                        "sum": 76.19,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T07:00:00-04:00",
-                        "state": 1.79,
-                        "sum": 77.98,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T08:00:00-04:00",
-                        "state": 2.93,
-                        "sum": 80.91000000000001,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T09:00:00-04:00",
-                        "state": 3.6,
-                        "sum": 84.51,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T10:00:00-04:00",
-                        "state": 2.36,
-                        "sum": 86.87,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T11:00:00-04:00",
-                        "state": 3.03,
-                        "sum": 89.9,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T12:00:00-04:00",
-                        "state": 3.14,
-                        "sum": 93.04,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T13:00:00-04:00",
-                        "state": 2.6,
-                        "sum": 95.64,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T14:00:00-04:00",
-                        "state": 2.58,
-                        "sum": 98.22,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T15:00:00-04:00",
-                        "state": 2.12,
-                        "sum": 100.34,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T16:00:00-04:00",
-                        "state": 1.7,
-                        "sum": 102.04,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T17:00:00-04:00",
-                        "state": 2.1,
-                        "sum": 104.14,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T18:00:00-04:00",
-                        "state": 5.04,
-                        "sum": 109.18,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T19:00:00-04:00",
-                        "state": 3.33,
-                        "sum": 112.51,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T20:00:00-04:00",
-                        "state": 3.15,
-                        "sum": 115.66000000000001,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T21:00:00-04:00",
-                        "state": 3.63,
-                        "sum": 119.29,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T22:00:00-04:00",
-                        "state": 2.69,
-                        "sum": 121.98,
-                    },
-                    {
-                        "start": f"{TODAY_STR}T23:00:00-04:00",
-                        "state": 2.9,
-                        "sum": 124.88000000000001,
-                    },
-                ],
-            }
-            # Message 6
-        ): [False, {"success": True}],
-    }
-
-    def _new_ws_client(
-        self,
-        client: dict[str, int | WebSocketHandler | tuple[str | int]],
-        server: WebsocketServer,
-    ) -> None:
-        """Send first WS message when when a new client is connected to the WS server."""
-        server.send_message(client, json.dumps({"type": "auth_required"}))
-
-    def _new_ws_message(
-        self,
-        client: dict[str, int | WebSocketHandler | tuple[str | int]],
-        server: WebsocketServer,
-        message: str,
-    ) -> None:
-        """Send WS responses when a new message is received by the WS server."""
-        assert message in self.ws_client_responses
-        if self.ws_client_id == 0:
-            assert "id" not in json.loads(message)
-        else:
-            assert json.loads(message)["id"] == self.ws_client_id
-        self.ws_client_id += 1
-        self.ws_client_responses[message][0] = True
-        server.send_message(client, json.dumps(self.ws_client_responses[message][1]))
-        if self.ws_client_id == 3:
-            self.ws_client_id = 0
-
-    def teardown(self) -> None:
-        """Teardown test method."""
-        # import ipdb;ipdb.set_trace()
-        self.server.shutdown()
-        self.thread.join()
-
-    def setup(self) -> None:
-        """Set up test method."""
-        self.server = WebsocketServer(
-            host=WS_SERVER_HOST, port=WS_SERVER_PORT, loglevel=logging.INFO
-        )
-        self.server.set_fn_new_client(self._new_ws_client)
-        self.server.set_fn_message_received(self._new_ws_message)
-        self.thread = threading.Thread(target=self.server.serve_forever)
-        self.thread.start()
 
     def test_base_sync_consumption(  # pylint: disable=too-many-locals
         self,
@@ -461,14 +138,15 @@ class TestLiveConsumption:
         client.connect_async(MQTT_HOST, MQTT_PORT, keepalive=60)
         client.loop_start()  # type: ignore[no-untyped-call]
         os.environ["HQ2M_CONTRACTS_0_SYNC_HOURLY_CONSUMPTION_ENABLED"] = "true"
-        os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL"] = WS_SERVER_URL
-        os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN"] = "fake_token"
+        # os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL"] = WS_SERVER_URL
+        # os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN"] = "fake_token"
 
         # await asyncio.sleep(1)
         time.sleep(1)
 
         # Prepare http mocking
-        with aioresponses(passthrough=[WS_SERVER_URL]) as mres:  # type: ignore[no-untyped-call]
+        ws_server_url = os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL"]
+        with aioresponses(passthrough=[ws_server_url]) as mres:  # type: ignore[no-untyped-call]
             # LOGIN
             mres.post(
                 AUTH_URL,
@@ -604,6 +282,4 @@ class TestLiveConsumption:
                 except json.decoder.JSONDecodeError:
                     assert collected_results[topic].strip() == expected_value.strip()
 
-            assert (
-                all(v[0] for v in self.ws_client_responses.values()) is True
-            ), "At least one of the expected websocket message is missing."
+            asyncio.run(check_data_in_hass())
