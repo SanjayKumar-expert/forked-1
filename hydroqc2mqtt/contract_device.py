@@ -20,6 +20,7 @@ from mqtt_hass_base.entity import (
     SensorSettingsType,
     SwitchSettingsType,
 )
+from packaging import version
 
 from hydroqc2mqtt.__version__ import VERSION
 from hydroqc2mqtt.error import Hydroqc2MqttError, Hydroqc2MqttWSError
@@ -560,6 +561,7 @@ class HydroqcContractDevice(MqttDevice):
                     raise Hydroqc2MqttWSError(
                         f"E0006: Bad server response: ${str_response}"
                     )
+                ha_version = response["ha_version"]
 
                 # Auth
                 await websocket.send_json(
@@ -576,6 +578,11 @@ class HydroqcContractDevice(MqttDevice):
                 ).isoformat()
                 data_end_date_str = data_date.isoformat()
 
+                websocket_call_type = (
+                    "history/statistics_during_period"
+                    if version.parse(ha_version) < version.parse("2022.10.0")
+                    else "recorder/statistics_during_period"
+                )
                 await websocket.send_json(
                     {
                         "end_time": f"{data_end_date_str}T00:00:00-04:00",
@@ -583,7 +590,7 @@ class HydroqcContractDevice(MqttDevice):
                         "period": "day",
                         "start_time": f"{data_start_date_str}T00:00:00-04:00",
                         "statistic_ids": [self.hourly_consumption_entity_id],
-                        "type": "history/statistics_during_period",
+                        "type": websocket_call_type,
                     }
                 )
                 self._ws_query_id += 1
@@ -603,6 +610,11 @@ class HydroqcContractDevice(MqttDevice):
                         stat["sum"] = stat["state"] + stats[index - 1]["sum"]
 
                 # Send today's data
+                unit_key = (
+                    "unit_of_measurement"
+                    if version.parse(ha_version) < version.parse("2022.10.0")
+                    else "state_unit_of_measurement"
+                )
                 await websocket.send_json(
                     {
                         "id": self._ws_query_id,
@@ -613,7 +625,7 @@ class HydroqcContractDevice(MqttDevice):
                             "name": None,
                             "source": "recorder",
                             "statistic_id": self.hourly_consumption_entity_id,
-                            "unit_of_measurement": "kWh",
+                            unit_key: "kWh",
                         },
                         "stats": stats,
                     }
