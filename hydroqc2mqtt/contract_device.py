@@ -610,11 +610,6 @@ class HydroqcContractDevice(MqttDevice):
                         stat["sum"] = stat["state"] + stats[index - 1]["sum"]
 
                 # Send today's data
-                unit_key = (
-                    "unit_of_measurement"
-                    if version.parse(ha_version) < version.parse("2022.10.0")
-                    else "state_unit_of_measurement"
-                )
                 await websocket.send_json(
                     {
                         "id": self._ws_query_id,
@@ -625,7 +620,7 @@ class HydroqcContractDevice(MqttDevice):
                             "name": None,
                             "source": "recorder",
                             "statistic_id": self.hourly_consumption_entity_id,
-                            unit_key: "kWh",
+                            "unit_of_measurement": "kWh",
                         },
                         "stats": stats,
                     }
@@ -633,8 +628,9 @@ class HydroqcContractDevice(MqttDevice):
                 self._ws_query_id += 1
                 response = await websocket.receive_json()
                 if response.get("success") is not True:
+                    reason = response.get("error", {}).get("message", "Unknown")
                     raise Hydroqc2MqttWSError(
-                        "E0008: Error trying to push consumption statistics"
+                        f"E0008: Error trying to push consumption statistics - Reason: {reason}"
                     )
                 self.logger.debug(
                     "Successfully import consumption statistics for %s",
