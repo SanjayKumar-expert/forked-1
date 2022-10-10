@@ -1,0 +1,57 @@
+[build-system]
+requires = [
+    "setuptools==62.3",
+    "setuptools_scm[toml]==7.0.5",
+    "wheel==0.37.1",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hydroqc2mqtt"
+dynamic = ["version"]
+description = "Daemon managing hydroqc sensors through MQTT"
+readme = "README.md"
+authors = [
+    {name = "Hydroqc Team", email = "info@hydroqc.cq"}
+]
+license = {text = "AGPL-3.0-or-later"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+keywords = ["hydroquebec", "mqtt", "homeassistant"]
+
+requires-python = ">=3.10.0"
+# https://github.com/renovatebot/renovate/issues/10187
+#dependencies    = [
+#    "mqtt-hass-base==4.0.13",
+#    "Hydro_Quebec_API_Wrapper==0.6.5",
+#    "python_dateutil==2.8.2",
+#    "packaging==21.3",
+## The following lines should not be there
+## but they solve a dependency issue
+## we should try to remove them
+## each time we upgrade the dependencies here
+#    "attrs==21.2.0",
+#    "charset-normalizer==2.1.1",
+#    "yarl==1.7.2",
+#]
+
+[project.urls]
+"Source Code" = "https://gitlab.com/hydroqc/hydroqc2mqtt"
+"Bug Reports" = "https://gitlab.com/hydroqc/hydroqc2mqtt/-/issues"
+"Home-page"   = "https://hydroqc.ca"
+
+[tool.setuptools]
+platforms = ["any"]
+include-package-data = true
+
+
+[tool.setuptools.packages.find]
+include = ["hydroqc2mqtt*"]
+
+[tool.setuptools_scm]
+
+[project.scripts]
+hydroqc2mqtt = "hydroqc2mqtt.__main__:main"
