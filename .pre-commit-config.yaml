@@ -41,7 +41,7 @@ repos:
     additional_dependencies:
       - "types-PyYAML==6.0.12"
       - "pytest-stub==1.1.0"
-      - "paho-mqtt-stubs==0.1.0"
+      - "types-paho-mqtt==1.6.0"
       - "homeassistant-stubs==2022.10.3"
       - "Hydro_Quebec_API_Wrapper==0.6.6"
       - "mqtt-hass-base==4.0.15"
