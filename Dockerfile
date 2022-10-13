@@ -18,4 +18,4 @@ ENV TZ="America/Toronto" \
     MQTT_DATA_ROOT_TOPIC="hydroqc" \
     SYNC_FREQUENCY=600
 
-CMD [ "/usr/local/bin/hydroqc2mqtt" ]
+CMD [ "/usr/bin/hydroqc2mqtt" ]
