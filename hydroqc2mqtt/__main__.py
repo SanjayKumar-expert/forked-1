@@ -1,4 +1,5 @@
 """Module defining entrypoint."""
+import os
 import argparse
 import asyncio
 
@@ -97,7 +98,7 @@ def main() -> None:
         mqtt_data_root_topic=cmd_args.mqtt_data_root_topic,
         config_file=cmd_args.config,
         run_once=cmd_args.run_once,
-        log_level=cmd_args.log_level,
+        log_level=os.getenv("HQ2M_CONTRACTS_0_LOG_LEVEL", cmd_args.log_level),
         http_log_level=cmd_args.http_log_level,
         hq_username=cmd_args.hq_username,
         hq_password=cmd_args.hq_password,
