@@ -47,7 +47,7 @@ test-hass-stable:
   tags:
   - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221025
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221031
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
@@ -95,7 +95,7 @@ test-hass-beta:
   tags:
   - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221025
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221031
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
