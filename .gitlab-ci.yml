@@ -9,6 +9,9 @@ stages:
 - docker
 sast:
   stage: test
+  tags:
+  - hydroqc
+
 include:
 - template: Security/SAST.gitlab-ci.yml
 
