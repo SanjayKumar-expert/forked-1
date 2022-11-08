@@ -73,7 +73,7 @@ test-hass-stable:
       - collected.env
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
+#      when: never
     - if: '$CI_COMMIT_TAG'
       when: never
     - when: on_success
@@ -116,7 +116,7 @@ test-hass-beta:
       - tests_result_junit.xml
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
+#      when: never
     - if: '$CI_COMMIT_TAG'
       when: never
     - when: on_success
@@ -137,7 +137,7 @@ docker_branch:
     - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:${CI_COMMIT_REF_NAME} --build-arg HYDROQC2MQTT_VERSION=${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: never
+#      when: never
     - if: '$CI_COMMIT_TAG'
       when: never
     - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
