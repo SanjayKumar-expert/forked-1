@@ -15,23 +15,30 @@ from mqtt_hass_base.device import MqttDevice
 from mqtt_hass_base.entity import (
     BinarySensorSettingsType,
     MqttBinarysensor,
+    MqttButton,
+    MqttNumber,
     MqttSensor,
     MqttSwitch,
     SensorSettingsType,
     SwitchSettingsType,
 )
 from packaging import version
+from pytz import timezone
 
 from hydroqc2mqtt.__version__ import VERSION
 from hydroqc2mqtt.error import Hydroqc2MqttError, Hydroqc2MqttWSError
 from hydroqc2mqtt.sensors import (
     BINARY_SENSORS,
+    HOURLY_CONSUMPTION_CLEAR_BUTTON,
+    HOURLY_CONSUMPTION_HISTORY_DAYS,
     HOURLY_CONSUMPTION_HISTORY_SWITCH,
     HOURLY_CONSUMPTION_SENSOR,
     SENSORS,
     BinarySensorType,
     SensorType,
 )
+
+TZ_EASTERN = timezone("US/Eastern")
 
 
 class HAEnergyStatType(TypedDict):
@@ -225,8 +232,8 @@ class HydroqcContractDevice(MqttDevice):
                 ),
             )
 
-        # HOURLY_CONSUMPTION_SENSOR
         if self.hourly_consumption_sync_enabled:
+            # HOURLY_CONSUMPTION_SENSOR
             self.logger.info("Consumption sync enabled")
             entity_settings = HOURLY_CONSUMPTION_SENSOR.copy()
             sensor_name = entity_settings["name"].capitalize()
@@ -243,6 +250,28 @@ class HydroqcContractDevice(MqttDevice):
                     f"{self._contract_id}-{sensor_name}",
                     cast(SensorSettingsType, entity_settings),
                     sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
+                ),
+            )
+
+            # History days
+            number_entity_settings = HOURLY_CONSUMPTION_HISTORY_DAYS.copy()
+            sensor_name = str(number_entity_settings["name"]).capitalize()
+            sub_mqtt_topic = (
+                str(number_entity_settings["sub_mqtt_topic"]).lower().strip("/")
+            )
+            del number_entity_settings["name"]
+            del number_entity_settings["sub_mqtt_topic"]
+            number_entity_settings["object_id"] = f"{self.name}_{sensor_name}"
+
+            self.consumption_history_ent_number = cast(
+                MqttNumber,
+                self.add_entity(
+                    "number",
+                    sensor_name,
+                    f"{self._contract_id}-{sensor_name}",
+                    cast(SwitchSettingsType, number_entity_settings),
+                    sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
+                    subscriptions={"command_topic": self._command_callback},
                 ),
             )
 
@@ -263,6 +292,28 @@ class HydroqcContractDevice(MqttDevice):
                     sensor_name,
                     f"{self._contract_id}-{sensor_name}",
                     cast(SwitchSettingsType, switch_entity_settings),
+                    sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
+                    subscriptions={"command_topic": self._command_callback},
+                ),
+            )
+
+            # Clear History button
+            button_entity_settings = HOURLY_CONSUMPTION_CLEAR_BUTTON.copy()
+            sensor_name = str(button_entity_settings["name"]).capitalize()
+            sub_mqtt_topic = (
+                str(button_entity_settings["sub_mqtt_topic"]).lower().strip("/")
+            )
+            del button_entity_settings["name"]
+            del button_entity_settings["sub_mqtt_topic"]
+            button_entity_settings["object_id"] = f"{self.name}_{sensor_name}"
+
+            self.consumption_clear_ent_button = cast(
+                MqttButton,
+                self.add_entity(
+                    "button",
+                    sensor_name,
+                    f"{self._contract_id}-{sensor_name}",
+                    cast(SwitchSettingsType, button_entity_settings),
                     sub_mqtt_topic=f"{self._base_name}/{sub_mqtt_topic}",
                     subscriptions={"command_topic": self._command_callback},
                 ),
@@ -383,6 +434,9 @@ class HydroqcContractDevice(MqttDevice):
             else:
                 await self.consumption_history_ent_switch.send_off()
 
+            await self.consumption_clear_ent_button.send_available()
+            await self.consumption_history_ent_number.send_available()
+
         await self._update_sensors(
             self._sensor_list, "SENSORS", customer, account, contract
         )
@@ -436,6 +490,73 @@ class HydroqcContractDevice(MqttDevice):
                 if not self.is_consumption_history_syncing:
                     await self.start_history_task()
 
+        if msg.topic == self.consumption_clear_ent_button.command_topic:
+            if msg.payload == b"PRESS":
+                await self.clear_history()
+
+    async def connect_hass_ws(
+        self, client: aiohttp.ClientSession
+    ) -> tuple[aiohttp.ClientWebSocketResponse, str]:
+        """Connect and login to Home Assistant websocket API."""
+        try:
+            websocket = await client.ws_connect(str(self._home_assistant_websocket_url))
+        except aiohttp.client_exceptions.ClientConnectorError as exp:
+            raise Hydroqc2MqttWSError(
+                f"E0005: Error Websocket connection error - {exp.strerror}"
+            ) from exp
+
+        response = await websocket.receive_json()
+        if response.get("type") != "auth_required":
+            str_response = json.dumps(response)
+            raise Hydroqc2MqttWSError(f"E0006: Bad server response: ${str_response}")
+        ha_version = response["ha_version"]
+
+        # Auth
+        await websocket.send_json(
+            {"type": "auth", "access_token": self._home_assistant_token}
+        )
+        response = await websocket.receive_json()
+        if response.get("type") != "auth_ok":
+            raise Hydroqc2MqttWSError("E0007: Bad Home Assistant websocket token")
+        return websocket, ha_version
+
+    async def clear_history(self) -> None:
+        """Clear all statistics of the hourly consumption entity."""
+        self.logger.info("Cleaning hourly consumption history")
+        if (
+            self._sync_hourly_consumption_history_task is not None
+            and not self._sync_hourly_consumption_history_task.done()
+        ):
+            self._sync_hourly_consumption_history_task.cancel()
+            try:
+                self.logger.info(
+                    "Stopping (forced) hourly consumption history sync task"
+                )
+                await self._sync_hourly_consumption_history_task
+            except asyncio.CancelledError:
+                self.logger.info(
+                    "Stopped (forced) hourly consumption history sync task"
+                )
+        self._ws_query_id = 1
+        async with aiohttp.ClientSession() as client:
+            websocket, _ = await self.connect_hass_ws(client)
+
+            await websocket.send_json(
+                {
+                    "id": self._ws_query_id,
+                    "statistic_ids": [self.hourly_consumption_entity_id],
+                    "type": "recorder/clear_statistics",
+                }
+            )
+            response = await websocket.receive_json()
+            if response.get("success") is not True:
+                reason = response.get("error", {}).get("message", "Unknown")
+                raise Hydroqc2MqttWSError(
+                    f"E0008: Error trying to clear consumption statistics - Reason: {reason}"
+                )
+        await self.consumption_clear_ent_button.send_available()
+        self.logger.info("Cleaning hourly consumption history done")
+
     async def start_history_task(self) -> None:
         """Start a asyncio task to fetch all the hourly data stored by HydroQc."""
         self.logger.info("Starting hourly consumption history sync task")
@@ -459,7 +580,11 @@ class HydroqcContractDevice(MqttDevice):
         )
         # Get two years ago plus few days
         today = datetime.date.today()
-        oldest_data_date = today - relativedelta(years=2)
+        if self.consumption_history_ent_number.current_value is None:
+            days = 731
+        else:
+            days = int(self.consumption_history_ent_number.current_value)
+        oldest_data_date = today - relativedelta(days=days)
         # Get the youngest date between contract start date VS 2 years ago
         start_date = (
             contract_start_date
@@ -482,14 +607,16 @@ class HydroqcContractDevice(MqttDevice):
         today = datetime.date.today()
         # We have 5 tries to fetch all historical data
         retry = 5
+        self._got_first_hourly_consumption_data = False
         while data_date <= today:
             try:
                 raw_data = await contract.get_hourly_consumption(data_date.isoformat())
             except hydroqc.error.HydroQcHTTPError as exp:
+                # import ipdb;ipdb.set_trace()
                 if not self._got_first_hourly_consumption_data:
                     self.logger.info(
-                        "There is not data for on %s."
-                        "you can ignore the previous error message",
+                        "There is not data for on %s. "
+                        "You can ignore the previous error message",
                         data_date.isoformat(),
                     )
                     data_date += datetime.timedelta(days=1)
@@ -521,11 +648,16 @@ class HydroqcContractDevice(MqttDevice):
             stats: list[HAEnergyStatType] = []
             for data in raw_data["results"]["listeDonneesConsoEnergieHoraire"]:
                 stat: HAEnergyStatType = {"start": "", "state": 0, "sum": 0}
-                data_date_str = data_date.isoformat()
-                date_hour_str = data["heure"]
-                stat["start"] = f"{data_date_str}T{date_hour_str}-04:00"
+                hour_splitted: list[int] = [int(e) for e in data["heure"].split(":", 2)]
+                start_date = datetime.datetime.combine(
+                    data_date,
+                    datetime.time(hour_splitted[0], hour_splitted[1], hour_splitted[2]),
+                )
+                localized_start_date = TZ_EASTERN.localize(start_date)
+                stat["start"] = localized_start_date.isoformat()
                 # TODO handle consoHaut and consoReg
                 stat["state"] = data["consoTotal"]
+                self.logger.debug("%s - %s", stat["start"], data["consoTotal"])
                 stats.append(stat)
 
             await self.send_consumption_statistics(stats, data_date)
@@ -545,38 +677,16 @@ class HydroqcContractDevice(MqttDevice):
         self._ws_query_id = 1
         try:
             async with aiohttp.ClientSession() as client:
-                # Connection
-                try:
-                    websocket = await client.ws_connect(
-                        str(self._home_assistant_websocket_url)
-                    )
-                except aiohttp.client_exceptions.ClientConnectorError as exp:
-                    raise Hydroqc2MqttWSError(
-                        f"E0005: Error Websocket connection error - {exp.strerror}"
-                    ) from exp
-
-                response = await websocket.receive_json()
-                if response.get("type") != "auth_required":
-                    str_response = json.dumps(response)
-                    raise Hydroqc2MqttWSError(
-                        f"E0006: Bad server response: ${str_response}"
-                    )
-                ha_version = response["ha_version"]
-
-                # Auth
-                await websocket.send_json(
-                    {"type": "auth", "access_token": self._home_assistant_token}
-                )
-                response = await websocket.receive_json()
-                if response.get("type") != "auth_ok":
-                    raise Hydroqc2MqttWSError(
-                        "E0007: Bad Home Assistant websocket token"
-                    )
+                websocket, ha_version = await self.connect_hass_ws(client)
                 # Get data from yesterday
-                data_start_date_str = (
-                    data_date - datetime.timedelta(days=1)
+                data_start_date_str = TZ_EASTERN.localize(
+                    datetime.datetime.combine(
+                        data_date - datetime.timedelta(days=1), datetime.time(0, 0)
+                    )
                 ).isoformat()
-                data_end_date_str = data_date.isoformat()
+                data_end_date_str = TZ_EASTERN.localize(
+                    datetime.datetime.combine(data_date, datetime.time(0, 0))
+                ).isoformat()
 
                 websocket_call_type = (
                     "history/statistics_during_period"
@@ -585,10 +695,10 @@ class HydroqcContractDevice(MqttDevice):
                 )
                 await websocket.send_json(
                     {
-                        "end_time": f"{data_end_date_str}T00:00:00-04:00",
+                        "end_time": data_end_date_str,
                         "id": self._ws_query_id,
                         "period": "day",
-                        "start_time": f"{data_start_date_str}T00:00:00-04:00",
+                        "start_time": data_start_date_str,
                         "statistic_ids": [self.hourly_consumption_entity_id],
                         "type": websocket_call_type,
                     }

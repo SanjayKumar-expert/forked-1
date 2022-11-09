@@ -231,4 +231,4 @@ class TestHistoryConsumption:
                 # Please note that this test will failed if the number
                 # of the last 2 years is diferent
                 # FIXME: handle when the number of days per year changes
-                assert self.send_consumption_statistics_nb_called == 731
+                assert self.send_consumption_statistics_nb_called == 732

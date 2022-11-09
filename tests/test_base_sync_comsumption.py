@@ -60,14 +60,11 @@ async def check_data_in_hass() -> None:
     hass_token = os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN"]
     async with aiohttp.ClientSession() as client:
         websocket = await client.ws_connect(ws_server_url)
-        print("DDDDDDDDDD")
         response = await websocket.receive_json()
         ha_version = response["ha_version"]
-        print(response)
         # Auth
         await websocket.send_json({"type": "auth", "access_token": hass_token})
         response = await websocket.receive_json()
-        print(response)
         # Get data from yesterday
         data_date = date.today()
         data_start_date_str = (data_date - timedelta(days=1)).isoformat()
@@ -89,10 +86,9 @@ async def check_data_in_hass() -> None:
             }
         )
         response = await websocket.receive_json()
-        print(response)
         assert (
             response["result"]["sensor.hydroqc_home_hourly_consumption"][1]["sum"]
-            == 61.94
+            == 59.04
         )
 
 
