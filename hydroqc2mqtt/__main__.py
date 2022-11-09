@@ -1,7 +1,7 @@
 """Module defining entrypoint."""
-import os
 import argparse
 import asyncio
+import os
 
 from hydroqc2mqtt.daemon import Hydroqc2Mqtt
 

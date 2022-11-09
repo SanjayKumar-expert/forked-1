@@ -46,6 +46,28 @@ HOURLY_CONSUMPTION_HISTORY_SWITCH = {
     "optimistic": False,
 }
 
+HOURLY_CONSUMPTION_HISTORY_DAYS = {
+    "name": "Days to sync in hourly consumption history",
+    "icon": "mdi:calendar-clock",
+    "entity_category": "config",
+    "sub_mqtt_topic": "contract/state",
+    "min_value": 0,
+    "max_value": 800,
+    "mode": "auto",
+    "unit": "days",
+    "step": 1,
+    "optimistic": True,
+    "start_value": 731,
+}
+
+HOURLY_CONSUMPTION_CLEAR_BUTTON = {
+    "name": "Clear hourly consumption history",
+    "icon": "mdi:broom",
+    "entity_category": "config",
+    "sub_mqtt_topic": "contract/state",
+}
+
+
 HOURLY_CONSUMPTION_SENSOR: SensorType = {
     "name": "Hourly consumption",
     "device_class": "energy",
