@@ -502,7 +502,7 @@ class HydroqcContractDevice(MqttDevice):
             websocket = await client.ws_connect(str(self._home_assistant_websocket_url))
         except aiohttp.client_exceptions.ClientConnectorError as exp:
             raise Hydroqc2MqttWSError(
-                f"E0005: Error Websocket connection error - {exp.strerror}"
+                f"E0005: Error Websocket connection error - {exp}"
             ) from exp
 
         response = await websocket.receive_json()
