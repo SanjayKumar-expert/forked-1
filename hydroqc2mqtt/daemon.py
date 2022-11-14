@@ -180,8 +180,6 @@ class Hydroqc2Mqtt(MqttClientDaemon):
                 self.mqtt_data_root_topic,
                 self.mqtt_client,
             )
-            contract.add_entities()
-            self.contracts.append(contract)
 
             self._connected = await contract.init_session()
             if not self._connected:
@@ -189,6 +187,10 @@ class Hydroqc2Mqtt(MqttClientDaemon):
                     "Can not start because we can not login at the startup."
                 )
                 sys.exit(1)
+
+            await contract.add_entities()
+            self.contracts.append(contract)
+
             # Register contract's entities to mqtt
             await contract.register()
             # Subscribes

@@ -80,6 +80,7 @@ HOURLY_CONSUMPTION_SENSOR: SensorType = {
     "sub_mqtt_topic": "contract/state",
 }
 
+
 SENSORS: dict[
     str, SensorType
 ] = {  # pylint: disable=consider-using-namedtuple-or-dataclass
@@ -396,6 +397,15 @@ SENSORS: dict[
         "icon": "mdi:home-lightning-bolt",
         "unit": "kWh",
         "sub_mqtt_topic": "wintercredits/yesterday",
+    },
+    "wc_next_pre_heat_start": {
+        "name": "Next Pre-heat start",
+        "data_source": "contract.winter_credit.next_peak.preheat.start_date",
+        "device_class": "timestamp",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:clock-start",
+        "sub_mqtt_topic": "wintercredits/state",
     },
 }
 BINARY_SENSORS: dict[

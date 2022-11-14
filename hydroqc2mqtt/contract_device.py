@@ -11,6 +11,7 @@ import hydroqc
 import paho.mqtt.client as paho
 from dateutil.relativedelta import relativedelta
 from hydroqc.webuser import WebUser
+from hydroqc.winter_credit.consts import DEFAULT_PRE_HEAT_DURATION
 from mqtt_hass_base.device import MqttDevice
 from mqtt_hass_base.entity import (
     BinarySensorSettingsType,
@@ -64,6 +65,7 @@ class HydroqcContractConfigType(TypedDict, total=False):
     account: str
     contract: str
     sync_hourly_consumption: bool
+    preheat_duration_minutes: int
     hourly_consumption_sensor_name: str | None
     home_assistant_websocket_url: str
     home_assistant_token: str
@@ -122,6 +124,9 @@ class HydroqcContractDevice(MqttDevice):
         )
         self._home_assistant_websocket_url = config.get("home_assistant_websocket_url")
         self._home_assistant_token = config.get("home_assistant_token")
+        self._preheat_duration = config.get(
+            "preheat_duration_minutes", DEFAULT_PRE_HEAT_DURATION
+        )
         self._sync_hourly_consumption_history_task: asyncio.Task[None] | None = None
         self._got_first_hourly_consumption_data: bool = False
 
@@ -182,11 +187,25 @@ class HydroqcContractDevice(MqttDevice):
             return True
         return False
 
-    def add_entities(self) -> None:
+    async def add_entities(self) -> None:
         """Add Home Assistant entities."""
+        # Get contract to know if WC is enabled
+        await self._webuser.get_info()
+        customer = self._webuser.get_customer(self._customer_id)
+        account = customer.get_account(self._account_id)
+        contract = account.get_contract(self._contract_id)
+
         for sensor_key in self._sensor_list:
             entity_settings = SENSORS[sensor_key].copy()
             sensor_name = entity_settings["name"].capitalize()
+
+            if (
+                ".winter_credit." in entity_settings["data_source"]
+                and not contract.winter_credit.is_enabled
+            ):
+                # This is a Winter Credit sensor and the contract doesn't have it enabled
+                continue
+
             sub_mqtt_topic = entity_settings["sub_mqtt_topic"].lower().strip("/")
             del entity_settings["data_source"]
             del entity_settings["name"]
@@ -211,6 +230,14 @@ class HydroqcContractDevice(MqttDevice):
         for sensor_key in self._binary_sensor_list:
             b_entity_settings = BINARY_SENSORS[sensor_key].copy()
             sensor_name = b_entity_settings["name"].capitalize()
+
+            if (
+                ".winter_credit." in b_entity_settings["data_source"]
+                and not contract.winter_credit.is_enabled
+            ):
+                # This is a Winter Credit sensor and the contract doesn't have it enabled
+                continue
+
             sub_mqtt_topic = b_entity_settings["sub_mqtt_topic"].lower().strip("/")
             del b_entity_settings["data_source"]
             del b_entity_settings["name"]
@@ -364,7 +391,11 @@ class HydroqcContractDevice(MqttDevice):
         else:
             raise Hydroqc2MqttError(f"E0003: Sensor type {sensor_type} not supported")
 
+        today = datetime.date.today()
         for sensor_key in sensor_list:
+            if not hasattr(self, sensor_key):
+                # The sensor doesn't exist, (like WC sensor when it's not enabled)
+                continue
             # Get current entity
             entity = getattr(self, sensor_key)
             # Get object path to get the value of the current entity
@@ -375,16 +406,23 @@ class HydroqcContractDevice(MqttDevice):
             # of the object "winter_credit" which is an attribute of the object "contract"
             data_obj = locals()[datasource[0]]
             value = None
+            in_winter_credit_season = False
+            if contract.winter_credit.is_enabled:
+                in_winter_credit_season = (
+                    contract.winter_credit.winter_start_date.date()
+                    <= today
+                    <= contract.winter_credit.winter_end_date.date()
+                )
+            reason = None
+            ele = ""
             for index, ele in enumerate(datasource[1:]):
+                if not in_winter_credit_season and isinstance(
+                    data_obj, hydroqc.winter_credit.handler.WinterCreditHandler
+                ):
+                    reason = "wc_sensor_not_in_season"
+                    break
                 if not hasattr(data_obj, ele):
-                    await entity.send_not_available()
-                    self.logger.warning(
-                        "%s - The object %s doesn't have the attribute %s. "
-                        "Maybe your contract doesn't have this data ?",
-                        sensor_key,
-                        data_obj,
-                        ele,
-                    )
+                    reason = "missing_data"
                     break
                 data_obj = getattr(data_obj, ele)
                 # If it's the last element of the datasource that means, it's the value
@@ -403,8 +441,21 @@ class HydroqcContractDevice(MqttDevice):
                         value = data_obj
 
             if value is None:
+                if reason == "wc_sensor_not_in_season":
+                    self.logger.info(
+                        "Not in winter credit season, ignoring %s", sensor_key
+                    )
+                elif reason == "missing_data":
+                    self.logger.warning(
+                        "%s - The object %s doesn't have the attribute `%s` . "
+                        "Maybe your contract doesn't have this data ?",
+                        sensor_key,
+                        data_obj,
+                        ele,
+                    )
+                else:
+                    self.logger.warning("Can not find value for: %s", sensor_key)
                 await entity.send_not_available()
-                self.logger.warning("Can not find value for: %s", sensor_key)
             else:
                 await entity.send_state(value, {})
                 await entity.send_available()
@@ -420,10 +471,12 @@ class HydroqcContractDevice(MqttDevice):
         customer = self._webuser.get_customer(self._customer_id)
         account = customer.get_account(self._account_id)
         contract = account.get_contract(self._contract_id)
+        contract.set_preheat_duration(self._preheat_duration)
         # fetch consumption and wintercredits
         # if needed:
         await contract.get_periods_info()
-        await contract.winter_credit.refresh_data()
+        if contract.winter_credit.is_enabled:
+            await contract.winter_credit.refresh_data()
         self.logger.info("Data fetched")
 
         # history
