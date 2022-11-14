@@ -101,7 +101,8 @@ class TestLiveConsumption:
         """Test Sync consumption for hydroqc2mqtt."""
         # Prepare MQTT Client
         client = mqtt.Client("hydroqc-test")
-        client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
+        if MQTT_USERNAME and MQTT_PASSWORD:
+            client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 
         expected_results = {}
         for root, _, files in os.walk("tests/expected_mqtt_data", topdown=False):
@@ -132,7 +133,7 @@ class TestLiveConsumption:
         client.on_connect = on_connect
         client.on_message = on_message
         client.connect_async(MQTT_HOST, MQTT_PORT, keepalive=60)
-        client.loop_start()  # type: ignore[no-untyped-call]
+        client.loop_start()
         os.environ["HQ2M_CONTRACTS_0_SYNC_HOURLY_CONSUMPTION_ENABLED"] = "true"
         # os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL"] = WS_SERVER_URL
         # os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_TOKEN"] = "fake_token"
