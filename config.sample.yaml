@@ -29,6 +29,10 @@ contracts:
     home_assistant_websocket_url: http://127.0.0.1:8123/api/websocket
     home_assistant_token: "YOUR LONGLIVED ACCESS TOKEN"
 
+    # When on Winter Credits or Flex-D, the amount of minutes prior 
+    # to the start of the critical peak we want the preheat to start.
+    preheat_duration_minutes: 120
+
     # By default all sensors will be returned, including the one that are added in the future.
     # If you uncomment some of the sensors below, only the uncommented will be generated
     # This will configure sensors available in home assistant
