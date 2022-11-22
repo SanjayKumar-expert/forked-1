@@ -1,6 +1,6 @@
 flake8==5.0.4
 pydocstyle==6.1.1
-pylint==2.15.5
+pylint==2.15.6
 pytest==7.2.0
 pytest-cov==4.0.0
 pytest-asyncio==0.20.2
@@ -8,13 +8,13 @@ pytest-timeout==2.1.0
 aioresponses==0.7.3
 black==22.10.0
 pytest-aiohttp==1.0.4
-mypy==0.990
+mypy==0.991
 types-PyYAML==6.0.12.2
 #Sphinx==1.8.4
 #sphinx-rtd-theme==0.4.3
 #tox==3.9.0
 types-paho-mqtt==1.6.0.1
-homeassistant-stubs==2022.11.2
+homeassistant-stubs==2022.11.4
 lxml==4.9.1
-types-python-dateutil==2.8.19.3
+types-python-dateutil==2.8.19.4
 types-pytz==2022.6.0.1
