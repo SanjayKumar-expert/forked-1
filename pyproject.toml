@@ -12,7 +12,7 @@ dynamic = ["version"]
 description = "Daemon managing hydroqc sensors through MQTT"
 readme = "README.md"
 authors = [
-    {name = "Hydroqc Team", email = "info@hydroqc.cq"}
+    {name = "Hydroqc Team", email = "info@hydroqc.ca"}
 ]
 license = {text = "AGPL-3.0-or-later"}
 classifiers = [
@@ -20,7 +20,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-keywords = ["hydroquebec", "mqtt", "homeassistant"]
+keywords = ["hydro-quebec", "mqtt", "homeassistant", "hydroqc"]
 
 requires-python = ">=3.10.0"
 # https://github.com/renovatebot/renovate/issues/10187
