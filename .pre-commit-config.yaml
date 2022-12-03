@@ -43,7 +43,7 @@ repos:
       - "pytest-stub==1.1.0"
       - "types-paho-mqtt==1.6.0.1"
       - "homeassistant-stubs==2022.11.5"
-      - "Hydro_Quebec_API_Wrapper==1.0.0"
+      - "Hydro_Quebec_API_Wrapper==1.0.1"
       - "mqtt-hass-base==4.1.1"
       - "aioresponses==0.7.3"
       - "types-python-dateutil==2.8.19.4"
