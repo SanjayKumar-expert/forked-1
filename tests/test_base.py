@@ -12,6 +12,8 @@ from aioresponses import aioresponses
 from hydroqc.hydro_api.consts import (
     AUTH_URL,
     AUTHORIZE_URL,
+    CONTRACT_LIST_URL,
+    CONTRACT_SUMMARY_URL,
     CUSTOMER_INFO_URL,
     GET_WINTER_CREDIT_API_URL,
     LOGIN_URL_6,
@@ -27,8 +29,8 @@ from hydroqc2mqtt.__main__ import main
 from hydroqc2mqtt.__version__ import VERSION
 
 CONTRACT_ID = os.environ["HQ2M_CONTRACTS_0_CONTRACT"]
-MQTT_USERNAME = os.environ.get("MQTT_USERNAME", None)
-MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", None)
+MQTT_USERNAME = os.environ.get("MQTT_USERNAME", "")
+MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")
 MQTT_HOST = os.environ["MQTT_HOST"]
 MQTT_PORT = int(os.environ["MQTT_PORT"])
 MQTT_DISCOVERY_ROOT_TOPIC = os.environ.get(
@@ -72,7 +74,7 @@ def test_base() -> None:  # pylint: disable=too-many-locals
     client.on_connect = on_connect
     client.on_message = on_message
     client.connect_async(MQTT_HOST, MQTT_PORT, keepalive=60)
-    client.loop_start()  # type: ignore[no-untyped-call]
+    client.loop_start()
 
     time.sleep(1)
 
@@ -112,7 +114,10 @@ def test_base() -> None:  # pylint: disable=too-many-locals
             },
         )
 
-        encoded_id_token_data = {"exp": int(time.time()) + 18000}
+        encoded_id_token_data = {
+            "sub": "fake_webuser_id",
+            "exp": int(time.time()) + 18000,
+        }
         encoded_id_token = b".".join(
             (
                 base64.b64encode(b"FAKE_TOKEN"),
@@ -157,10 +162,21 @@ def test_base() -> None:  # pylint: disable=too-many-locals
             payload_6 = json.load(fht)
         mres.get(RELATION_URL, payload=payload_6)
 
-        url_7 = re.compile(r"^" + CUSTOMER_INFO_URL + r".*$")
-        with open("tests/input_http_data/infoCompte.json", "rb") as fht:
+        with open(
+            "tests/input_http_data/calculerSommaireContractuel.json", "rb"
+        ) as fht:
             payload_7 = json.load(fht)
-        mres.get(url_7, payload=payload_7, repeat=True)
+        mres.get(CONTRACT_SUMMARY_URL, payload=payload_7)
+
+        with open("tests/input_http_data/contrats.json", "rb") as fht:
+            payload_8 = json.load(fht)
+
+        mres.post(CONTRACT_LIST_URL, payload=payload_8)
+
+        url_9 = re.compile(r"^" + CUSTOMER_INFO_URL + r".*$")
+        with open("tests/input_http_data/infoCompte.json", "rb") as fht:
+            payload_9 = json.load(fht)
+        mres.get(url_9, payload=payload_9, repeat=True)
 
         mres.get(f"{SESSION_URL}?mode=web")
 
@@ -170,15 +186,15 @@ def test_base() -> None:  # pylint: disable=too-many-locals
             "tests/input_http_data/resourceObtenirDonneesPeriodesConsommation.json",
             "rb",
         ) as fht:
-            payload_10 = json.load(fht)
-        mres.get(PERIOD_DATA_URL, payload=payload_10)
+            payload_12 = json.load(fht)
+        mres.get(PERIOD_DATA_URL, payload=payload_12)
 
         with open("tests/input_http_data/creditPointeCritique.json", "rb") as fht:
-            payload_11 = json.load(fht)
-        mres.get(GET_WINTER_CREDIT_API_URL, payload=payload_11)
+            payload_13 = json.load(fht)
+        mres.get(GET_WINTER_CREDIT_API_URL, payload=payload_13)
 
         mres.get(
-            f"{GET_WINTER_CREDIT_API_URL}?noContrat={CONTRACT_ID}", payload=payload_11
+            f"{GET_WINTER_CREDIT_API_URL}?noContrat={CONTRACT_ID}", payload=payload_13
         )
 
         # Run main loop once

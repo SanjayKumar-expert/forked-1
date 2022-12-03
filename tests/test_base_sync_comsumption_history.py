@@ -16,6 +16,8 @@ from aioresponses import CallbackResult, aioresponses
 from hydroqc.hydro_api.consts import (
     AUTH_URL,
     AUTHORIZE_URL,
+    CONTRACT_LIST_URL,
+    CONTRACT_SUMMARY_URL,
     CUSTOMER_INFO_URL,
     HOURLY_CONSUMPTION_API_URL,
     LOGIN_URL_6,
@@ -108,7 +110,10 @@ class TestHistoryConsumption:
                 },
             )
 
-            encoded_id_token_data = {"exp": int(time.time()) + 18000}
+            encoded_id_token_data = {
+                "sub": "fake_webuserid",
+                "exp": int(time.time()) + 18000,
+            }
             encoded_id_token = b".".join(
                 (
                     base64.b64encode(b"FAKE_TOKEN"),
@@ -154,6 +159,17 @@ class TestHistoryConsumption:
             mres.get(RELATION_URL, payload=payload_6)
             # Second time for consumption data sync
             mres.get(RELATION_URL, payload=payload_6)
+
+            with open(
+                "tests/input_http_data/calculerSommaireContractuel.json", "rb"
+            ) as fht:
+                payload_7 = json.load(fht)
+            mres.get(CONTRACT_SUMMARY_URL, payload=payload_7)
+
+            with open("tests/input_http_data/contrats.json", "rb") as fht:
+                payload_8 = json.load(fht)
+
+            mres.post(CONTRACT_LIST_URL, payload=payload_8)
 
             url_7 = re.compile(r"^" + CUSTOMER_INFO_URL + r".*$")
             with open("tests/input_http_data/infoCompte.json", "rb") as fht:

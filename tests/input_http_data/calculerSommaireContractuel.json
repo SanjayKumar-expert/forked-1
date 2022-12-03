@@ -1,0 +1,18 @@
+{
+  "nbContrats": 1,
+  "nbComptesContrats": 1,
+  "listeComptesContrats": {
+    "listeCompteContrat": [
+      "333333333333"
+    ]
+  },
+  "comptesContrats": [
+    {
+      "noCompteContrat": "333333333333",
+      "listeNoContrat": [
+        "4444444444"
+      ],
+      "titulaire": "0000000000"
+    }
+  ]
+}
