@@ -191,6 +191,7 @@ class HydroqcContractDevice(MqttDevice):
         """Add Home Assistant entities."""
         # Get contract to know if WC is enabled
         await self._webuser.get_info()
+        await self._webuser.fetch_customers_info()
         customer = self._webuser.get_customer(self._customer_id)
         account = customer.get_account(self._account_id)
         contract = account.get_contract(self._contract_id)
@@ -613,7 +614,6 @@ class HydroqcContractDevice(MqttDevice):
     async def start_history_task(self) -> None:
         """Start a asyncio task to fetch all the hourly data stored by HydroQc."""
         self.logger.info("Starting hourly consumption history sync task")
-        # import ipdb;ipdb.set_trace()
         loop = asyncio.get_running_loop()
         self._sync_hourly_consumption_history_task = loop.create_task(
             self.get_hourly_consumption_history()
@@ -626,11 +626,6 @@ class HydroqcContractDevice(MqttDevice):
         customer = self._webuser.get_customer(self._customer_id)
         account = customer.get_account(self._account_id)
         contract = account.get_contract(self._contract_id)
-        contract_info = await contract.get_info()
-        # Get contract start date
-        contract_start_date = datetime.date.fromisoformat(
-            contract_info["dateDebutContrat"]
-        )
         # Get two years ago plus few days
         today = datetime.date.today()
         if self.consumption_history_ent_number.current_value is None:
@@ -638,12 +633,18 @@ class HydroqcContractDevice(MqttDevice):
         else:
             days = int(self.consumption_history_ent_number.current_value)
         oldest_data_date = today - relativedelta(days=days)
-        # Get the youngest date between contract start date VS 2 years ago
-        start_date = (
-            contract_start_date
-            if contract_start_date > oldest_data_date
-            else oldest_data_date
-        )
+        # Get contract start date
+        await contract.get_info()
+        if contract.start_date is not None:
+            contract_start_date = datetime.date.fromisoformat(str(contract.start_date))
+            # Get the youngest date between contract start date VS 2 years ago
+            start_date = (
+                oldest_data_date
+                if contract_start_date < oldest_data_date
+                else contract_start_date
+            )
+        else:
+            start_date = oldest_data_date
         await self.get_historical_statistics(contract, start_date)
         await self.consumption_history_ent_switch.send_off()
         self.logger.info("Hourly consumption history sync done.")
@@ -665,7 +666,6 @@ class HydroqcContractDevice(MqttDevice):
             try:
                 raw_data = await contract.get_hourly_consumption(data_date.isoformat())
             except hydroqc.error.HydroQcHTTPError as exp:
-                # import ipdb;ipdb.set_trace()
                 if not self._got_first_hourly_consumption_data:
                     self.logger.info(
                         "There is not data for on %s. "
