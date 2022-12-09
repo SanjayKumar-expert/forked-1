@@ -22,7 +22,7 @@ from hydroqc2mqtt.error import Hydroqc2MqttError, Hydroqc2MqttWSError
 # from typing_extensions import NotRequired
 
 
-MAIN_LOOP_WAIT_TIME = 600
+MAIN_LOOP_WAIT_TIME = 60
 OVERRIDE_REGEX = re.compile(
     # TODO add env
     (
