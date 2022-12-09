@@ -340,7 +340,7 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/yesterday",
     },
     "wc_yesterday_morning_peak_actual_consumption": {
-        "name": "Yesterday morning peak actual consumtion",
+        "name": "Yesterday morning peak actual consumption",
         "data_source": "contract.winter_credit.yesterday_morning_peak.actual_consumption",
         "device_class": "energy",
         "expire_after": 0,
@@ -350,7 +350,7 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/yesterday",
     },
     "wc_yesterday_morning_peak_ref_consumption": {
-        "name": "Yesterday morning peak reference consumtion",
+        "name": "Yesterday morning peak reference consumption",
         "data_source": "contract.winter_credit.yesterday_morning_peak.ref_consumption",
         "device_class": "energy",
         "expire_after": 0,
@@ -360,7 +360,7 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/yesterday",
     },
     "wc_yesterday_morning_peak_saved_consumption": {
-        "name": "Yesterday morning peak saved consumtion",
+        "name": "Yesterday morning peak saved consumption",
         "data_source": "contract.winter_credit.yesterday_morning_peak.saved_consumption",
         "device_class": "energy",
         "expire_after": 0,
@@ -380,7 +380,7 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/yesterday",
     },
     "wc_yesterday_evening_peak_actual_consumption": {
-        "name": "Yesterday evening peak actual consumtion",
+        "name": "Yesterday evening peak actual consumption",
         "data_source": "contract.winter_credit.yesterday_evening_peak.actual_consumption",
         "device_class": "energy",
         "expire_after": 0,
@@ -390,7 +390,7 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/yesterday",
     },
     "wc_yesterday_evening_peak_ref_consumption": {
-        "name": "Yesterday evening peak reference consumtion",
+        "name": "Yesterday evening peak reference consumption",
         "data_source": "contract.winter_credit.yesterday_evening_peak.ref_consumption",
         "device_class": "energy",
         "expire_after": 0,
@@ -400,7 +400,7 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/yesterday",
     },
     "wc_yesterday_evening_peak_saved_consumption": {
-        "name": "Yesterday evening peak saved consumtion",
+        "name": "Yesterday evening peak saved consumption",
         "data_source": "contract.winter_credit.yesterday_evening_peak.saved_consumption",
         "device_class": "energy",
         "expire_after": 0,
