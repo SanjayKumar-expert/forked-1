@@ -116,12 +116,13 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         # Override hydroquebec settings from env var if exists over config file
         config: dict[str, Any] = {}
         config["contracts"] = self.config["contracts"]
-        # if config["contracts"] is None:
-        #    config["contracts"] = []
 
-        # TODO we should ensure that  os.environ.items() are sorted abc...
-
-        for env_var, value in os.environ.items():
+        # We ensure that os.environ.items() are sorted abc and with only needed env vars
+        hq2m_env_vars = sorted(
+            [env_var for env_var in os.environ if env_var.startswith("HQ2M_")]
+        )
+        for env_var in hq2m_env_vars:
+            value = os.environ[env_var]
             if env_var == "HQ2M_SYNC_FREQUENCY":
                 self.config["sync_frequency"] = int(value)
                 continue
@@ -143,6 +144,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
                     )
                 else:
                     config["contracts"][index][kind] = value
+
         if "http_log_level" not in config["contracts"][0] and self._http_log_level:
             config["contracts"][0]["http_log_level"] = self._http_log_level
 

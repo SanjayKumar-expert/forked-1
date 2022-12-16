@@ -17,6 +17,7 @@ include:
 - template: Security/SAST.gitlab-ci.yml
 
 variables:
+  TZ: America/Toronto
   TWINE_USERNAME: __token__
   MQTT_HOST: mosquitto
   MQTT_PORT: "1883"
@@ -48,7 +49,8 @@ test-hass-stable:
         - bash
       command:
         - -c
-        - mkdir -p .storage && (echo ${HASS_AUTH} | base64 -d > .storage/auth) && hass --script auth add admin password && /init
+        - |
+          mkdir -p .storage && (echo ${HASS_AUTH} | base64 -d > .storage/auth) && (hass --script ensure_config -c /config 2>&1) && (echo 'homeassistant:' >> /config/configuration.yaml) && (echo '  time_zone: America/New_York' >> /config/configuration.yaml) && (echo '  latitude: 45.508888' >> /config/configuration.yaml) && (echo '  longitude: -73.561668' >> /config/configuration.yaml) && hass --script auth add admin password && sleep 1 && /init
   tags:
   - hydroqc
   image:
@@ -57,6 +59,8 @@ test-hass-stable:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
   script:
+    - cp /usr/share/zoneinfo/America/New_York /etc/localtime
+    - echo echo "America/New_York " > /etc/timezone
     - tox --parallel auto
     - pip install --upgrade setuptools_scm
     - echo HYDROQC2MQTT_VERSION=$(python3 -m setuptools_scm) > collected.env
@@ -75,7 +79,6 @@ test-hass-stable:
       - collected.env
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-#      when: never
     - if: '$CI_COMMIT_TAG'
       when: never
     - when: on_success
@@ -96,7 +99,8 @@ test-hass-beta:
         - bash
       command:
         - -c
-        - mkdir -p .storage && (echo ${HASS_AUTH} | base64 -d > .storage/auth) && hass --script auth add admin password && /init
+        - |
+          mkdir -p .storage && (echo ${HASS_AUTH} | base64 -d > .storage/auth) && (hass --script ensure_config -c /config 2>&1) && (echo 'homeassistant:' >> /config/configuration.yaml) && (echo '  time_zone: America/New_York' >> /config/configuration.yaml) && (echo '  latitude: 45.508888' >> /config/configuration.yaml) && (echo '  longitude: -73.561668' >> /config/configuration.yaml) && hass --script auth add admin password && sleep 1 && /init
   tags:
   - hydroqc
   image:
@@ -105,6 +109,8 @@ test-hass-beta:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
   script:
+    - cp /usr/share/zoneinfo/America/New_York /etc/localtime
+    - echo echo "America/New_York " > /etc/timezone
     - tox --parallel auto
   artifacts:
     reports:
@@ -194,5 +200,3 @@ promote2pypi:
     - if: '$CI_COMMIT_TAG'
       when: on_success
     - when: never
-
-

@@ -1,6 +1,7 @@
 """Base tests for hydroqc2mqtt."""
 import asyncio
 import base64
+import copy
 import json
 
 # import logging
@@ -10,7 +11,7 @@ import sys
 
 # import threading
 import time
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import aiohttp
@@ -32,6 +33,7 @@ from hydroqc.hydro_api.consts import (
     SESSION_REFRESH_URL,
     SESSION_URL,
 )
+from hydroqc.winter_credit.consts import EST_TIMEZONE
 from packaging import version
 
 from hydroqc2mqtt.__main__ import main
@@ -68,7 +70,7 @@ async def check_data_in_hass() -> None:
         await websocket.send_json({"type": "auth", "access_token": hass_token})
         response = await websocket.receive_json()
         # Get data from yesterday
-        data_date = date.today()
+        data_date = datetime.today().astimezone(EST_TIMEZONE)
         data_start_date_str = (data_date - timedelta(days=1)).isoformat()
         data_end_date_str = data_date.isoformat()
 
@@ -79,18 +81,18 @@ async def check_data_in_hass() -> None:
         )
         await websocket.send_json(
             {
-                "end_time": f"{data_end_date_str}T00:00:00-04:00",
+                "end_time": data_end_date_str,
                 "id": query_id,
                 "period": "day",
-                "start_time": f"{data_start_date_str}T00:00:00-04:00",
-                "statistic_ids": ["sensor.hydroqc_home_hourly_consumption"],
+                "start_time": data_start_date_str,
+                "statistic_ids": ["sensor.hydroqc_home_total_hourly_consumption"],
                 "type": websocket_call_type,
             }
         )
         response = await websocket.receive_json()
         assert (
-            response["result"]["sensor.hydroqc_home_hourly_consumption"][1]["sum"]
-            == 59.04
+            response["result"]["sensor.hydroqc_home_total_hourly_consumption"][0]["sum"]
+            == 61.94
         )
 
 
@@ -234,6 +236,7 @@ class TestLiveConsumption:
                 "tests/input_http_data/calculerSommaireContractuel.json", "rb"
             ) as fht:
                 payload_7 = json.load(fht)
+                print(CONTRACT_SUMMARY_URL)
             mres.get(CONTRACT_SUMMARY_URL, payload=payload_7)
 
             with open("tests/input_http_data/contrats.json", "rb") as fht:
@@ -271,7 +274,9 @@ class TestLiveConsumption:
                 "rb",
             ) as fht:
                 payload_12 = json.load(fht)
+                payload_13 = copy.copy(payload_12)
                 payload_12["results"]["dateJour"] = YESTERDAY_STR
+                payload_13["results"]["dateJour"] = TODAY_STR
             mres.get(
                 f"{HOURLY_CONSUMPTION_API_URL}?date={YESTERDAY_STR}", payload=payload_12
             )

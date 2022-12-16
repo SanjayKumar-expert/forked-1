@@ -8,18 +8,15 @@ import sys
 import time
 from contextlib import AsyncExitStack
 from datetime import date, datetime, timedelta
-from typing import Any
 
 import pytest
-import yarl
-from aioresponses import CallbackResult, aioresponses
+from aioresponses import aioresponses
 from hydroqc.hydro_api.consts import (
     AUTH_URL,
     AUTHORIZE_URL,
     CONTRACT_LIST_URL,
     CONTRACT_SUMMARY_URL,
     CUSTOMER_INFO_URL,
-    HOURLY_CONSUMPTION_API_URL,
     LOGIN_URL_6,
     PORTRAIT_URL,
     RELATION_URL,
@@ -57,10 +54,10 @@ YESTERDAY2_STR = YESTERDAY2.strftime("%Y-%m-%d")
 class TestHistoryConsumption:
     """Test class for Live consumption feature."""
 
-    def teardown(self) -> None:
+    def teardown_method(self) -> None:
         """Teardown test method."""
 
-    def setup(self) -> None:
+    def setup_method(self) -> None:
         """Set up test method."""
 
     @pytest.mark.asyncio
@@ -180,22 +177,6 @@ class TestHistoryConsumption:
 
             mres.get(f"{PORTRAIT_URL}?noContrat={CONTRACT_ID}")
 
-            def hourly_data_callback(
-                url: yarl.URL,  # pylint: disable=unused-argument
-                **kwargs: dict[str, Any],
-            ) -> CallbackResult:
-                date_str = url.query["date"]
-                with open(
-                    "tests/input_http_data/resourceObtenirDonneesConsommationHoraires.json",
-                    "rb",
-                ) as fht:
-                    payload_12 = json.load(fht)
-                    payload_12["results"]["dateJour"] = date_str
-                return CallbackResult(status=200, payload=payload_12)
-
-            pattern = re.compile(rf"^{HOURLY_CONSUMPTION_API_URL}\?date=.*$")
-            mres.get(pattern, callback=hourly_data_callback, repeat=True)
-
             # Run Daemon manually
             del sys.argv[1:]
             sys.argv.append("--run-once")
@@ -231,13 +212,61 @@ class TestHistoryConsumption:
 
                 async def mock_send_consptn_statistics(
                     stats: list[HAEnergyStatType],
+                    consumption: str,  # pylint: disable=unused-argument
                     data_date: date,  # pylint: disable=unused-argument
                 ) -> None:
                     self.send_consumption_statistics_nb_called += 1
                     # We want to ensure that all data sent to WS are correct
-                    assert sum(s["state"] for s in stats) == 61.94
+                    assert sum(s["state"] for s in stats) == sum(range(0, 24)) * 2
 
                 contract.send_consumption_statistics = mock_send_consptn_statistics  # type: ignore
+
+                # Mock get_hourly_energy
+                async def mock_get_hourly_energy(
+                    start_date: str,
+                    end_date: str,
+                    raw_output: bool = False,  # pylint: disable=unused-argument
+                ) -> list[list[str]]:
+                    data: list[list[str]] = []
+                    header = [
+                        "Contrat",
+                        "Date et heure",
+                        "kWh",
+                        "Code de consommation",
+                        "Température moyenne (°C)",
+                        "Code de température",
+                    ]
+                    data.append(header)
+                    for hour in range(0, 24):
+                        value = f"{hour},00"
+                        data.append(
+                            [
+                                "0000000000",
+                                f"{start_date} {hour:02}:00:00",
+                                value,
+                                "R",
+                                "0",
+                                "R",
+                            ]
+                        )
+                    for hour in range(0, 24):
+                        value = f"{hour},00"
+                        data.append(
+                            [
+                                "0000000000",
+                                f"{end_date} {hour:02}:00:00",
+                                value,
+                                "R",
+                                "0",
+                                "R",
+                            ]
+                        )
+                    return data
+
+                contract._webuser.customers[0].accounts[0].contracts[  # type: ignore
+                    0
+                ].get_hourly_energy = mock_get_hourly_energy  # type: ignore
+
                 # Connecting to the contract
                 await contract.init_session()
                 # Starting importing data
@@ -247,4 +276,4 @@ class TestHistoryConsumption:
                 # Please note that this test will failed if the number
                 # of the last 2 years is diferent
                 # FIXME: handle when the number of days per year changes
-                assert self.send_consumption_statistics_nb_called == 732
+                assert self.send_consumption_statistics_nb_called in {732, 731}

@@ -23,6 +23,7 @@ class SensorType(TypedDict, total=False):
     unit: str | None
     sub_mqtt_topic: str
     object_id: str
+    rates: list[str]
 
 
 class BinarySensorType(TypedDict, total=False):
@@ -36,6 +37,7 @@ class BinarySensorType(TypedDict, total=False):
     icon: str
     sub_mqtt_topic: str
     object_id: str
+    rates: list[str]
 
 
 HOURLY_CONSUMPTION_HISTORY_SWITCH = {
@@ -68,8 +70,32 @@ HOURLY_CONSUMPTION_CLEAR_BUTTON = {
 }
 
 
-HOURLY_CONSUMPTION_SENSOR: SensorType = {
-    "name": "Hourly consumption",
+HOURLY_CONSUMPTION_TOTAL_SENSOR: SensorType = {
+    "name": "Total hourly consumption",
+    "device_class": "energy",
+    "expire_after": 0,
+    "entity_category": "diagnostic",
+    "force_update": False,
+    "icon": "mdi:lightning-bolt",
+    "state_class": "total",
+    "unit": "kWh",
+    "sub_mqtt_topic": "contract/state",
+}
+
+HOURLY_CONSUMPTION_HAUT_SENSOR: SensorType = {
+    "name": "High price hourly consumption",
+    "device_class": "energy",
+    "expire_after": 0,
+    "entity_category": "diagnostic",
+    "force_update": False,
+    "icon": "mdi:lightning-bolt",
+    "state_class": "total",
+    "unit": "kWh",
+    "sub_mqtt_topic": "contract/state",
+}
+
+HOURLY_CONSUMPTION_REG_SENSOR: SensorType = {
+    "name": "Reg price hourly consumption",
     "device_class": "energy",
     "expire_after": 0,
     "entity_category": "diagnostic",
@@ -95,6 +121,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": "CAD",
         "sub_mqtt_topic": "account/state",
+        "rates": ["ALL"],
     },
     # Contract
     "current_billing_period_current_day": {
@@ -107,6 +134,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": "days",
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_duration": {
         "name": "Current billing period duration",
@@ -118,6 +146,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": "days",
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_total_to_date": {
         "name": "Current billing period total to date",
@@ -129,6 +158,7 @@ SENSORS: dict[
         "state_class": "total_increasing",
         "unit": "CAD",
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_projected_bill": {
         "name": "Current billing period projected bill",
@@ -140,6 +170,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": "CAD",
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_daily_bill_mean": {
         "name": "Current billing period daily bill mean",
@@ -151,6 +182,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": "CAD",
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_daily_consumption_mean": {
         "name": "Current billing period daily consumption mean",
@@ -162,6 +194,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": "kWh",
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_total_consumption": {
         "name": "Current billing period total consumption",
@@ -173,6 +206,7 @@ SENSORS: dict[
         "state_class": "total_increasing",
         "unit": "kWh",
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_projected_total_consumption": {
         "name": "Current billing period projected total consumption",
@@ -184,28 +218,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": "kWh",
         "sub_mqtt_topic": "contract/state",
-    },
-    "current_billing_period_higher_price_consumption": {
-        "name": "Current billing period higher price consumption",
-        "data_source": "contract.cp_higher_price_consumption",
-        "device_class": "energy",
-        "expire_after": 0,
-        "force_update": False,
-        "icon": "mdi:home-lightning-bolt",
-        "state_class": "measurement",
-        "unit": "kWh",
-        "sub_mqtt_topic": "contract/state",
-    },
-    "current_billing_period_lower_price_consumption": {
-        "name": "Current billing period lower price consumption",
-        "data_source": "contract.cp_lower_price_consumption",
-        "device_class": "energy",
-        "expire_after": 0,
-        "force_update": False,
-        "icon": "mdi:home-lightning-bolt-outline",
-        "state_class": "measurement",
-        "unit": "kWh",
-        "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_average_temperature": {
         "name": "Current billing period average temperature",
@@ -217,6 +230,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": "°C",
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_kwh_cost_mean": {
         "name": "Current billing period kwh cost mean",
@@ -228,6 +242,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": "CAD",
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_rate": {
         "name": "Current billing period rate",
@@ -239,6 +254,7 @@ SENSORS: dict[
         "state_class": None,
         "unit": None,
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     "current_billing_period_rate_option": {
         "name": "Current billing period rate option",
@@ -250,6 +266,44 @@ SENSORS: dict[
         "state_class": None,
         "unit": None,
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
+    },
+    # FlexD and DT (identical for now...)
+    "current_billing_period_higher_price_consumption": {
+        "name": "Current billing period higher price consumption",
+        "data_source": "contract.cp_higher_price_consumption",
+        "device_class": "energy",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:home-lightning-bolt",
+        "state_class": "measurement",
+        "unit": "kWh",
+        "sub_mqtt_topic": "contract/state",
+        "rates": ["DT", "DPC"],
+    },
+    "current_billing_period_lower_price_consumption": {
+        "name": "Current billing period lower price consumption",
+        "data_source": "contract.cp_lower_price_consumption",
+        "device_class": "energy",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:home-lightning-bolt-outline",
+        "state_class": "measurement",
+        "unit": "kWh",
+        "sub_mqtt_topic": "contract/state",
+        "rates": ["DT", "DPC"],
+    },
+    "amount_saved_vs_base_rate": {
+        "name": "Net saving/loss vs rate D",
+        "data_source": "contract.amount_saved_vs_base_rate",
+        "device_class": "monetary",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:currency-usd",
+        "state_class": "measurement",
+        "unit": "CAD",
+        "sub_mqtt_topic": "contract/state",
+        "rates": ["DT", "DPC"],
     },
     # Winter credits
     "wc_state": {
@@ -262,6 +316,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": None,
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_cumulated_credit": {
         "name": "Cumulated winter credit",
@@ -273,6 +328,7 @@ SENSORS: dict[
         "state_class": "measurement",
         "unit": "CAD",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_next_anchor_start": {
         "name": "Next anchor start",
@@ -282,6 +338,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:clock-start",
         "sub_mqtt_topic": "wintercredits/next/anchor",
+        "rates": ["DCPC"],
     },
     "wc_next_anchor_end": {
         "name": "Next anchor end",
@@ -291,6 +348,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:clock-end",
         "sub_mqtt_topic": "wintercredits/next/anchor",
+        "rates": ["DCPC"],
     },
     "wc_next_peak_start": {
         "name": "Next peak start",
@@ -300,6 +358,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:clock-start",
         "sub_mqtt_topic": "wintercredits/next/peak",
+        "rates": ["DCPC"],
     },
     "wc_next_peak_end": {
         "name": "Next peak end",
@@ -309,6 +368,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:clock-end",
         "sub_mqtt_topic": "wintercredits/next/peak",
+        "rates": ["DCPC"],
     },
     "wc_next_critical_peak_start": {
         "name": "Next critical peak start",
@@ -318,6 +378,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:clock-start",
         "sub_mqtt_topic": "wintercredits/next/critical",
+        "rates": ["DCPC"],
     },
     "wc_next_critical_peak_end": {
         "name": "Next critical peak end",
@@ -327,6 +388,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:clock-end",
         "sub_mqtt_topic": "wintercredits/next/critical",
+        "rates": ["DCPC"],
     },
     # Yesterday
     "wc_yesterday_morning_peak_credit": {
@@ -338,6 +400,7 @@ SENSORS: dict[
         "icon": "mdi:currency-usd",
         "unit": "CAD",
         "sub_mqtt_topic": "wintercredits/yesterday",
+        "rates": ["DCPC"],
     },
     "wc_yesterday_morning_peak_actual_consumption": {
         "name": "Yesterday morning peak actual consumtion",
@@ -348,6 +411,7 @@ SENSORS: dict[
         "icon": "mdi:home-lightning-bolt",
         "unit": "kWh",
         "sub_mqtt_topic": "wintercredits/yesterday",
+        "rates": ["DCPC"],
     },
     "wc_yesterday_morning_peak_ref_consumption": {
         "name": "Yesterday morning peak reference consumtion",
@@ -358,6 +422,7 @@ SENSORS: dict[
         "icon": "mdi:home-lightning-bolt",
         "unit": "kWh",
         "sub_mqtt_topic": "wintercredits/yesterday",
+        "rates": ["DCPC"],
     },
     "wc_yesterday_morning_peak_saved_consumption": {
         "name": "Yesterday morning peak saved consumtion",
@@ -368,6 +433,7 @@ SENSORS: dict[
         "icon": "mdi:home-lightning-bolt",
         "unit": "kWh",
         "sub_mqtt_topic": "wintercredits/yesterday",
+        "rates": ["DCPC"],
     },
     "wc_yesterday_evening_peak_credit": {
         "name": "Yesterday evening peak saved credit",
@@ -378,6 +444,7 @@ SENSORS: dict[
         "icon": "mdi:currency-usd",
         "unit": "CAD",
         "sub_mqtt_topic": "wintercredits/yesterday",
+        "rates": ["DCPC"],
     },
     "wc_yesterday_evening_peak_actual_consumption": {
         "name": "Yesterday evening peak actual consumtion",
@@ -388,6 +455,7 @@ SENSORS: dict[
         "icon": "mdi:home-lightning-bolt",
         "unit": "kWh",
         "sub_mqtt_topic": "wintercredits/yesterday",
+        "rates": ["DCPC"],
     },
     "wc_yesterday_evening_peak_ref_consumption": {
         "name": "Yesterday evening peak reference consumtion",
@@ -398,6 +466,7 @@ SENSORS: dict[
         "icon": "mdi:home-lightning-bolt",
         "unit": "kWh",
         "sub_mqtt_topic": "wintercredits/yesterday",
+        "rates": ["DCPC"],
     },
     "wc_yesterday_evening_peak_saved_consumption": {
         "name": "Yesterday evening peak saved consumtion",
@@ -408,6 +477,7 @@ SENSORS: dict[
         "icon": "mdi:home-lightning-bolt",
         "unit": "kWh",
         "sub_mqtt_topic": "wintercredits/yesterday",
+        "rates": ["DCPC"],
     },
     "wc_next_pre_heat_start": {
         "name": "Next Pre-heat start",
@@ -417,6 +487,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:clock-start",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
 }
 BINARY_SENSORS: dict[
@@ -430,6 +501,7 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:code-equal",
         "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
     },
     # Winter credits
     "wc_critical": {
@@ -440,6 +512,7 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_critical_peak_in_progress": {
         "name": "Critical peak in progress",
@@ -448,6 +521,7 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_pre_heat": {
         "name": "Pre-heat In Progress",
@@ -456,6 +530,7 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_next_anchor_critical": {
         "name": "Next Anchor Period Critical",
@@ -465,6 +540,7 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_next_peak_critical": {
         # == wc_critical
@@ -475,6 +551,7 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_upcoming_critical_peak": {
         # True si au moins un peaks donnés par l'API d'hydroQuebec n'est pas encore terminé
@@ -484,6 +561,7 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:flash-alert",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_critical_morning_peak_today": {
         "name": "Critical Morning Peak Today",
@@ -492,6 +570,7 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:message-flash",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_critical_evening_peak_today": {
         "name": "Critical Evening Peak Today",
@@ -500,6 +579,7 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:message-flash",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_critical_morning_peak_tomorrow": {
         "name": "Critical Morning Peak tomorrow",
@@ -508,6 +588,7 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:message-flash",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
     "wc_critical_evening_peak_tomorrow": {
         "name": "Critical Evening Peak tomorrow",
@@ -516,5 +597,6 @@ BINARY_SENSORS: dict[
         "force_update": False,
         "icon": "mdi:message-flash",
         "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
     },
 }
