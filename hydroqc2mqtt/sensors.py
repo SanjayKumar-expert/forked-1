@@ -240,7 +240,7 @@ SENSORS: dict[
         "force_update": False,
         "icon": "mdi:currency-usd",
         "state_class": "measurement",
-        "unit": "CAD",
+        "unit": "CAD/kWh",
         "sub_mqtt_topic": "contract/state",
         "rates": ["ALL"],
     },
