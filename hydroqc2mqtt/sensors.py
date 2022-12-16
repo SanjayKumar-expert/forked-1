@@ -313,7 +313,6 @@ SENSORS: dict[
         "expire_after": 0,
         "force_update": False,
         "icon": None,
-        "state_class": "measurement",
         "unit": None,
         "sub_mqtt_topic": "wintercredits/state",
         "rates": ["DCPC"],
