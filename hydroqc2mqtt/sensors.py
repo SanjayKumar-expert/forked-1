@@ -24,6 +24,7 @@ class SensorType(TypedDict, total=False):
     sub_mqtt_topic: str
     object_id: str
     rates: list[str]
+    attributes: dict[str, str]
 
 
 class BinarySensorType(TypedDict, total=False):
@@ -38,6 +39,7 @@ class BinarySensorType(TypedDict, total=False):
     sub_mqtt_topic: str
     object_id: str
     rates: list[str]
+    attributes: dict[str, str]
 
 
 HOURLY_CONSUMPTION_HISTORY_SWITCH = {
@@ -338,6 +340,9 @@ SENSORS: dict[
         "icon": "mdi:clock-start",
         "sub_mqtt_topic": "wintercredits/next/anchor",
         "rates": ["DCPC"],
+        "attributes": {
+            "critical": "contract.winter_credit.next_peak.is_critical",
+        },
     },
     "wc_next_anchor_end": {
         "name": "Next anchor end",
@@ -348,6 +353,9 @@ SENSORS: dict[
         "icon": "mdi:clock-end",
         "sub_mqtt_topic": "wintercredits/next/anchor",
         "rates": ["DCPC"],
+        "attributes": {
+            "critical": "contract.winter_credit.next_peak.is_critical",
+        },
     },
     "wc_next_peak_start": {
         "name": "Next peak start",
@@ -358,6 +366,9 @@ SENSORS: dict[
         "icon": "mdi:clock-start",
         "sub_mqtt_topic": "wintercredits/next/peak",
         "rates": ["DCPC"],
+        "attributes": {
+            "critical": "contract.winter_credit.next_peak.is_critical",
+        },
     },
     "wc_next_peak_end": {
         "name": "Next peak end",
@@ -368,6 +379,9 @@ SENSORS: dict[
         "icon": "mdi:clock-end",
         "sub_mqtt_topic": "wintercredits/next/peak",
         "rates": ["DCPC"],
+        "attributes": {
+            "critical": "contract.winter_credit.next_peak.is_critical",
+        },
     },
     "wc_next_critical_peak_start": {
         "name": "Next critical peak start",
@@ -487,6 +501,9 @@ SENSORS: dict[
         "icon": "mdi:clock-start",
         "sub_mqtt_topic": "wintercredits/state",
         "rates": ["DCPC"],
+        "attributes": {
+            "critical": "contract.winter_credit.next_peak.is_critical",
+        },
     },
 }
 BINARY_SENSORS: dict[

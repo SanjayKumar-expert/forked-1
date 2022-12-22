@@ -4,6 +4,7 @@ import os
 import re
 import sys
 from contextlib import AsyncExitStack
+from datetime import datetime
 from typing import Any, TypedDict
 
 import asyncio_mqtt as mqtt
@@ -54,6 +55,9 @@ class ConfigType(TypedDict, total=False):
     sync_frequency: int
     unregister_on_stop: bool
     contracts: list[HydroqcContractConfigType]
+    _main_loop_run_hour: int
+    _hour_first_minute_loop: bool
+    _main_loop_wait_time: int
 
 
 class Hydroqc2Mqtt(MqttClientDaemon):
@@ -92,6 +96,9 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         self._http_log_level = http_log_level
         self._needs_mqtt_reconnection: bool = False
         self.config: ConfigType = {}
+        self._main_loop_run_hour = datetime.now().hour
+        self._hour_first_minute_loop = False
+        self._main_loop_wait_time = 0
 
         MqttClientDaemon.__init__(
             self,
@@ -243,10 +250,26 @@ class Hydroqc2Mqtt(MqttClientDaemon):
             self.must_run = False
             return
 
-        i = 0
-        while i < self.sync_frequency and self.must_run:
+        if self._hour_first_minute_loop is True:
+            self._hour_first_minute_loop = False
+            self.logger.info("Ending first main loop of the hour.")
+            self.logger.debug(
+                "The main loop wait time is equal to %d", self._main_loop_wait_time
+            )
+        else:
+            self._main_loop_wait_time = 0
+
+        while self._main_loop_wait_time < self.sync_frequency and self.must_run:
+
+            now_hour = datetime.now().hour
+            if self._main_loop_run_hour != now_hour:
+                self._hour_first_minute_loop = True
+                self._main_loop_run_hour = now_hour
+                self.logger.info("Starting first main loop of the hour.")
+                break
+
             await asyncio.sleep(1)
-            i += 1
+            self._main_loop_wait_time += 1
 
     async def _loop_stopped(self) -> None:
         """Run after the end of the main loop."""
