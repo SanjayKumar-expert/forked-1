@@ -140,9 +140,15 @@ class HydroqcContractDevice(MqttDevice):
         )
         self._home_assistant_websocket_url = config.get("home_assistant_websocket_url")
         self._home_assistant_token = config.get("home_assistant_token")
-        self._preheat_duration = config.get(
-            "preheat_duration_minutes", DEFAULT_PRE_HEAT_DURATION
-        )
+        try:
+            self._preheat_duration = int(
+                config.get("preheat_duration_minutes", DEFAULT_PRE_HEAT_DURATION)
+            )
+        except ValueError as exp:
+            raise Hydroqc2MqttError(
+                f"PREHEAT_DURATION_MINUTES value can not be convert "
+                f"to an integer for contract {self._contract_id}"
+            ) from exp
         self._sync_hourly_consumption_history_task: asyncio.Task[None] | None = None
         self._got_first_hourly_consumption_data: bool = False
         self.hourly_consumption_entity_list: dict[str, MqttSensor] = {}
