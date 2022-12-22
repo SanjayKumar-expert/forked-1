@@ -237,6 +237,8 @@ class HydroqcContractDevice(MqttDevice):
             del entity_settings["name"]
             del entity_settings["sub_mqtt_topic"]
             del entity_settings["rates"]
+            if "attributes" in entity_settings:
+                del entity_settings["attributes"]
             entity_settings["object_id"] = f"{self.name}_{sensor_name}"
 
             setattr(
@@ -414,6 +416,79 @@ class HydroqcContractDevice(MqttDevice):
             return await self._login()
         return True
 
+    def _get_object_attribute_value(
+        self,
+        datasource: list[str],
+        sensor_list: dict[str, SensorType] | dict[str, BinarySensorType],
+        sensor_key: str,
+        sensor_type: str,
+        customer: hydroqc.customer.Customer,  # pylint: disable=unused-argument
+        account: hydroqc.account.Account,  # pylint: disable=unused-argument
+        contract: Contract,
+    ) -> str | None:
+        """Get object path to get the value of the current entity.
+
+        Example: datasource = "contract.winter_credit.value_state_evening_event_today"
+                 datasource = ["contract", "winter_credit", "value_state_evening_event_today"]
+
+        Here we try get the value of the attribut "value_state_evening_event_today"
+        of the object "winter_credit" which is an attribute of the object "contract"
+        """
+        today = datetime.date.today()
+        data_obj = locals()[datasource[0]]
+        value = None
+        in_winter_credit_season = False
+
+        if contract.rate_option == "CPC":
+            contract = cast(ContractDCPC, contract)
+            in_winter_credit_season = (
+                contract.winter_credit.winter_start_date.date()
+                <= today
+                <= contract.winter_credit.winter_end_date.date()
+            )
+        reason = None
+        ele = ""
+        for index, ele in enumerate(datasource[1:]):
+            if not in_winter_credit_season and isinstance(
+                data_obj, hydroqc.winter_credit.handler.WinterCreditHandler
+            ):
+                reason = "wc_sensor_not_in_season"
+                break
+            if not hasattr(data_obj, ele):
+                reason = "missing_data"
+                break
+            data_obj = getattr(data_obj, ele)
+            # If it's the last element of the datasource that means, it's the value
+            if index + 1 == len(datasource[1:]):
+                if sensor_type == "BINARY_SENSORS":
+                    value = "ON" if data_obj else "OFF"
+                elif isinstance(data_obj, datetime.datetime):
+                    value = data_obj.isoformat()
+                elif (
+                    isinstance(data_obj, (int, float))
+                    and "device_class" in sensor_list[sensor_key]
+                    and sensor_list[sensor_key]["device_class"] == "monetary"
+                ):
+                    value = str(round(data_obj, 2))
+                else:
+                    value = data_obj
+
+        if value is None and sensor_type != "ATTRIBUTES":
+            if reason == "wc_sensor_not_in_season":
+                self.logger.info("Not in winter credit season, ignoring %s", sensor_key)
+            elif reason == "missing_data":
+                self.logger.warning(
+                    "%s - The object %s doesn't have the attribute `%s` . "
+                    "Maybe your contract doesn't have this data ?",
+                    sensor_key,
+                    data_obj,
+                    ele,
+                )
+            else:
+                self.logger.warning("Can not find value for: %s", sensor_key)
+
+        return value
+
     async def _update_sensors(
         self,
         sensor_list: dict[str, SensorType] | dict[str, BinarySensorType],
@@ -433,7 +508,6 @@ class HydroqcContractDevice(MqttDevice):
         else:
             raise Hydroqc2MqttError(f"E0003: Sensor type {sensor_type} not supported")
 
-        today = datetime.date.today()
         for sensor_key in sensor_list:
             if not hasattr(self, sensor_key):
                 # The sensor doesn't exist, (like WC sensor when it's not enabled)
@@ -442,66 +516,37 @@ class HydroqcContractDevice(MqttDevice):
             entity = getattr(self, sensor_key)
             # Get object path to get the value of the current entity
             datasource = sensor_config[sensor_key]["data_source"].split(".")
-            # Example: datasource = "contract.winter_credit.value_state_evening_event_today"
-            # datasource = ["contract", "winter_credit", "value_state_evening_event_today"]
-            # Here we try get the value of the attribut "value_state_evening_event_today"
-            # of the object "winter_credit" which is an attribute of the object "contract"
-            data_obj = locals()[datasource[0]]
-            value = None
-            in_winter_credit_season = False
+            # Get object path to get the value of the attributes of the current entity
+            attr_dss = sensor_config[sensor_key].get("attributes", {})
 
-            if contract.rate_option == "CPC":
-                contract = cast(ContractDCPC, contract)
-                in_winter_credit_season = (
-                    contract.winter_credit.winter_start_date.date()
-                    <= today
-                    <= contract.winter_credit.winter_end_date.date()
+            value = self._get_object_attribute_value(
+                datasource,
+                sensor_list,
+                sensor_key,
+                sensor_type,
+                customer,
+                account,
+                contract,
+            )
+
+            attributes = {}
+            for attr_key, attr_ds in attr_dss.items():
+                datasource = attr_ds.split(".")
+                attr_value = self._get_object_attribute_value(
+                    datasource,
+                    sensor_list,
+                    sensor_key,
+                    "ATTRIBUTE",
+                    customer,
+                    account,
+                    contract,
                 )
-            reason = None
-            ele = ""
-            for index, ele in enumerate(datasource[1:]):
-                if not in_winter_credit_season and isinstance(
-                    data_obj, hydroqc.winter_credit.handler.WinterCreditHandler
-                ):
-                    reason = "wc_sensor_not_in_season"
-                    break
-                if not hasattr(data_obj, ele):
-                    reason = "missing_data"
-                    break
-                data_obj = getattr(data_obj, ele)
-                # If it's the last element of the datasource that means, it's the value
-                if index + 1 == len(datasource[1:]):
-                    if sensor_type == "BINARY_SENSORS":
-                        value = "ON" if data_obj else "OFF"
-                    elif isinstance(data_obj, datetime.datetime):
-                        value = data_obj.isoformat()
-                    elif (
-                        isinstance(data_obj, (int, float))
-                        and "device_class" in sensor_list[sensor_key]
-                        and sensor_list[sensor_key]["device_class"] == "monetary"
-                    ):
-                        value = str(round(data_obj, 2))
-                    else:
-                        value = data_obj
+                attributes[attr_key] = attr_value
 
             if value is None:
-                if reason == "wc_sensor_not_in_season":
-                    self.logger.info(
-                        "Not in winter credit season, ignoring %s", sensor_key
-                    )
-                elif reason == "missing_data":
-                    self.logger.warning(
-                        "%s - The object %s doesn't have the attribute `%s` . "
-                        "Maybe your contract doesn't have this data ?",
-                        sensor_key,
-                        data_obj,
-                        ele,
-                    )
-                else:
-                    self.logger.warning("Can not find value for: %s", sensor_key)
                 await entity.send_not_available()
             else:
-                await entity.send_state(value, {})
+                await entity.send_state(value, attributes)
                 await entity.send_available()
 
     async def update(self) -> None:
