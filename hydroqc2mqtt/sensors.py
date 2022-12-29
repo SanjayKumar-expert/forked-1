@@ -331,6 +331,18 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/state",
         "rates": ["DCPC"],
     },
+    "wc_projected_cumulated_credit": {
+        "name": "Projected cumulated winter credit",
+        "data_source": "contract.winter_credit.projected_cumulated_credit",
+        "device_class": "monetary",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:currency-usd",
+        "state_class": "measurement",
+        "unit": "CAD",
+        "sub_mqtt_topic": "wintercredits/state",
+        "rates": ["DCPC"],
+    },
     "wc_next_anchor_start": {
         "name": "Next anchor start",
         "data_source": "contract.winter_credit.next_peak.anchor.start_date",
