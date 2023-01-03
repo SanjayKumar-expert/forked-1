@@ -454,9 +454,13 @@ class HydroqcContractDevice(MqttDevice):
             ):
                 reason = "wc_sensor_not_in_season"
                 break
-            if not hasattr(data_obj, ele):
+            if hasattr(data_obj, ele) is False:
                 reason = "missing_data"
                 break
+            if getattr(data_obj, ele) is None:
+                reason = "data_not_available"
+                break
+
             data_obj = getattr(data_obj, ele)
             # If it's the last element of the datasource that means, it's the value
             if index + 1 == len(datasource[1:]):
@@ -476,6 +480,11 @@ class HydroqcContractDevice(MqttDevice):
         if value is None and sensor_type != "ATTRIBUTES":
             if reason == "wc_sensor_not_in_season":
                 self.logger.info("Not in winter credit season, ignoring %s", sensor_key)
+            elif reason == "data_not_available":
+                self.logger.info(
+                    "The value of %s is unkwown (the value is null) at this time",
+                    sensor_key,
+                )
             elif reason == "missing_data":
                 self.logger.warning(
                     "%s - The object %s doesn't have the attribute `%s` . "
@@ -770,6 +779,12 @@ class HydroqcContractDevice(MqttDevice):
         retry = 5
         self._got_first_hourly_consumption_data = False
         data_date = copy.copy(start_data_date)
+        stats: dict[str, list[HAEnergyStatType]] = {
+            "reg": [],
+            "haut": [],
+            "total": [],
+        }
+        start_date = None
         while data_date < today:
             try:
                 self.logger.info(
@@ -829,12 +844,7 @@ class HydroqcContractDevice(MqttDevice):
             #  'Code de consommation', 'Température moyenne (°C)', 'Code de température']
             raw_data_sorted = raw_data_sorted[1:]
             raw_data_sorted.reverse()
-            start_date = None
-            stats: dict[str, list[HAEnergyStatType]] = {
-                "reg": [],
-                "haut": [],
-                "total": [],
-            }
+
             # stats: list[HAEnergyStatType] = []
             for line in raw_data_sorted:
                 # Get date
@@ -902,52 +912,17 @@ class HydroqcContractDevice(MqttDevice):
                         stats["total"][-1]["state"],
                     )
 
-            if start_date is None:
-                raise Hydroqc2MqttError(
-                    "EOO11: no Start date found while importing data."
-                )
-            for consumption_type, stat in stats.items():
-                if not stat:
-                    # Ignore empty stats list
-                    continue
-                # import ipdb;ipdb.set_trace()
-                await self.send_consumption_statistics(
-                    stat, consumption_type, start_date.date()
-                )
             data_date = data_datetime.date() + datetime.timedelta(days=1)
 
-    #            raw_data_sorted.reverse()
-    #            start_date = None
-    #            for line in raw_data_sorted:
-    #                import ipdb;ipdb.set_trace()
-    #                # TODO data seems different depending on the rate
-    #                #consumption_types = _get_consumption_types(contract)
-    #                if contract.rate == "D":
-    #                    # ['Contrat', 'Date et heure', 'kWh', 'Code de consommation',
-    #                    #  'Température moyenne (°C)', 'Code de température']
-    #                    _, date_str, consumption, _, _, _ = [str(ele) for ele in line]
-    #                    data_datetime = TZ_EASTERN.localize(
-    #                        datetime.datetime.fromisoformat(date_str)
-    #                    )
-    #                    if start_date is None:
-    #                        start_date = data_datetime
-    #                    # {'start': '2022-12-02T06:00:00-05:00', 'state': 2.48, 'sum': 0}
-    #                    stat: HAEnergyStatType = {"start": "", "state": 0, "sum": 0}
-    #                    stat["start"] = data_datetime.isoformat()
-    #                    stat["state"] = (
-    #                        float(consumption.replace(",", ".")) if consumption else 0
-    #                    )
-    #                    stats.append(stat)
-    #                    self.logger.debug("%s - %s", stat["start"], stat["state"])
-    #                else:
-    #                    self.logger.error("Rate %s not supporter yet", contract.rate)
-    #                    return
-    #            if start_date is None:
-    #                raise Hydroqc2MqttError(
-    #                    "EOO11: no Start date found while importing data."
-    #                )
-    #            await self.send_consumption_statistics(stats, start_date.date())
-    #            data_date = data_datetime.date() + datetime.timedelta(days=1)
+        if start_date is None:
+            raise Hydroqc2MqttError("EOO11: no Start date found while importing data.")
+        for consumption_type, stat in stats.items():
+            if not stat:
+                # Ignore empty stats list
+                continue
+            await self.send_consumption_statistics(
+                stat, consumption_type, start_date.date()
+            )
 
     async def get_historical_statistics(
         self, contract: Contract, data_date: datetime.date
@@ -1066,6 +1041,11 @@ class HydroqcContractDevice(MqttDevice):
                     if version.parse(ha_version) < version.parse("2022.10.0")
                     else "recorder/statistics_during_period"
                 )
+                self.logger.debug(
+                    "Trying to get statistics of %s on %s",
+                    hourly_consumption_entity_id,
+                    data_start_date_str,
+                )
                 await websocket.send_json(
                     {
                         "end_time": data_end_date_str,
@@ -1078,6 +1058,12 @@ class HydroqcContractDevice(MqttDevice):
                 )
                 self._ws_query_id += 1
                 response = await websocket.receive_json()
+                self.logger.debug(
+                    "Got statistics of %s on %s: %s",
+                    hourly_consumption_entity_id,
+                    data_start_date_str,
+                    response,
+                )
                 if not response.get("result"):
                     base_sum = 0
                 else:
