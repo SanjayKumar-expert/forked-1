@@ -72,7 +72,7 @@ class TestHistoryConsumption:
         await asyncio.sleep(1)
 
         # Prepare http mocking
-        with aioresponses(passthrough=[WS_SERVER_URL]) as mres:  # type: ignore[no-untyped-call]
+        with aioresponses(passthrough=[WS_SERVER_URL]) as mres:
             # LOGIN
             mres.post(
                 AUTH_URL,
@@ -228,15 +228,7 @@ class TestHistoryConsumption:
                     raw_output: bool = False,  # pylint: disable=unused-argument
                 ) -> list[list[str]]:
                     data: list[list[str]] = []
-                    header = [
-                        "Contrat",
-                        "Date et heure",
-                        "kWh",
-                        "Code de consommation",
-                        "Température moyenne (°C)",
-                        "Code de température",
-                    ]
-                    data.append(header)
+                    data = []
                     for hour in range(0, 24):
                         value = f"{hour},00"
                         data.append(
@@ -261,6 +253,16 @@ class TestHistoryConsumption:
                                 "R",
                             ]
                         )
+                    data.reverse()
+                    header = [
+                        "Contrat",
+                        "Date et heure",
+                        "kWh",
+                        "Code de consommation",
+                        "Température moyenne (°C)",
+                        "Code de température",
+                    ]
+                    data.insert(0, header)
                     return data
 
                 contract._webuser.customers[0].accounts[0].contracts[  # type: ignore
@@ -272,8 +274,6 @@ class TestHistoryConsumption:
                 # Starting importing data
                 await contract.get_hourly_consumption_history()
 
-                # We check if we collected the right number of days.
-                # Please note that this test will failed if the number
-                # of the last 2 years is diferent
-                # FIXME: handle when the number of days per year changes
-                assert self.send_consumption_statistics_nb_called in {732, 731}
+                # We check if we called method send_consumption_statistics_nb_called
+                # only one time
+                assert self.send_consumption_statistics_nb_called == 1
