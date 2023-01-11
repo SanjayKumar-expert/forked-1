@@ -54,7 +54,7 @@ test-hass-stable:
   tags:
   - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:7ad943b
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230111151303
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
@@ -104,7 +104,7 @@ test-hass-beta:
   tags:
   - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:7ad943b
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230111151303
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
@@ -187,7 +187,7 @@ promote2pypi:
   stage: pypi
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:7ad943b
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230111151303
   script:
     - pip install --upgrade pip
     - pip install --upgrade build setuptools_scm twine
