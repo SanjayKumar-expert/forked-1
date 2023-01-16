@@ -474,6 +474,8 @@ class HydroqcContractDevice(MqttDevice):
                     and sensor_list[sensor_key]["device_class"] == "monetary"
                 ):
                     value = str(round(data_obj, 2))
+                elif isinstance(data_obj, datetime.timedelta):
+                    value = f"{data_obj.seconds / 60} minutes"
                 else:
                     value = data_obj
 
@@ -566,6 +568,7 @@ class HydroqcContractDevice(MqttDevice):
         self.logger.info("Fetching data...")
         customer, account, contract = await self.get_contract()
         await contract.get_periods_info()
+        await contract.refresh_outages()
 
         if contract.rate == "D" and contract.rate_option == "CPC":
             contract = cast(ContractDCPC, contract)
@@ -574,6 +577,7 @@ class HydroqcContractDevice(MqttDevice):
         elif contract.rate == "DPC":
             contract = cast(ContractDPC, contract)
             await contract.get_dpc_data()
+            await contract.peak_handler.refresh_data()
         elif contract.rate == "DT":
             contract = cast(ContractDT, contract)
             await contract.get_annual_consumption()

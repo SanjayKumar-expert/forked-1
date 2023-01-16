@@ -26,6 +26,7 @@ from hydroqc.hydro_api.consts import (
     GET_WINTER_CREDIT_API_URL,
     HOURLY_CONSUMPTION_API_URL,
     LOGIN_URL_6,
+    OUTAGES,
     PERIOD_DATA_URL,
     PORTRAIT_URL,
     RELATION_URL,
@@ -147,7 +148,7 @@ class TestLiveConsumption:
 
         # Prepare http mocking
         ws_server_url = os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL"]
-        with aioresponses(passthrough=[ws_server_url]) as mres:  # type: ignore[no-untyped-call]
+        with aioresponses(passthrough=[ws_server_url]) as mres:
             # LOGIN
             mres.post(
                 AUTH_URL,
@@ -283,6 +284,10 @@ class TestLiveConsumption:
             mres.get(
                 f"{HOURLY_CONSUMPTION_API_URL}?date={TODAY_STR}", payload=payload_12
             )
+
+            with open("tests/input_http_data/outages.json", "rb") as fht:
+                payload_14 = json.load(fht)
+            mres.get(OUTAGES + "6666666666", payload=payload_14)
 
             del sys.argv[1:]
             sys.argv.append("--run-once")

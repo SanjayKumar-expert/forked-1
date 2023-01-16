@@ -1,0 +1,30 @@
+[
+  {
+    "idLieuConso": "0500314629",
+    "etat": "N",
+    "date": "2023-01-04T03:25:40.000+00:00",
+    "interruptions": [
+      {
+        "idInterruption": {
+          "site": "ORL",
+          "typeObjet": "I",
+          "noInterruption": 37224,
+          "noSection": 1
+        },
+        "dateDebut": "2023-01-04T03:25:40.000+00:00",
+        "etat": "C",
+        "dateFinEstimeeMax": "2023-01-04T04:30:00.000+00:00",
+        "codeIntervention": "L",
+        "niveauUrgence": "P",
+        "nbClient": 3,
+        "codeCause": "51",
+        "codeMunicipal": "5557",
+        "datePublication": "2023-01-04T03:25:54.932+00:00",
+        "codeRemarque": "",
+        "dureePrevu": 0,
+        "probabilite": 0,
+        "interruptionPlanifiee": false
+      }
+    ]
+  }
+]
