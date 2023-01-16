@@ -17,6 +17,7 @@ from hydroqc.hydro_api.consts import (
     CUSTOMER_INFO_URL,
     GET_WINTER_CREDIT_API_URL,
     LOGIN_URL_6,
+    OUTAGES,
     PERIOD_DATA_URL,
     PORTRAIT_URL,
     RELATION_URL,
@@ -79,7 +80,7 @@ def test_base() -> None:  # pylint: disable=too-many-locals
     time.sleep(1)
 
     # Prepare http mocking
-    with aioresponses() as mres:  # type: ignore[no-untyped-call]
+    with aioresponses() as mres:
         # LOGIN
         mres.post(
             AUTH_URL,
@@ -196,6 +197,10 @@ def test_base() -> None:  # pylint: disable=too-many-locals
         mres.get(
             f"{GET_WINTER_CREDIT_API_URL}?noContrat={CONTRACT_ID}", payload=payload_13
         )
+
+        with open("tests/input_http_data/outages.json", "rb") as fht:
+            payload_14 = json.load(fht)
+        mres.get(OUTAGES + "6666666666", payload=payload_14)
 
         # Run main loop once
         del sys.argv[1:]

@@ -126,6 +126,24 @@ SENSORS: dict[
         "rates": ["ALL"],
     },
     # Contract
+    "outage": {
+        "name": "Next or current outage",
+        "data_source": "contract.next_outage.start_date",
+        "state_class": "measurement",
+        "device_class": "timestamp",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:calendar-start",
+        "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
+        "attributes": {
+            "end_date": "contract.next_outage.end_date",
+            "cause": "contract.next_outage.cause",
+            "planned_duration": "contract.next_outage.planned_duration",
+            "emergency_level": "contract.next_outage.emergency_level",
+            "is_planned": "contract.next_outage.is_planned",
+        },
+    },
     "current_billing_period_current_day": {
         "name": "Current billing period current day",
         "data_source": "contract.cp_current_day",
