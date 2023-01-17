@@ -8,12 +8,15 @@ This module extracts data from your Hydro-Quebec account using the [Hydro Quebec
 
 We have implemented a feature that will send historical hourly consumption from Hydro-Quebec to your Home-Assistant statistics to be used in the Energy Dashboard. This feature does not work over MQTT but send the information directly to Home-Assistant via Websocket.
 
-## Disclaimer
+## Donations
 
+We put a lot of hearth and effort in this project, any contribution is greatly appreciated!
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=GRFRXT6L8GCR8)
+## Disclaimer
 ### **Not an official Hydro-Quebec API**
 
 This is a non official way to extract your data from Hydro-Quebec, while it works now it may break at anytime if or when Hydro-Quebec change their systems.
-
 ### **Special message to Hydro-Quebec's employees**
 
 We would very much like to improve this module and it's [API](https://gitlab.com/hydroqc). We tried to reach out to HQ but never were able to get in contact with anyone there interested in discussing this project. If you have some feedback, complaints or are interested to discuss this project, please reach out to us on our [development discord channel](https://discord.gg/NWnfdfRZ7T).
