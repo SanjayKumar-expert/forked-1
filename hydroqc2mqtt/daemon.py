@@ -277,7 +277,6 @@ class Hydroqc2Mqtt(MqttClientDaemon):
             self._main_loop_wait_time = 0
 
         while self._main_loop_wait_time < self.sync_frequency and self.must_run:
-
             now_hour = datetime.now().hour
             if self._main_loop_run_hour != now_hour:
                 self._hour_first_minute_loop = True
