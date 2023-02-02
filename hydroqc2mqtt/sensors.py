@@ -138,8 +138,10 @@ SENSORS: dict[
         "rates": ["ALL"],
         "attributes": {
             "end_date": "contract.next_outage.end_date",
-            "cause": "contract.next_outage.cause",
+            "cause": "contract.next_outage.cause.name",
             "planned_duration": "contract.next_outage.planned_duration",
+            "code": "contract.next_outage.code.name",
+            "state": "contract.next_outage.status.name",
             "emergency_level": "contract.next_outage.emergency_level",
             "is_planned": "contract.next_outage.is_planned",
         },
@@ -370,7 +372,7 @@ SENSORS: dict[
     # Winter credits
     "wc_state": {
         "name": "Current WC period detail",
-        "data_source": "contract.winter_credit.current_state",
+        "data_source": "contract.peak_handler.current_state",
         "device_class": None,
         "expire_after": 0,
         "force_update": False,
@@ -381,7 +383,7 @@ SENSORS: dict[
     },
     "wc_cumulated_credit": {
         "name": "Cumulated winter credit",
-        "data_source": "contract.winter_credit.cumulated_credit",
+        "data_source": "contract.peak_handler.cumulated_credit",
         "device_class": "monetary",
         "expire_after": 0,
         "force_update": False,
@@ -393,7 +395,7 @@ SENSORS: dict[
     },
     "wc_projected_cumulated_credit": {
         "name": "Projected cumulated winter credit",
-        "data_source": "contract.winter_credit.projected_cumulated_credit",
+        "data_source": "contract.peak_handler.projected_cumulated_credit",
         "device_class": "monetary",
         "expire_after": 0,
         "force_update": False,
@@ -405,7 +407,7 @@ SENSORS: dict[
     },
     "wc_next_anchor_start": {
         "name": "Next anchor start",
-        "data_source": "contract.winter_credit.next_peak.anchor.start_date",
+        "data_source": "contract.peak_handler.next_peak.anchor.start_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -413,12 +415,12 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/next/anchor",
         "rates": ["DCPC"],
         "attributes": {
-            "critical": "contract.winter_credit.next_peak.is_critical",
+            "critical": "contract.peak_handler.next_peak.is_critical",
         },
     },
     "wc_next_anchor_end": {
         "name": "Next anchor end",
-        "data_source": "contract.winter_credit.next_peak.anchor.end_date",
+        "data_source": "contract.peak_handler.next_peak.anchor.end_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -426,12 +428,12 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/next/anchor",
         "rates": ["DCPC"],
         "attributes": {
-            "critical": "contract.winter_credit.next_peak.is_critical",
+            "critical": "contract.peak_handler.next_peak.is_critical",
         },
     },
     "wc_next_peak_start": {
         "name": "Next peak start",
-        "data_source": "contract.winter_credit.next_peak.start_date",
+        "data_source": "contract.peak_handler.next_peak.start_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -439,12 +441,12 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/next/peak",
         "rates": ["DCPC"],
         "attributes": {
-            "critical": "contract.winter_credit.next_peak.is_critical",
+            "critical": "contract.peak_handler.next_peak.is_critical",
         },
     },
     "wc_next_peak_end": {
         "name": "Next peak end",
-        "data_source": "contract.winter_credit.next_peak.end_date",
+        "data_source": "contract.peak_handler.next_peak.end_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -452,12 +454,12 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/next/peak",
         "rates": ["DCPC"],
         "attributes": {
-            "critical": "contract.winter_credit.next_peak.is_critical",
+            "critical": "contract.peak_handler.next_peak.is_critical",
         },
     },
     "wc_next_critical_peak_start": {
         "name": "Next critical peak start",
-        "data_source": "contract.winter_credit.next_critical_peak.start_date",
+        "data_source": "contract.peak_handler.next_critical_peak.start_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -467,7 +469,7 @@ SENSORS: dict[
     },
     "wc_next_critical_peak_end": {
         "name": "Next critical peak end",
-        "data_source": "contract.winter_credit.next_critical_peak.end_date",
+        "data_source": "contract.peak_handler.next_critical_peak.end_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -477,7 +479,7 @@ SENSORS: dict[
     },
     "wc_next_pre_heat_start": {
         "name": "Next Pre-heat start",
-        "data_source": "contract.winter_credit.next_peak.preheat.start_date",
+        "data_source": "contract.peak_handler.next_peak.preheat.start_date",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
@@ -485,13 +487,13 @@ SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/state",
         "rates": ["DCPC"],
         "attributes": {
-            "critical": "contract.winter_credit.next_peak.is_critical",
+            "critical": "contract.peak_handler.next_peak.is_critical",
         },
     },
     # Yesterday
     "wc_yesterday_morning_peak_credit": {
         "name": "Yesterday morning peak saved credit",
-        "data_source": "contract.winter_credit.yesterday_morning_peak.credit",
+        "data_source": "contract.peak_handler.yesterday_morning_peak.credit",
         "device_class": "monetary",
         "expire_after": 0,
         "force_update": False,
@@ -502,7 +504,7 @@ SENSORS: dict[
     },
     "wc_yesterday_morning_peak_actual_consumption": {
         "name": "Yesterday morning peak actual consumption",
-        "data_source": "contract.winter_credit.yesterday_morning_peak.actual_consumption",
+        "data_source": "contract.peak_handler.yesterday_morning_peak.actual_consumption",
         "device_class": "energy",
         "expire_after": 0,
         "force_update": False,
@@ -513,7 +515,7 @@ SENSORS: dict[
     },
     "wc_yesterday_morning_peak_ref_consumption": {
         "name": "Yesterday morning peak reference consumption",
-        "data_source": "contract.winter_credit.yesterday_morning_peak.ref_consumption",
+        "data_source": "contract.peak_handler.yesterday_morning_peak.ref_consumption",
         "device_class": "energy",
         "expire_after": 0,
         "force_update": False,
@@ -524,7 +526,7 @@ SENSORS: dict[
     },
     "wc_yesterday_morning_peak_saved_consumption": {
         "name": "Yesterday morning peak saved consumption",
-        "data_source": "contract.winter_credit.yesterday_morning_peak.saved_consumption",
+        "data_source": "contract.peak_handler.yesterday_morning_peak.saved_consumption",
         "device_class": "energy",
         "expire_after": 0,
         "force_update": False,
@@ -535,7 +537,7 @@ SENSORS: dict[
     },
     "wc_yesterday_evening_peak_credit": {
         "name": "Yesterday evening peak saved credit",
-        "data_source": "contract.winter_credit.yesterday_evening_peak.credit",
+        "data_source": "contract.peak_handler.yesterday_evening_peak.credit",
         "device_class": "monetary",
         "expire_after": 0,
         "force_update": False,
@@ -546,7 +548,7 @@ SENSORS: dict[
     },
     "wc_yesterday_evening_peak_actual_consumption": {
         "name": "Yesterday evening peak actual consumption",
-        "data_source": "contract.winter_credit.yesterday_evening_peak.actual_consumption",
+        "data_source": "contract.peak_handler.yesterday_evening_peak.actual_consumption",
         "device_class": "energy",
         "expire_after": 0,
         "force_update": False,
@@ -557,7 +559,7 @@ SENSORS: dict[
     },
     "wc_yesterday_evening_peak_ref_consumption": {
         "name": "Yesterday evening peak reference consumption",
-        "data_source": "contract.winter_credit.yesterday_evening_peak.ref_consumption",
+        "data_source": "contract.peak_handler.yesterday_evening_peak.ref_consumption",
         "device_class": "energy",
         "expire_after": 0,
         "force_update": False,
@@ -568,7 +570,7 @@ SENSORS: dict[
     },
     "wc_yesterday_evening_peak_saved_consumption": {
         "name": "Yesterday evening peak saved consumption",
-        "data_source": "contract.winter_credit.yesterday_evening_peak.saved_consumption",
+        "data_source": "contract.peak_handler.yesterday_evening_peak.saved_consumption",
         "device_class": "energy",
         "expire_after": 0,
         "force_update": False,
@@ -581,6 +583,16 @@ SENSORS: dict[
 BINARY_SENSORS: dict[
     str, BinarySensorType
 ] = {  # pylint: disable=consider-using-namedtuple-or-dataclass
+    # HydroQuebec
+    "hydroquebec_website_status": {
+        "name": "HydroQuebec website status",
+        "data_source": "self._hydro_is_up",
+        "device_class": "connectivity",
+        "expire_after": 0,
+        "force_update": False,
+        "sub_mqtt_topic": "contract/state",
+        "rates": ["ALL"],
+    },
     # Contracts
     "current_period_epp_enabled": {
         "name": "Current period epp enabled",
@@ -595,7 +607,7 @@ BINARY_SENSORS: dict[
     "wc_critical": {
         # == wc_next_peak_critical
         "name": "Critical",
-        "data_source": "contract.winter_credit.next_peak.is_critical",
+        "data_source": "contract.peak_handler.next_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
@@ -604,7 +616,7 @@ BINARY_SENSORS: dict[
     },
     "wc_critical_peak_in_progress": {
         "name": "Critical peak in progress",
-        "data_source": "contract.winter_credit.current_peak_is_critical",
+        "data_source": "contract.peak_handler.current_peak_is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
@@ -613,7 +625,7 @@ BINARY_SENSORS: dict[
     },
     "wc_pre_heat": {
         "name": "Pre-heat In Progress",
-        "data_source": "contract.winter_credit.preheat_in_progress",
+        "data_source": "contract.peak_handler.preheat_in_progress",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
@@ -623,7 +635,7 @@ BINARY_SENSORS: dict[
     "wc_next_anchor_critical": {
         "name": "Next Anchor Period Critical",
         # Est-ce que la période d'ancrage à venir est lié à une pointe critique"
-        "data_source": "contract.winter_credit.next_anchor.is_critical",
+        "data_source": "contract.peak_handler.next_anchor.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
@@ -634,7 +646,7 @@ BINARY_SENSORS: dict[
         # == wc_critical
         # Est-ce que la prochaine période de pointe est critique true/false
         "name": "Next Peak Period Critical",
-        "data_source": "contract.winter_credit.next_peak.is_critical",
+        "data_source": "contract.peak_handler.next_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
@@ -644,7 +656,7 @@ BINARY_SENSORS: dict[
     "wc_upcoming_critical_peak": {
         # True si au moins un peaks donnés par l'API d'hydroQuebec n'est pas encore terminé
         "name": "Upcoming Critical Peak",
-        "data_source": "contract.winter_credit.is_any_critical_peak_coming",
+        "data_source": "contract.peak_handler.is_any_critical_peak_coming",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
@@ -653,7 +665,7 @@ BINARY_SENSORS: dict[
     },
     "wc_critical_morning_peak_today": {
         "name": "Critical Morning Peak Today",
-        "data_source": "contract.winter_credit.today_morning_peak.is_critical",
+        "data_source": "contract.peak_handler.today_morning_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:message-flash",
@@ -662,7 +674,7 @@ BINARY_SENSORS: dict[
     },
     "wc_critical_evening_peak_today": {
         "name": "Critical Evening Peak Today",
-        "data_source": "contract.winter_credit.today_evening_peak.is_critical",
+        "data_source": "contract.peak_handler.today_evening_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:message-flash",
@@ -671,7 +683,7 @@ BINARY_SENSORS: dict[
     },
     "wc_critical_morning_peak_tomorrow": {
         "name": "Critical Morning Peak tomorrow",
-        "data_source": "contract.winter_credit.tomorrow_morning_peak.is_critical",
+        "data_source": "contract.peak_handler.tomorrow_morning_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:message-flash",
@@ -680,7 +692,7 @@ BINARY_SENSORS: dict[
     },
     "wc_critical_evening_peak_tomorrow": {
         "name": "Critical Evening Peak tomorrow",
-        "data_source": "contract.winter_credit.tomorrow_evening_peak.is_critical",
+        "data_source": "contract.peak_handler.tomorrow_evening_peak.is_critical",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:message-flash",

@@ -23,8 +23,9 @@ from hydroqc.hydro_api.consts import (
     CONTRACT_LIST_URL,
     CONTRACT_SUMMARY_URL,
     CUSTOMER_INFO_URL,
-    GET_WINTER_CREDIT_API_URL,
+    GET_CPC_API_URL,
     HOURLY_CONSUMPTION_API_URL,
+    IS_HYDRO_PORTAL_UP_URL,
     LOGIN_URL_6,
     OUTAGES,
     PERIOD_DATA_URL,
@@ -34,7 +35,7 @@ from hydroqc.hydro_api.consts import (
     SESSION_REFRESH_URL,
     SESSION_URL,
 )
-from hydroqc.winter_credit.consts import EST_TIMEZONE
+from hydroqc.utils import EST_TIMEZONE
 from packaging import version
 
 from hydroqc2mqtt.__main__ import main
@@ -149,6 +150,12 @@ class TestLiveConsumption:
         # Prepare http mocking
         ws_server_url = os.environ["HQ2M_CONTRACTS_0_HOME_ASSISTANT_WEBSOCKET_URL"]
         with aioresponses(passthrough=[ws_server_url]) as mres:
+            # STATUS
+            mres.get(
+                IS_HYDRO_PORTAL_UP_URL,
+                status=200,
+            )
+
             # LOGIN
             mres.post(
                 AUTH_URL,
@@ -263,10 +270,10 @@ class TestLiveConsumption:
 
             with open("tests/input_http_data/creditPointeCritique.json", "rb") as fht:
                 payload_11 = json.load(fht)
-            mres.get(GET_WINTER_CREDIT_API_URL, payload=payload_11)
+            mres.get(GET_CPC_API_URL, payload=payload_11)
 
             mres.get(
-                f"{GET_WINTER_CREDIT_API_URL}?noContrat={CONTRACT_ID}",
+                f"{GET_CPC_API_URL}?noContrat={CONTRACT_ID}",
                 payload=payload_11,
             )
 
