@@ -353,7 +353,7 @@ class HourlyConsumpHandler:
         data_date = copy.copy(start_data_date)
         stats: dict[str, list[HAEnergyStatType]] = {
             "reg": [],
-            "haut": [],
+            "high": [],
             "total": [],
         }
         start_date = None
