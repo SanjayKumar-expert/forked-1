@@ -41,6 +41,8 @@ OVERRIDE_REGEX = re.compile(
         "SYNC_HOURLY_CONSUMPTION_HISTORY_ENABLED|"
         "HOME_ASSISTANT_WEBSOCKET_URL|"
         "HOME_ASSISTANT_TOKEN|"
+        "RATE|"
+        "RATE_OPTION|"
         "PREHEAT_DURATION_MINUTES)$"
     )
 )
@@ -191,12 +193,15 @@ class Hydroqc2Mqtt(MqttClientDaemon):
                 self.mqtt_client,
             )
 
-            self._connected = await contract.init_session()
-            if not self._connected:
-                self.logger.fatal(
-                    "Can not start because we can not login at the startup."
-                )
-                sys.exit(1)
+            if contract.rate is None or contract.rate_option is None:
+                print(contract.rate)
+                print(contract.rate_option)
+                self._connected = await contract.init_session()
+                if not self._connected:
+                    self.logger.fatal(
+                        "Can not start because we can not login at the startup."
+                    )
+                    sys.exit(1)
 
             await contract.add_entities()
             self.contracts.append(contract)
@@ -209,42 +214,54 @@ class Hydroqc2Mqtt(MqttClientDaemon):
     async def _main_loop(self, stack: AsyncExitStack) -> None:
         """Run main loop."""
         try:
-            # Handle reconnection needed
-            if self._needs_mqtt_reconnection:
-                self.logger.info("Mqtt trying to reconnect")
-                await self._mqtt_connect(stack)
-                self.logger.info("Reinit contracts objects")
+            hydro_is_up = await self.contracts[0].check_hq_portal_status()
+        except BaseException as exp:
+            hydro_is_up = False
+            self.logger.warning(
+                "Hydro-Québec website seems down."
+                "Most of the sensor will be not updated."
+                "See next warning message."
+            )
+            self.logger.warning(exp)
+
+        if hydro_is_up:
+            try:
+                # Handle reconnection needed
+                if self._needs_mqtt_reconnection:
+                    self.logger.info("Mqtt trying to reconnect")
+                    await self._mqtt_connect(stack)
+                    self.logger.info("Reinit contracts objects")
+                    for contract in self.contracts:
+                        contract.set_mqtt_client(self.mqtt_client)
+                    self._needs_mqtt_reconnection = False
+
+                # Connect to contracts
                 for contract in self.contracts:
-                    contract.set_mqtt_client(self.mqtt_client)
-                self._needs_mqtt_reconnection = False
+                    await contract.init_session()
 
-            # Connect to contracts
-            for contract in self.contracts:
-                await contract.init_session()
+                # Sync_consumption_statistics
+                for contract in self.contracts:
+                    if (
+                        contract._hch.enabled
+                        and not contract._hch.is_consumption_history_syncing
+                    ):
+                        await contract._hch.sync_consumption_statistics()
 
-            # Get contract data
-            for contract in self.contracts:
-                await contract.update()
+            except hydroqc.error.HydroQcHTTPError as exp:
+                self.logger.error("E0014: Hydroqc lib error: %s", exp)
+            except Hydroqc2MqttWSError as exp:
+                self.logger.error(exp)
+            except Hydroqc2MqttError as exp:
+                self.logger.error(exp)
+            except (mqtt.MqttError, MQTTHassBaseError) as exp:
+                self.logger.error("E0011: %s", exp)
+                # Reconnect to Mqtt
+                self._needs_mqtt_reconnection = True
+                self.logger.warning("We will try to reconnect to MQTT server.")
 
-            # Sync_consumption_statistics
-            for contract in self.contracts:
-                if (
-                    contract.hourly_consumption_sync_enabled
-                    and not contract.is_consumption_history_syncing
-                ):
-                    await contract.sync_consumption_statistics()
-
-        except hydroqc.error.HydroQcHTTPError as exp:
-            self.logger.error("E0010: Hydroqc lib error: %s", exp)
-        except Hydroqc2MqttWSError as exp:
-            self.logger.error(exp)
-        except Hydroqc2MqttError as exp:
-            self.logger.error(exp)
-        except (mqtt.MqttError, MQTTHassBaseError) as exp:
-            self.logger.error("E0011: %s", exp)
-            # Reconnect to Mqtt
-            self._needs_mqtt_reconnection = True
-            self.logger.warning("We will try to reconnect to MQTT server.")
+        # Get contract data
+        for contract in self.contracts:
+            await contract.update(hydro_is_up)
 
         if self._run_once:
             self.must_run = False

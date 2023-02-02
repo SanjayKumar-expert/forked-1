@@ -26,8 +26,8 @@ from hydroqc.hydro_api.consts import (
 )
 
 from hydroqc2mqtt.__main__ import _parse_cmd
-from hydroqc2mqtt.contract_device import HAEnergyStatType
 from hydroqc2mqtt.daemon import Hydroqc2Mqtt
+from hydroqc2mqtt.hourly_consump_handler import HAEnergyStatType
 
 CONTRACT_ID = os.environ["HQ2M_CONTRACTS_0_CONTRACT"]
 MQTT_USERNAME = os.environ.get("MQTT_USERNAME", None)
@@ -212,14 +212,16 @@ class TestHistoryConsumption:
 
                 async def mock_send_consptn_statistics(
                     stats: list[HAEnergyStatType],
-                    consumption: str,  # pylint: disable=unused-argument
+                    consumption_type: str,  # pylint: disable=unused-argument
                     data_date: date,  # pylint: disable=unused-argument
                 ) -> None:
                     self.send_consumption_statistics_nb_called += 1
                     # We want to ensure that all data sent to WS are correct
                     assert sum(s["state"] for s in stats) == sum(range(0, 24)) * 2
 
-                contract.send_consumption_statistics = mock_send_consptn_statistics  # type: ignore
+                contract._hch.send_consumption_statistics = (  # type: ignore[assignment]
+                    mock_send_consptn_statistics
+                )
 
                 # Mock get_hourly_energy
                 async def mock_get_hourly_energy(
@@ -272,7 +274,7 @@ class TestHistoryConsumption:
                 # Connecting to the contract
                 await contract.init_session()
                 # Starting importing data
-                await contract.get_hourly_consumption_history()
+                await contract._hch.get_hourly_consumption_history()
 
                 # We check if we called method send_consumption_statistics_nb_called
                 # only one time
