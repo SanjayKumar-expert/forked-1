@@ -203,7 +203,7 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
         consumption_types = ["total"]
         if self.rate in {"DT", "DPC"}:
             consumption_types.append("reg")
-            consumption_types.append("haut")
+            consumption_types.append("high")
         return consumption_types
 
     async def check_hq_portal_status(self) -> bool:
