@@ -54,13 +54,14 @@ test-hass-stable:
   tags:
   - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230111151303
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230201020356
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
   script:
     - cp /usr/share/zoneinfo/America/New_York /etc/localtime
     - echo echo "America/New_York " > /etc/timezone
+    - pip install tox
     - tox --parallel auto
     - pip install --upgrade setuptools_scm
     - echo HYDROQC2MQTT_VERSION=$(python3 -m setuptools_scm) > collected.env
@@ -104,13 +105,14 @@ test-hass-beta:
   tags:
   - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230111151303
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230201020356
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
   script:
     - cp /usr/share/zoneinfo/America/New_York /etc/localtime
     - echo echo "America/New_York " > /etc/timezone
+    - pip install tox
     - tox --parallel auto
   artifacts:
     reports:
@@ -187,7 +189,7 @@ promote2pypi:
   stage: pypi
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230111151303
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230201020356
   script:
     - pip install --upgrade pip
     - pip install --upgrade build setuptools_scm twine
