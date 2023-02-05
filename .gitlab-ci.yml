@@ -6,13 +6,13 @@
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
 - test
-- docker
+- build
+- tag
 - pypi
 sast:
   stage: test
   tags:
   - hydroqc
-
 include:
 - template: Security/SAST.gitlab-ci.yml
 
@@ -26,7 +26,6 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   TOX_PARALLEL_NO_SPINNER: "1"
   HASS_AUTH: ewogICJ2ZXJzaW9uIjogMSwKICAibWlub3JfdmVyc2lvbiI6IDEsCiAgImtleSI6ICJhdXRoIiwKICAiZGF0YSI6IHsKICAgICJ1c2VycyI6IFsKICAgICAgewogICAgICAgICJpZCI6ICIyMzFlMzIyMjllZmY0YjNlODAzMDcyMTZiYjRiZmU2OSIsCiAgICAgICAgImdyb3VwX2lkcyI6IFsKICAgICAgICAgICJzeXN0ZW0tcmVhZC1vbmx5IgogICAgICAgIF0sCiAgICAgICAgImlzX293bmVyIjogZmFsc2UsCiAgICAgICAgImlzX2FjdGl2ZSI6IHRydWUsCiAgICAgICAgIm5hbWUiOiAiSG9tZSBBc3Npc3RhbnQgQ29udGVudCIsCiAgICAgICAgInN5c3RlbV9nZW5lcmF0ZWQiOiB0cnVlLAogICAgICAgICJsb2NhbF9vbmx5IjogZmFsc2UKICAgICAgfSwKICAgICAgewogICAgICAgICJpZCI6ICJmZjhiYTljY2EzMTI0Zjk2OWMzNGM4NDA4YmU0N2QzYyIsCiAgICAgICAgImdyb3VwX2lkcyI6IFsKICAgICAgICAgICJzeXN0ZW0tYWRtaW4iCiAgICAgICAgXSwKICAgICAgICAiaXNfb3duZXIiOiB0cnVlLAogICAgICAgICJpc19hY3RpdmUiOiB0cnVlLAogICAgICAgICJuYW1lIjogImFkbWluIiwKICAgICAgICAic3lzdGVtX2dlbmVyYXRlZCI6IGZhbHNlLAogICAgICAgICJsb2NhbF9vbmx5IjogZmFsc2UKICAgICAgfQogICAgXSwKICAgICJncm91cHMiOiBbCiAgICAgIHsKICAgICAgICAiaWQiOiAic3lzdGVtLWFkbWluIiwKICAgICAgICAibmFtZSI6ICJBZG1pbmlzdHJhdG9ycyIKICAgICAgfSwKICAgICAgewogICAgICAgICJpZCI6ICJzeXN0ZW0tdXNlcnMiLAogICAgICAgICJuYW1lIjogIlVzZXJzIgogICAgICB9LAogICAgICB7CiAgICAgICAgImlkIjogInN5c3RlbS1yZWFkLW9ubHkiLAogICAgICAgICJuYW1lIjogIlJlYWQgT25seSIKICAgICAgfQogICAgXSwKICAgICJjcmVkZW50aWFscyI6IFsKICAgICAgewogICAgICAgICJpZCI6ICJiNDA5ODZlYjY3ZDQ0MDVlOGQ0ZGRkNTVmNjZjOWFhOSIsCiAgICAgICAgInVzZXJfaWQiOiAiZmY4YmE5Y2NhMzEyNGY5NjljMzRjODQwOGJlNDdkM2MiLAogICAgICAgICJhdXRoX3Byb3ZpZGVyX3R5cGUiOiAiaG9tZWFzc2lzdGFudCIsCiAgICAgICAgImF1dGhfcHJvdmlkZXJfaWQiOiBudWxsLAogICAgICAgICJkYXRhIjogewogICAgICAgICAgInVzZXJuYW1lIjogImFkbWluIgogICAgICAgIH0KICAgICAgfQogICAgXSwKICAgICJyZWZyZXNoX3Rva2VucyI6IFsKICAgICAgewogICAgICAgICJpZCI6ICJhM2Q0NmI1ZTZlZTY0MDM1YmIwZTNlMzMwN2EzODEwZiIsCiAgICAgICAgInVzZXJfaWQiOiAiMjMxZTMyMjI5ZWZmNGIzZTgwMzA3MjE2YmI0YmZlNjkiLAogICAgICAgICJjbGllbnRfaWQiOiBudWxsLAogICAgICAgICJjbGllbnRfbmFtZSI6IG51bGwsCiAgICAgICAgImNsaWVudF9pY29uIjogbnVsbCwKICAgICAgICAidG9rZW5fdHlwZSI6ICJzeXN0ZW0iLAogICAgICAgICJjcmVhdGVkX2F0IjogIjIwMjItMDktMzBUMDA6NTc6NDUuOTE1MzgyKzAwOjAwIiwKICAgICAgICAiYWNjZXNzX3Rva2VuX2V4cGlyYXRpb24iOiAxODAwLjAsCiAgICAgICAgInRva2VuIjogIjEzYWU5NGY4YTMxZmQ4YzM5OTgwOTlkZWEyYTdjODVjNmQ0ZWJiMTRmOGU0MjI5ZjY1NDQ4OGQ1NTg1NzUyZDY0YmRiM2ExMjE3MTkyZGFkOTA0M2QwZDY5ZmFjNmU2ZTBkYzY3MzgxOTk5ZmY5YjYyYzY0YmExMmM5MWY2ZTRjIiwKICAgICAgICAiand0X2tleSI6ICIzNTJmY2VhMDNiYjBjMGQ5YWZhNGZlYzNmYzI2ZmZkOTA0YzVhY2RlMzJiYTEzNmY1OTEzNDU2OWE0YTY0NDlmNmJlOGMwMzFlY2IyMmY0MjRiYTE4ZjQzNDkzODg5MDczMDFhNThmMGQ5YzY4NjVhYzAzZTE2MmRkNDNkOTRlOSIsCiAgICAgICAgImxhc3RfdXNlZF9hdCI6IG51bGwsCiAgICAgICAgImxhc3RfdXNlZF9pcCI6IG51bGwsCiAgICAgICAgImNyZWRlbnRpYWxfaWQiOiBudWxsLAogICAgICAgICJ2ZXJzaW9uIjogIjIwMjIuOS43IgogICAgICB9LAogICAgICB7CiAgICAgICAgImlkIjogImM5ZDJjOTFjNWViYTRiOGFhYjUyN2I5ZTg4NDZkYjI0IiwKICAgICAgICAidXNlcl9pZCI6ICJmZjhiYTljY2EzMTI0Zjk2OWMzNGM4NDA4YmU0N2QzYyIsCiAgICAgICAgImNsaWVudF9pZCI6ICJodHRwOi8vMTI3LjAuMC4xOjgxMjMvIiwKICAgICAgICAiY2xpZW50X25hbWUiOiBudWxsLAogICAgICAgICJjbGllbnRfaWNvbiI6IG51bGwsCiAgICAgICAgInRva2VuX3R5cGUiOiAibm9ybWFsIiwKICAgICAgICAiY3JlYXRlZF9hdCI6ICIyMDIyLTA5LTMwVDAxOjIyOjAyLjM5NTk4OCswMDowMCIsCiAgICAgICAgImFjY2Vzc190b2tlbl9leHBpcmF0aW9uIjogMTgwMC4wLAogICAgICAgICJ0b2tlbiI6ICJiNDFmMzhkOGFmZjNiNzk3YmQ2ZWNjYjdiODc1YzhkNGQwYzZkNjg5MTUyNTBlMThkZmViYzA4OGViOGExNTAyMDU5MGQyMmUyOWZjOWQ5Njg1NGNiNjljNDI2YWU0ZmI2MTQzOTAzZDlhMjA4ODMxNGE5Nzk5ZjNiNGViYzZhNCIsCiAgICAgICAgImp3dF9rZXkiOiAiMTFmZDg0MWNmM2ZjNzY3N2I3ODU0M2NjOGQ4YjE2MTc5NGZlY2QyMjBkZDhmYTU0N2FmYjgxMzBiYTczZTIyNjBmNmY1OWVhYTUyN2Y3Mjc2ZjQ4OGNhYzM4MTEwOTIzOTNiZjQzYjc0NzEzYjliNjkzNWJlNmNkY2Q0ODVhYjQiLAogICAgICAgICJsYXN0X3VzZWRfYXQiOiAiMjAyMi0wOS0zMFQwMToyMjowMi4zOTYwODErMDA6MDAiLAogICAgICAgICJsYXN0X3VzZWRfaXAiOiAiMTcyLjE3LjAuMSIsCiAgICAgICAgImNyZWRlbnRpYWxfaWQiOiAiYjQwOTg2ZWI2N2Q0NDA1ZThkNGRkZDU1ZjY2YzlhYTkiLAogICAgICAgICJ2ZXJzaW9uIjogIjIwMjIuOS43IgogICAgICB9LAogICAgICB7CiAgICAgICAgImlkIjogIjU1YTViM2JlMjMzNjQ5YzhhNWYyOWE4MWJlZDc1YTVmIiwKICAgICAgICAidXNlcl9pZCI6ICJmZjhiYTljY2EzMTI0Zjk2OWMzNGM4NDA4YmU0N2QzYyIsCiAgICAgICAgImNsaWVudF9pZCI6IG51bGwsCiAgICAgICAgImNsaWVudF9uYW1lIjogInRlc3QiLAogICAgICAgICJjbGllbnRfaWNvbiI6IG51bGwsCiAgICAgICAgInRva2VuX3R5cGUiOiAibG9uZ19saXZlZF9hY2Nlc3NfdG9rZW4iLAogICAgICAgICJjcmVhdGVkX2F0IjogIjIwMjItMDktMzBUMDE6MjI6MTguNjUzODE1KzAwOjAwIiwKICAgICAgICAiYWNjZXNzX3Rva2VuX2V4cGlyYXRpb24iOiAzMTUzNjAwMDAuMCwKICAgICAgICAidG9rZW4iOiAiN2VkZWZjMTRmNTJkNGI1MjE5MmZlNzAyOWZhOThmODEwNGE1OTM1OGFiMDEyOWNmNDU3ODA1YWNkOTQ5NzM4ZWQ2MTU3ZmFjODgxZGZhZDY4NTJkNDFhZWQwZGI3MTAyM2E3YmJkNmJhZTE4NDNjY2ZjNWYyMGJiNTkzN2E1ZDAiLAogICAgICAgICJqd3Rfa2V5IjogIjA5NDYyMWFmOWQ0NmYzOTEwZjRiODc3MmNmNWM5YTA0NmVjNDEwZDA1YTkwNzc3ZjBlNDJiNzI1OTU5ZGY5MTllZWZmZTU4NTQxZDE3MTMyNzI3MjNjYjkxMjViOGU2NjE1Zjk5NTk0ZTE3MzBjNGMzYWQyNjEzOTVkMjZiYjYzIiwKICAgICAgICAibGFzdF91c2VkX2F0IjogIjIwMjItMDktMzBUMDE6MjI6MTguNjUzOTcyKzAwOjAwIiwKICAgICAgICAibGFzdF91c2VkX2lwIjogbnVsbCwKICAgICAgICAiY3JlZGVudGlhbF9pZCI6IG51bGwsCiAgICAgICAgInZlcnNpb24iOiAiMjAyMi45LjciCiAgICAgIH0KICAgIF0KICB9Cn0=
-
 
 cache:
   key: pip-cache
@@ -79,10 +78,22 @@ test-hass-stable:
       - tests_result_junit.xml
       - collected.env
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # Disable if CI_SKIP is set
+    - if: '$CI_SKIP =~ /test-hass-stable/'
+      when: never
+    # Disable if it's a tag pipeline
     - if: '$CI_COMMIT_TAG'
       when: never
-    - when: on_success
+    # Enabled for main branch
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+      when: on_success
+    # Enable for all other branches if it's a MR pipeline
+    - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
+      when: on_success
+    # Make it manual for external MR
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+      when: manual
+    - when: never
 
 test-hass-beta:
   stage: test
@@ -125,61 +136,129 @@ test-hass-beta:
       - coverage.xml
       - tests_result_junit.xml
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # Disable if CI_SKIP is set
+    - if: '$CI_SKIP =~ /test-hass-beta/'
+      when: never
+    # Disable if it's a tag pipeline
     - if: '$CI_COMMIT_TAG'
       when: never
-    - when: on_success
-
-docker_branch:
-  stage: docker
-  tags:
-  - hydroqc
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
-  script:
-    - echo "Build docker image version ${CI_COMMIT_REF_NAME}"
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - export CI_COMMIT_SHORT_SHA=$(echo $CI_COMMIT_SHA | cut -c1-7)
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:${CI_COMMIT_REF_NAME} --build-arg HYDROQC2MQTT_VERSION=${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_TAG'
-      when: never
-    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
-      when: never
-    - when: on_success
-
-docker:
-  stage: docker
-  tags:
-  - hydroqc
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
-  script:
-    - export CI_COMMIT_SHORT_SHA=$(echo $CI_COMMIT_SHA | cut -c1-7)
-    - echo "Build docker image version ${CI_COMMIT_SHORT_SHA}"
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --destination $CI_REGISTRY_IMAGE:main  --build-arg HYDROQC2MQTT_VERSION=${HYDROQC2MQTT_VERSION}
-  rules:
-    - if: '$CI_COMMIT_TAG'
-      when: never
+    # Enabled for main branch
     - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
       when: on_success
+    # Enable for all other branches if it's a MR pipeline
+    - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
+      when: on_success
+    # Make it manual for external MR
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+      when: manual
     - when: never
 
-docker_tag:
-  stage: docker
+.build_generic: &build_generic
   tags:
-  - hydroqc
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
+    - docker
+  stage: build
+  image: docker:22.06-rc
+  services:
+    - docker:22.06-rc-dind
   script:
-    - echo "Build docker image version ${CI_COMMIT_TAG}"
-    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG --destination $CI_REGISTRY_IMAGE:latest --build-arg HYDROQC2MQTT_VERSION=${CI_COMMIT_TAG}
+    - docker version
+    - docker buildx build 
+      --platform linux/${BUILD_ARCH} 
+      -t ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA} 
+      -f ./Dockerfile 
+      --build-arg HYDROQC2MQTT_VERSION=${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
+      .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA} 
+  rules:
+    # Disable if CI_SKIP is set
+    - if: '$CI_SKIP =~ /docker/'
+      when: never
+    # Disable if it's a tag pipeline
+    - if: '$CI_COMMIT_TAG'
+      when: on_success
+    # Enabled for main branch
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+      when: on_success
+    # Enable for all other branches if it's a MR pipeline
+    - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
+      when: on_success
+    # Make it manual for external MR
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+      when: manual
+    - when: never
+
+build_amd64:
+  variables:
+    ARCH: amd64
+    BUILD_ARCH: amd64
+  <<: *build_generic
+
+build_i386:
+  variables:
+    ARCH: i386
+    BUILD_ARCH: i386
+  <<: *build_generic
+
+build_armv7:
+  variables:
+    ARCH: armv7
+    BUILD_ARCH: arm/v7
+  <<: *build_generic
+
+build_aarch64:
+  variables:
+    ARCH: aarch64
+    BUILD_ARCH: aarch64
+  <<: *build_generic
+
+docker_tag:
+  tags:
+    - docker
+  stage: tag
+  image: docker:22.06-rc
+  services:
+    - docker:22.06-rc-dind
+  script:
+    - docker version
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker manifest create ${CI_REGISTRY_IMAGE}:${IMAGE_TAG}
+      ${CI_REGISTRY_IMAGE}/amd64:${CI_COMMIT_SHORT_SHA}
+      ${CI_REGISTRY_IMAGE}/i386:${CI_COMMIT_SHORT_SHA}
+      ${CI_REGISTRY_IMAGE}/armv7:${CI_COMMIT_SHORT_SHA}
+      ${CI_REGISTRY_IMAGE}/aarch64:${CI_COMMIT_SHORT_SHA}
+    - docker manifest push ${CI_REGISTRY_IMAGE}:${IMAGE_TAG}
+
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      variables:
+        IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}
+      when: on_success
+    - if: '$CI_COMMIT_TAG'
+      variables:
+        IMAGE_TAG: ${CI_COMMIT_TAG}
+      when: on_success
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+      variables:
+        IMAGE_TAG: beta
+      when: on_success
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+      variables:
+        IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}      
+      when: manual
+    - when: never
+
+docker_tag_latest:
+  tags:
+    - docker
+  image: docker:22.06-rc
+  services:
+    - docker:22.06-rc-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+    - docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG} ${CI_REGISTRY_IMAGE}:latest
+    - docker push ${CI_REGISTRY_IMAGE}:latest
   rules:
     - if: '$CI_COMMIT_TAG'
       when: on_success
