@@ -84,7 +84,7 @@ HOURLY_CONSUMPTION_TOTAL_SENSOR: SensorType = {
     "sub_mqtt_topic": "contract/state",
 }
 
-HOURLY_CONSUMPTION_HIGH_SENSOR: SensorType = {
+HOURLY_CONSUMPTION_HAUT_SENSOR: SensorType = {
     "name": "High price hourly consumption",
     "device_class": "energy",
     "expire_after": 0,
