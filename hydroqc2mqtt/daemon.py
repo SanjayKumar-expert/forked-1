@@ -30,20 +30,18 @@ OVERRIDE_REGEX = re.compile(
         r"^HQ2M_CONTRACTS_(\d*)_("
         "USERNAME|"
         "PASSWORD|"
+        "NAME|"
         "CUSTOMER|"
         "ACCOUNT|"
         "CONTRACT|"
-        "NAME|"
+        "PREHEAT_DURATION_MINUTES|"
         "LOG_LEVEL|"
         "HTTP_LOG_LEVEL|"
         "SYNC_HOURLY_CONSUMPTION_ENABLED|"
-        "HOURLY_CONSUMPTION_SENSOR_NAME|"
-        "SYNC_HOURLY_CONSUMPTION_HISTORY_ENABLED|"
         "HOME_ASSISTANT_WEBSOCKET_URL|"
         "HOME_ASSISTANT_TOKEN|"
         "RATE|"
-        "RATE_OPTION|"
-        "PREHEAT_DURATION_MINUTES)$"
+        "RATE_OPTION)$"
     )
 )
 
@@ -149,9 +147,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
                     config["contracts"].append({})
                 if env_var.endswith("_ENABLED"):
                     # Handle boolean values
-                    config["contracts"][index][kind[: -len("_ENABLED")]] = (
-                        value.lower() == "true"
-                    )
+                    config["contracts"][index][kind] = value.lower() == "true"
                 else:
                     config["contracts"][index][kind] = value
 

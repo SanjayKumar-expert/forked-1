@@ -359,6 +359,39 @@ SENSORS: dict[
         "sub_mqtt_topic": "dpc-peak/state",
         "rates": ["DPC"],
     },
+    "dpc_pre_heat": {
+        "name": "Pre-heat In Progress",
+        "data_source": "contract.peak_handler.preheat_in_progress",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:flash-alert",
+        "sub_mqtt_topic": "dpk-peak/state",
+        "rates": ["DPC"],
+    },
+    "dpc_critical_hours_count": {
+        "name": "Number of critical hours",
+        "data_source": "contract.critical_called_hours",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:clock-alert-outline",
+        "sub_mqtt_topic": "dpk-peak/state",
+        "rates": ["DPC"],
+        "attributes": {
+            "max": "contract.max_critical_called_hours",
+        },
+    },
+    "dpc_winter_days_count": {
+        "name": "Number of winter days",
+        "data_source": "contract.winter_total_days_last_update",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:calendar-range-outline",
+        "sub_mqtt_topic": "dpk-peak/state",
+        "rates": ["DPC"],
+        "attributes": {
+            "max": "contract.winter_total_days",
+        },
+    },
     # Winter credits
     "wc_state": {
         "name": "Current WC period detail",
