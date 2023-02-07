@@ -246,9 +246,14 @@ docker_tag:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker manifest create ${CI_REGISTRY_IMAGE}:${IMAGE_TAG}
       ${CI_REGISTRY_IMAGE}/amd64:${CI_COMMIT_SHORT_SHA}
-      ${CI_REGISTRY_IMAGE}/i386:${CI_COMMIT_SHORT_SHA}
-      ${CI_REGISTRY_IMAGE}/armv7:${CI_COMMIT_SHORT_SHA}
-      ${CI_REGISTRY_IMAGE}/aarch64:${CI_COMMIT_SHORT_SHA}
+    - |
+      for platform in i386 armv7 aarch64
+        do
+          docker manifest inspect ${CI_REGISTRY_IMAGE}/${PLATFORM}:${CI_COMMIT_SHORT_SHA}
+          if [$? = 0]; then
+            docker manifest annotate ${CI_REGISTRY_IMAGE}/${PLATFORM}:${CI_COMMIT_SHORT_SHA} ${CI_REGISTRY_IMAGE}:${IMAGE_TAG}        
+          fi
+      done    
     - docker manifest push ${CI_REGISTRY_IMAGE}:${IMAGE_TAG}
 
   rules:
