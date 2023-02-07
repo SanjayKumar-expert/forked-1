@@ -167,7 +167,7 @@ test-hass-beta:
       --platform linux/${BUILD_ARCH} 
       -t ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA} 
       -f ./Dockerfile 
-      --build-arg ${BUILD-ARG}
+      --build-arg HYDROQC2MQTT_VERSION=${HQ2MQTT_VERSION}
       .
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker push ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA} 
@@ -178,22 +178,22 @@ test-hass-beta:
     # Disable if it's a tag pipeline
     - if: '$CI_COMMIT_TAG'
       variables:
-        BUILD-ARG: HYDROQC2MQTT_VERSION=${CI_COMMIT_TAG}
+        HQ2MQTT_VERSION: ${CI_COMMIT_TAG}
       when: on_success
     # Enabled for main branch
     - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
       variables:
-        BUILD-ARG: HYDROQC2MQTT_VERSION=${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
+        HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
       when: on_success
     # Enable for all other branches if it's a MR pipeline
     - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
       variables:
-        BUILD-ARG: HYDROQC2MQTT_VERSION=${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
+        HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
       when: on_success
     # Make it manual for external MR
     - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
       variables:
-        BUILD-ARG: HYDROQC2MQTT_VERSION=${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
+        HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
       when: manual
     - when: never
 
