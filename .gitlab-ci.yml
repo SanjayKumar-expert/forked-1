@@ -157,9 +157,9 @@ test-hass-beta:
   tags:
     - docker
   stage: build
-  image: docker:23.0-rc
+  image: docker:23.0
   services:
-    - docker:23.0-rc-dind
+    - docker:23.0-dind
   script:
     - docker version
     - docker buildx build 
@@ -216,9 +216,9 @@ docker_tag:
   tags:
     - docker
   stage: tag
-  image: docker:23.0-rc
+  image: docker:23.0
   services:
-    - docker:23.0-rc-dind
+    - docker:23.0-dind
   script:
     - docker version
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -246,22 +246,6 @@ docker_tag:
       variables:
         IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}      
       when: manual
-    - when: never
-
-docker_tag_latest:
-  tags:
-    - docker
-  image: docker:23.0-rc
-  services:
-    - docker:23.0-rc-dind
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker pull ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
-    - docker tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG} ${CI_REGISTRY_IMAGE}:latest
-    - docker push ${CI_REGISTRY_IMAGE}:latest
-  rules:
-    - if: '$CI_COMMIT_TAG'
-      when: on_success
     - when: never
 
 promote2pypi:
