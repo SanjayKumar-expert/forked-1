@@ -45,13 +45,16 @@ class HydroqcContractConfigType(TypedDict, total=False):
     account: str
     contract: str
     preheat_duration_minutes: int
-    verify_ssl: bool
     log_level: str
     http_log_level: str
-    sensors: list[str]
-    binary_sensors: list[str]
+    sync_hourly_consumption_enabled: bool
+    home_assistant_websocket_url: str
+    home_assistant_token: str
     rate: str | None
     rate_option: str | None
+    sensors: list[str]
+    binary_sensors: list[str]
+    verify_ssl: bool
     _hydro_is_up: bool
     # verify_ssl: NotRequired[bool]
     # log_level: NotRequired[str]
@@ -158,7 +161,7 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
         self._hch = HourlyConsumpHandler(
             self._name,
             bool(
-                config.get("sync_hourly_consumption", False)
+                config.get("sync_hourly_consumption_enabled", False)
                 and config.get("home_assistant_websocket_url", False)
                 and config.get("home_assistant_token", False)
             ),
