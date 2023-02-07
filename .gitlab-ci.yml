@@ -162,6 +162,7 @@ test-hass-beta:
     - docker:22.06-rc-dind
   script:
     - docker version
+    - echo ${BUILD-ARG}
     - docker buildx build 
       --platform linux/${BUILD_ARCH} 
       -t ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA} 
