@@ -216,7 +216,7 @@ docker_tag:
   tags:
     - docker
   stage: tag
-  image: docker:22.06
+  image: docker:22.06-rc
   services:
     - docker:22.06-rc-dind
   script:
