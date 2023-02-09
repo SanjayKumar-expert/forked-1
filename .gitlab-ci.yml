@@ -274,7 +274,7 @@ docker_tag:
     - |
         if [ "$CI_COMMIT_TAG" ]; then
           docker manifest create ${CI_REGISTRY_IMAGE}:latest ${CI_REGISTRY_IMAGE}/amd64:${CI_COMMIT_SHORT_SHA} ${CI_REGISTRY_IMAGE}/i386:${CI_COMMIT_SHORT_SHA} ${CI_REGISTRY_IMAGE}/armv7:${CI_COMMIT_SHORT_SHA} ${CI_REGISTRY_IMAGE}/aarch64:${CI_COMMIT_SHORT_SHA}
-          docker inspect ${CI_REGISTRY_IMAGE}:latest
+          docker manifest inspect ${CI_REGISTRY_IMAGE}:latest
           docker push ${CI_REGISTRY_IMAGE}:latest
         fi
   rules:
