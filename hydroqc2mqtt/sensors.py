@@ -359,15 +359,6 @@ SENSORS: dict[
         "sub_mqtt_topic": "dpc-peak/state",
         "rates": ["DPC"],
     },
-    "dpc_pre_heat": {
-        "name": "Pre-heat In Progress",
-        "data_source": "contract.peak_handler.preheat_in_progress",
-        "expire_after": 0,
-        "force_update": False,
-        "icon": "mdi:flash-alert",
-        "sub_mqtt_topic": "dpk-peak/state",
-        "rates": ["DPC"],
-    },
     "dpc_critical_hours_count": {
         "name": "Number of critical hours",
         "data_source": "contract.critical_called_hours",
@@ -719,5 +710,14 @@ BINARY_SENSORS: dict[
         "icon": "mdi:message-flash",
         "sub_mqtt_topic": "wintercredits/state",
         "rates": ["DCPC"],
+    },
+    "dpc_pre_heat": {
+        "name": "Pre-heat In Progress",
+        "data_source": "contract.peak_handler.preheat_in_progress",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:flash-alert",
+        "sub_mqtt_topic": "dpk-peak/state",
+        "rates": ["DPC"],
     },
 }
