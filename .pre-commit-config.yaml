@@ -39,10 +39,10 @@ repos:
   - id: mypy
     args: [--strict, --pretty, --show-error-codes]
     additional_dependencies:
-      - "types-PyYAML==6.0.12.4"
+      - "types-PyYAML==6.0.12.5"
       - "pytest-stub==1.1.0"
-      - "types-paho-mqtt==1.6.0.2"
-      - "homeassistant-stubs==2023.2.2"
+      - "types-paho-mqtt==1.6.0.3"
+      - "homeassistant-stubs==2023.2.3"
       - "Hydro_Quebec_API_Wrapper==3.0.1"
       - "mqtt-hass-base==4.1.5"
       - "aioresponses==0.7.4"
