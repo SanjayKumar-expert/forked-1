@@ -17,6 +17,7 @@
   "force_update": false,
   "json_attributes_topic": "hydroqc/home/account/state/sensor/balance/attributes",
   "name": "Balance",
+  "state_class": "total",
   "payload_available": "online",
   "payload_not_available": "offline",
   "qos": 0,
