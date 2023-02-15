@@ -371,7 +371,7 @@ SENSORS: dict[
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:clock-alert-outline",
-        "sub_mqtt_topic": "dpk-peak/state",
+        "sub_mqtt_topic": "dpc-peak/state",
         "rates": ["DPC"],
         "attributes": {
             "max": "contract.max_critical_called_hours",
@@ -383,7 +383,7 @@ SENSORS: dict[
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:calendar-range-outline",
-        "sub_mqtt_topic": "dpk-peak/state",
+        "sub_mqtt_topic": "dpc-peak/state",
         "rates": ["DPC"],
         "attributes": {
             "max": "contract.winter_total_days",
@@ -721,13 +721,23 @@ BINARY_SENSORS: dict[
         "sub_mqtt_topic": "wintercredits/state",
         "rates": ["DCPC"],
     },
+    # DPC
     "dpc_pre_heat": {
         "name": "Pre-heat In Progress",
         "data_source": "contract.peak_handler.preheat_in_progress",
         "expire_after": 0,
         "force_update": False,
         "icon": "mdi:flash-alert",
-        "sub_mqtt_topic": "dpk-peak/state",
+        "sub_mqtt_topic": "dpc-peak/state",
+        "rates": ["DPC"],
+    },
+    "dpc_peak_in_progress": {
+        "name": "Critical peak in progress",
+        "data_source": "contract.peak_handler.peak_in_progress",
+        "expire_after": 0,
+        "force_update": False,
+        "icon": "mdi:flash-alert",
+        "sub_mqtt_topic": "dpc-peak/state",
         "rates": ["DPC"],
     },
 }

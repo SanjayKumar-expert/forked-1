@@ -149,13 +149,7 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
                     )
                 self._binary_sensor_list[sensor_key] = BINARY_SENSORS[sensor_key]
 
-        connections = {
-            "customer": self._customer_id,
-            "account": self._account_id,
-            "contract": self._contract_id,
-        }
-        self.add_connections(connections)
-        self.add_identifier(str(config["contract"]))
+        self.add_identifier(self._contract_id)
         self._base_name = name
         self.name = f"hydroqc_{self._base_name}"
         self._hch = HourlyConsumpHandler(
