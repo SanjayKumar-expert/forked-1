@@ -31,6 +31,24 @@ def _parse_cmd() -> argparse.Namespace:
         "--mqtt-password", required=False, default=None, help="Mqtt password"
     )
     parser.add_argument(
+        "--mqtt-transport",
+        required=False,
+        default="tcp",
+        help="Mqtt transport 'tcp' or 'websocket'. Default: tcp",
+    )
+    parser.add_argument(
+        "--mqtt-ssl-enabled",
+        required=False,
+        default=False,
+        help="Mqtt ssl enabled. Default: False",
+    )
+    parser.add_argument(
+        "--mqtt-websocket-path",
+        required=False,
+        default="",
+        help="Mqtt websocket path. Default: empty string",
+    )
+    parser.add_argument(
         "--mqtt-discovery-root-topic",
         required=False,
         default="homeassistant",
@@ -94,6 +112,9 @@ def main() -> None:
         mqtt_port=cmd_args.mqtt_port,
         mqtt_username=cmd_args.mqtt_username,
         mqtt_password=cmd_args.mqtt_password,
+        mqtt_transport=cmd_args.mqtt_transport,
+        mqtt_ssl_enabled=cmd_args.mqtt_ssl_enabled,
+        mqtt_websocket_path=cmd_args.mqtt_websocket_path,
         mqtt_discovery_root_topic=cmd_args.mqtt_discovery_root_topic,
         mqtt_data_root_topic=cmd_args.mqtt_data_root_topic,
         config_file=cmd_args.config,

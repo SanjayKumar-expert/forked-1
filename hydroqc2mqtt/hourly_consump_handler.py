@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, TypedDict, cast
 import aiohttp
 import hydroqc
 from dateutil.relativedelta import relativedelta
+from homeassistant.util import slugify
 from hydroqc.contract.common import Contract
 from mqtt_hass_base.entity import (
     MqttButton,
@@ -204,11 +205,9 @@ class HourlyConsumpHandler:
     ) -> str:
         """Get the entity_id of the Hourly consumption HA sensor."""
         entity_id = f"{self.name}_{consumption_type}_hourly_consumption"
-        # if self.hourly_consumption_sensor_name is not None:
-        #   entity_id = self.hourly_consumption_sensor_name
         if with_entity_type:
-            return f"sensor.{entity_id}".lower()
-        return f"{entity_id}".lower()
+            return "sensor." + slugify(entity_id)
+        return slugify(entity_id)
 
     async def sync_consumption_statistics(self) -> None:
         """Sync hourly consumption statistics.

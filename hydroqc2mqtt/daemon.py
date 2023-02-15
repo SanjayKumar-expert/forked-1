@@ -69,6 +69,9 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         mqtt_port: int,
         mqtt_username: str,
         mqtt_password: str,
+        mqtt_transport: str,
+        mqtt_ssl_enabled: bool,
+        mqtt_websocket_path: str,
         mqtt_discovery_root_topic: str,
         mqtt_data_root_topic: str,
         config_file: str,
@@ -110,6 +113,9 @@ class Hydroqc2Mqtt(MqttClientDaemon):
             mqtt_discovery_root_topic,
             mqtt_data_root_topic,
             log_level,
+            transport=mqtt_transport,
+            ssl_enabled=mqtt_ssl_enabled,
+            websocket_path=mqtt_websocket_path,
         )
 
     def read_config(self) -> None:
