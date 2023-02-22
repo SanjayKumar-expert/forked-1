@@ -196,8 +196,6 @@ class Hydroqc2Mqtt(MqttClientDaemon):
             )
 
             if contract.rate is None or contract.rate_option is None:
-                print(contract.rate)
-                print(contract.rate_option)
                 self._connected = await contract.init_session()
                 if not self._connected:
                     self.logger.fatal(
