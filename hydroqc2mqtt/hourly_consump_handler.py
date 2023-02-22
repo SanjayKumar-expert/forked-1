@@ -301,37 +301,41 @@ class HourlyConsumpHandler:
         """Start a asyncio task to fetch all the hourly data stored by HydroQc."""
         self.logger.info("Starting hourly consumption history sync task")
         loop = asyncio.get_running_loop()
+
         self._sync_hourly_consumption_history_task = loop.create_task(
             self.get_hourly_consumption_history()
         )
 
     async def get_hourly_consumption_history(self) -> None:
         """Fetch all history of the hourly consumption."""
-        await self.consumption_history_ent_switch.send_on()
-        print("FFFFFF1")
-        _, _, contract = await self._contract.get_contract()
-        print("FFFFFF1")
-        # Get two years ago plus few days
-        today = datetime.date.today()
-        if self.consumption_history_ent_number.current_value is None:
-            days = 731
-        else:
-            days = int(self.consumption_history_ent_number.current_value)
-        oldest_data_date = today - relativedelta(days=days)
-        # Get contract start date
-        await contract.get_info()
-        if contract.start_date is not None:
-            contract_start_date = datetime.date.fromisoformat(str(contract.start_date))
-            # Get the youngest date between contract start date VS 2 years ago
-            start_date = (
-                oldest_data_date
-                if contract_start_date < oldest_data_date
-                else contract_start_date
-            )
-        else:
-            start_date = oldest_data_date
-        await self.get_historical_csv_statistics(contract, start_date)
-        await self.consumption_history_ent_switch.send_off()
+        try:
+            await self.consumption_history_ent_switch.send_on()
+            _, _, contract = await self._contract.get_contract()
+            # Get two years ago plus few days
+            today = datetime.date.today()
+            if self.consumption_history_ent_number.current_value is None:
+                days = 731
+            else:
+                days = int(self.consumption_history_ent_number.current_value)
+            oldest_data_date = today - relativedelta(days=days)
+            # Get contract start date
+            await contract.get_info()
+            if contract.start_date is not None:
+                contract_start_date = datetime.date.fromisoformat(
+                    str(contract.start_date)
+                )
+                # Get the youngest date between contract start date VS 2 years ago
+                start_date = (
+                    oldest_data_date
+                    if contract_start_date < oldest_data_date
+                    else contract_start_date
+                )
+            else:
+                start_date = oldest_data_date
+            await self.get_historical_csv_statistics(contract, start_date)
+            await self.consumption_history_ent_switch.send_off()
+        except BaseException as exp:
+            self.logger.error("Hourly consumption history task error: %s", exp)
         self.logger.info("Hourly consumption history sync done.")
 
     async def get_historical_csv_statistics(
