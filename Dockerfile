@@ -1,18 +1,14 @@
 FROM debian:testing-slim as base-image
 
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y ca-certificates
-RUN echo "deb  [check-valid-until=no] https://snapshot.debian.org/archive/debian/20221208T032103Z/ testing main" >> /etc/apt/sources.list
-RUN apt-get update && \
     apt-get install --no-install-recommends -y \
-        python3.10 \
-        python3.10-venv \
+        python3.11 \
+        ca-certificates \
+        python3.11-venv \
         python3-pip \
         curl \
         && \
     apt-get clean
-
-
 
 FROM base-image as build-image
 
@@ -20,7 +16,7 @@ ARG HYDROQC2MQTT_VERSION
 
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
-        python3.10-dev \
+        python3.11-dev \
         libffi-dev \
         gcc \
         build-essential \
@@ -28,8 +24,6 @@ RUN apt-get update && \
         cargo \
         && \
     apt-get clean
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && \
-    update-alternatives --set python3 /usr/bin/python3.10
 WORKDIR /usr/src/app
 
 COPY setup.cfg pyproject.toml /usr/src/app/
@@ -41,7 +35,7 @@ ENV DEB_PYTHON_INSTALL_LAYOUT=deb_system
 ENV DISTRIBUTION_NAME=HYDROQC2MQTT
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_HYDROQC2MQTT=${HYDROQC2MQTT_VERSION}
 
-RUN python3.10 -m venv /opt/venv
+RUN python3.11 -m venv /opt/venv
 
 RUN --mount=type=tmpfs,target=/root/.cargo \
     curl https://sh.rustup.rs -sSf | \
@@ -63,8 +57,6 @@ RUN . /opt/venv/bin/activate && \
 
 
 FROM base-image
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 && \
-    update-alternatives --set python3 /usr/bin/python3.10
 COPY --from=build-image /opt/venv /opt/venv
 COPY --from=build-image /usr/src/app/hydroqc2mqtt /usr/src/app/hydroqc2mqtt
 COPY --from=build-image /opt/venv/bin/hydroqc2mqtt /opt/venv/bin/hydroqc2mqtt
