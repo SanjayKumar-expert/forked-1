@@ -53,7 +53,7 @@ test-hass-stable:
   tags:
   - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230213100104
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230331170705
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
@@ -116,7 +116,7 @@ test-hass-beta:
   tags:
   - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230213100104
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230331170705
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
@@ -163,14 +163,14 @@ test-hass-beta:
   script:
     - docker version
     - echo ${BUILD-ARG}
-    - docker buildx build 
-      --platform linux/${BUILD_ARCH} 
-      -t ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA} 
-      -f ./Dockerfile 
+    - docker buildx build
+      --platform linux/${BUILD_ARCH}
+      -t ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA}
+      -f ./Dockerfile
       --build-arg HYDROQC2MQTT_VERSION=${HQ2MQTT_VERSION}
       .
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker push ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA} 
+    - docker push ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA}
   rules:
     # Disable if CI_SKIP is set
     - if: '$CI_SKIP =~ /docker/'
@@ -292,7 +292,7 @@ docker_tag:
       when: on_success
     - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
       variables:
-        IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}      
+        IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}
       when: manual
     - when: never
 
@@ -300,7 +300,7 @@ promote2pypi:
   stage: pypi
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230213100104
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230331170705
   script:
     - pip install --upgrade pip
     - pip install --upgrade build setuptools_scm twine
