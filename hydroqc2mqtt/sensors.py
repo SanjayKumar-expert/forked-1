@@ -129,7 +129,6 @@ SENSORS: dict[
     "outage": {
         "name": "Next or current outage",
         "data_source": "contract.next_outage.start_date",
-        "state_class": "measurement",
         "device_class": "timestamp",
         "expire_after": 0,
         "force_update": False,
