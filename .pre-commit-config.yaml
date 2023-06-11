@@ -39,7 +39,7 @@ repos:
   - id: mypy
     args: [--strict, --pretty, --show-error-codes]
     additional_dependencies:
-      - "types-PyYAML==6.0.12.9"
+      - "types-PyYAML==6.0.12.10"
       - "pytest-stub==1.1.0"
       - "types-paho-mqtt==1.6.0.6"
       - "homeassistant-stubs==2023.6.1"
