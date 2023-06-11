@@ -606,6 +606,7 @@ class HourlyConsumpHandler:
                 ).isoformat()
                 data_end_date_str = TZ_EASTERN.localize(
                     datetime.datetime.combine(data_date, datetime.time(0, 0))
+                    - datetime.timedelta(seconds=1)
                 ).isoformat()
 
                 websocket_call_type = (
