@@ -6,9 +6,9 @@
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
 - test
+- pypi
 - build
 - tag
-- pypi
 sast:
   stage: test
   tags:
@@ -151,6 +151,24 @@ test-hass-beta:
     # Make it manual for external MR
     - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
       when: manual
+    - when: never
+
+promote2pypi:
+  stage: pypi
+  tags:
+  - hydroqc
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230508090106
+  script:
+    - pip install --upgrade pip
+    - pip install --upgrade build setuptools_scm twine
+    - python3 -m build -o dist
+    - python3 -m twine check --strict dist/*
+    - twine upload --verbose --non-interactive --repository pypi dist/*
+  rules:
+    - if: '$CI_SKIP =~ /pypi/'
+      when: never
+    - if: '$CI_COMMIT_TAG'
+      when: on_success
     - when: never
 
 .build_generic: &build_generic
@@ -296,20 +314,3 @@ docker_tag:
       when: manual
     - when: never
 
-promote2pypi:
-  stage: pypi
-  tags:
-  - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230508090106
-  script:
-    - pip install --upgrade pip
-    - pip install --upgrade build setuptools_scm twine
-    - python3 -m build -o dist
-    - python3 -m twine check --strict dist/*
-    - twine upload --verbose --non-interactive --repository pypi dist/*
-  rules:
-    - if: '$CI_SKIP =~ /pypi/'
-      when: never
-    - if: '$CI_COMMIT_TAG'
-      when: on_success
-    - when: never
