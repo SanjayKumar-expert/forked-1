@@ -22,6 +22,7 @@ RUN apt-get update && \
         build-essential \
         libssl-dev \
         cargo \
+        pkg-config \
         && \
     apt-get clean
 WORKDIR /usr/src/app
