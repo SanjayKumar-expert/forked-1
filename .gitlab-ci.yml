@@ -35,7 +35,7 @@ cache:
 test-hass-stable:
   stage: test
   services:
-    - name: eclipse-mosquitto:2.0.15
+    - name: eclipse-mosquitto:2.0.18
       alias: mosquitto
       entrypoint:
         - "/bin/sh"
@@ -98,7 +98,7 @@ test-hass-stable:
 test-hass-beta:
   stage: test
   services:
-    - name: eclipse-mosquitto:2.0.15
+    - name: eclipse-mosquitto:2.0.18
       alias: mosquitto
       entrypoint:
         - "/bin/sh"
