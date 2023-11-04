@@ -220,34 +220,6 @@ build_amd64:
     ARCH: amd64
     BUILD_ARCH: amd64
   <<: *build_generic
-build_i386:
-  variables:
-    ARCH: i386
-    BUILD_ARCH: i386
-  <<: *build_generic
-  rules:
-    - if: '$CI_COMMIT_TAG'
-      variables:
-        HQ2MQTT_VERSION: ${CI_COMMIT_TAG}
-      when: on_success
-    - when: manual
-      variables:
-        HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
-      allow_failure: true
-build_armv7:
-  variables:
-    ARCH: armv7
-    BUILD_ARCH: arm/v7
-  <<: *build_generic
-  rules:
-    - if: '$CI_COMMIT_TAG'
-      variables:
-        HQ2MQTT_VERSION: ${CI_COMMIT_TAG}
-      when: on_success
-    - when: manual
-      variables:
-        HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
-      allow_failure: true
 build_aarch64:
   variables:
     ARCH: aarch64
@@ -262,6 +234,34 @@ build_aarch64:
       variables:
         HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
       allow_failure: true
+# build_i386:
+#   variables:
+#     ARCH: i386
+#     BUILD_ARCH: i386
+#   <<: *build_generic
+#   rules:
+#     - if: '$CI_COMMIT_TAG'
+#       variables:
+#         HQ2MQTT_VERSION: ${CI_COMMIT_TAG}
+#       when: on_success
+#     - when: manual
+#       variables:
+#         HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
+#       allow_failure: true
+# build_armv7:
+#   variables:
+#     ARCH: armv7
+#     BUILD_ARCH: arm/v7
+#   <<: *build_generic
+#   rules:
+#     - if: '$CI_COMMIT_TAG'
+#       variables:
+#         HQ2MQTT_VERSION: ${CI_COMMIT_TAG}
+#       when: on_success
+#     - when: manual
+#       variables:
+#         HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
+#       allow_failure: true
 
 docker_tag:
   tags:
@@ -277,7 +277,7 @@ docker_tag:
       ${CI_REGISTRY_IMAGE}/amd64:${CI_COMMIT_SHORT_SHA}
     - docker manifest push ${CI_REGISTRY_IMAGE}:${IMAGE_TAG}
     - |
-        for PLATFORM in i386 armv7 aarch64
+        for PLATFORM in aarch64
           do
             echo "docker manifest inspect ${CI_REGISTRY_IMAGE}/${PLATFORM}:${CI_COMMIT_SHORT_SHA}"
             if docker manifest inspect ${CI_REGISTRY_IMAGE}/${PLATFORM}:${CI_COMMIT_SHORT_SHA}; then
