@@ -172,8 +172,8 @@ promote2pypi:
     - when: never
 
 .build_generic: &build_generic
-  tags:
-    - docker
+  # tags:
+  #  - docker
   stage: build
   image: docker:22.06-rc
   services:
@@ -264,8 +264,8 @@ build_aarch64:
 #       allow_failure: true
 
 docker_tag:
-  tags:
-    - docker
+  # tags:
+  #  - docker
   stage: tag
   image: docker:22.06-rc
   services:
