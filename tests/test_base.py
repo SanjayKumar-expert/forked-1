@@ -18,7 +18,7 @@ from hydroqc.hydro_api.consts import (
     GET_CPC_API_URL,
     IS_HYDRO_PORTAL_UP_URL,
     LOGIN_URL_6,
-    OUTAGES,
+    # OUTAGES,
     PERIOD_DATA_URL,
     PORTRAIT_URL,
     RELATION_URL,
@@ -203,9 +203,9 @@ def test_base() -> None:  # pylint: disable=too-many-locals
 
         mres.get(f"{GET_CPC_API_URL}?noContrat={CONTRACT_ID}", payload=payload_13)
 
-        with open("tests/input_http_data/outages.json", "rb") as fht:
-            payload_14 = json.load(fht)
-        mres.get(OUTAGES + "6666666666", payload=payload_14)
+        # with open("tests/input_http_data/outages.json", "rb") as fht:
+        #     payload_14 = json.load(fht)
+        # mres.get(OUTAGES + "6666666666", payload=payload_14)
 
         # Run main loop once
         del sys.argv[1:]
