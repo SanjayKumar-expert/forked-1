@@ -126,7 +126,6 @@ SENSORS: dict[
         "rates": ["ALL"],
     },
     # Contract
-
     # TODO 2023-12-02 Broken api call. Needs to be fixed in the library
     # "outage": {
     #     "name": "Next or current outage",
