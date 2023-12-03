@@ -483,8 +483,8 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
                     # TODO FIX ME
                     return
                 await self._contract.get_periods_info()
-                # TODO 2023-12-02 Broken api call. Needs to be fixed in the library
-                # await self._contract.refresh_outages()
+
+                await self._contract.refresh_outages()
 
                 if self.rate == "D" and self.rate_option == "CPC":
                     contract_dcpc = cast(ContractDCPC, self._contract)
