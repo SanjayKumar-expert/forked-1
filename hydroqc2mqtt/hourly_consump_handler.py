@@ -224,7 +224,8 @@ class HourlyConsumpHandler:
 
         _, _, contract = await self._contract.get_contract()
         # We send data for today and yesterday to be sure to not miss and data
-        yesterday = datetime.date.today() - datetime.timedelta(days=1)
+        # TODO Revert days=7 to 1
+        yesterday = datetime.date.today() - datetime.timedelta(days=7)
         await self.get_historical_statistics(contract, yesterday)
         for entity in self.hourly_consumption_entity_list.values():
             await entity.send_available()
