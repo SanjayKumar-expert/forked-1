@@ -27,7 +27,7 @@ from hydroqc.hydro_api.consts import (
     HOURLY_CONSUMPTION_API_URL,
     IS_HYDRO_PORTAL_UP_URL,
     LOGIN_URL_6,
-    # OUTAGES,
+    OUTAGES,
     PERIOD_DATA_URL,
     PORTRAIT_URL,
     RELATION_URL,
@@ -292,9 +292,9 @@ class TestLiveConsumption:
                 f"{HOURLY_CONSUMPTION_API_URL}?date={TODAY_STR}", payload=payload_12
             )
 
-            # with open("tests/input_http_data/outages.json", "rb") as fht:
-            #    payload_14 = json.load(fht)
-            # mres.get(OUTAGES + "6666666666", payload=payload_14)
+            with open("tests/input_http_data/outages.json", "rb") as fht:
+                payload_14 = json.load(fht)
+            mres.get(OUTAGES + "6666666666", payload=payload_14)
 
             del sys.argv[1:]
             sys.argv.append("--run-once")
