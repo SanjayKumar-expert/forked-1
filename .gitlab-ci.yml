@@ -4,6 +4,10 @@
 # Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
 # Note that environment variables can be set in several places
 # See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - project: "renovate-bot/renovate-runner"
+    file: "/templates/renovate-config-validator.gitlab-ci.yml"
 stages:
 - test
 - pypi
@@ -13,8 +17,6 @@ sast:
   stage: test
   tags:
   - hydroqc
-include:
-- template: Security/SAST.gitlab-ci.yml
 
 variables:
   TZ: America/Toronto
@@ -31,6 +33,36 @@ cache:
   key: pip-cache
   paths:
     - .cache/pip
+
+renovate-config-validator:
+  stage: test
+  tags:
+    - hydroqc
+  rules:
+    # Enable for all other branches if it's a MR pipeline
+    - if: "$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID"
+      changes:
+        - renovate.json5
+      when: on_success
+    - when: never
+
+set-version:
+  stage: test
+  image:
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
+  script:
+    - echo HYDROQC2MQTT_VERSION=$(python3 -m setuptools_scm) > collected.env
+    - echo HYDROQC2MQTT_VERSION_STRIPPED=$(python3 -m setuptools_scm --strip-dev) >> collected.env
+  artifacts:
+    reports:
+      dotenv: collected.env
+    paths:
+      - collected.env
+  rules:
+    # Only run when test-hass-stable is disabled
+    - if: '$CI_SKIP =~ /test-hass-stable/'
+      when: on_success
+    - when: never
 
 test-hass-stable:
   stage: test
@@ -53,7 +85,7 @@ test-hass-stable:
   tags:
   - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20231127050116
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
@@ -116,7 +148,7 @@ test-hass-beta:
   tags:
   - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20231127050116
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
@@ -157,7 +189,7 @@ promote2pypi:
   stage: pypi
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20231127050116
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
   script:
     - pip install --upgrade pip
     - pip install --upgrade build setuptools_scm twine
@@ -172,12 +204,10 @@ promote2pypi:
     - when: never
 
 .build_generic: &build_generic
-  # tags:
-  #  - docker
   stage: build
-  image: docker:22.06-rc
+  image: docker:23.0
   services:
-    - docker:22.06-rc-dind
+    - docker:23.0-dind
   script:
     - docker version
     - echo ${BUILD-ARG}
@@ -187,8 +217,12 @@ promote2pypi:
       -f ./Dockerfile
       --build-arg HYDROQC2MQTT_VERSION=${HQ2MQTT_VERSION}
       .
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker push ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA}
+    - |
+      if [ $GITLAB_CI == 'true' ];
+        then
+          docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+          docker push ${CI_REGISTRY_IMAGE}/${ARCH}:${CI_COMMIT_SHORT_SHA}
+        fi
   rules:
     # Disable if CI_SKIP is set
     - if: '$CI_SKIP =~ /docker/'
@@ -234,42 +268,12 @@ build_aarch64:
       variables:
         HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
       allow_failure: true
-# build_i386:
-#   variables:
-#     ARCH: i386
-#     BUILD_ARCH: i386
-#   <<: *build_generic
-#   rules:
-#     - if: '$CI_COMMIT_TAG'
-#       variables:
-#         HQ2MQTT_VERSION: ${CI_COMMIT_TAG}
-#       when: on_success
-#     - when: manual
-#       variables:
-#         HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
-#       allow_failure: true
-# build_armv7:
-#   variables:
-#     ARCH: armv7
-#     BUILD_ARCH: arm/v7
-#   <<: *build_generic
-#   rules:
-#     - if: '$CI_COMMIT_TAG'
-#       variables:
-#         HQ2MQTT_VERSION: ${CI_COMMIT_TAG}
-#       when: on_success
-#     - when: manual
-#       variables:
-#         HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
-#       allow_failure: true
 
 docker_tag:
-  # tags:
-  #  - docker
   stage: tag
-  image: docker:22.06-rc
+  image: docker:23.0
   services:
-    - docker:22.06-rc-dind
+    - docker:23.0-dind
   script:
     - docker version
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -291,7 +295,7 @@ docker_tag:
     - docker manifest push ${CI_REGISTRY_IMAGE}:${IMAGE_TAG}
     - |
         if [ "$CI_COMMIT_TAG" ]; then
-          docker manifest create ${CI_REGISTRY_IMAGE}:latest ${CI_REGISTRY_IMAGE}/amd64:${CI_COMMIT_SHORT_SHA} {CI_REGISTRY_IMAGE}/aarch64:${CI_COMMIT_SHORT_SHA}
+          docker manifest create ${CI_REGISTRY_IMAGE}:latest ${CI_REGISTRY_IMAGE}/amd64:${CI_COMMIT_SHORT_SHA} ${CI_REGISTRY_IMAGE}/aarch64:${CI_COMMIT_SHORT_SHA}
           docker manifest inspect ${CI_REGISTRY_IMAGE}:latest
           docker manifest push ${CI_REGISTRY_IMAGE}:latest
         fi
@@ -313,4 +317,3 @@ docker_tag:
         IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}
       when: manual
     - when: never
-

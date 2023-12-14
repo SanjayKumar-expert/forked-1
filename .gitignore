@@ -103,6 +103,7 @@ celerybeat.pid
 
 # Environments
 .env
+.envrc
 .venv
 env/
 venv/
@@ -131,6 +132,10 @@ dmypy.json
 config.yaml
 .idea/
 
+# gitlab-ci-local
+.gitlab-ci-local-env
+.gitlab-ci-local/
+.gitlab-ci-local-variables.yml
 
 run.sh
 config.yaml

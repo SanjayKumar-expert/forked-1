@@ -1,30 +1,7 @@
-FROM debian:testing-slim as base-image
-
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
-        python3.11 \
-        ca-certificates \
-        python3.11-venv \
-        python3-pip \
-        curl \
-        && \
-    apt-get clean
-
-FROM base-image as build-image
+FROM registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest@sha256:049f7935029b57bdb18554561581fde63e454fc51be38b89214ff8dc9de35db0 as build-image
 
 ARG HYDROQC2MQTT_VERSION
 
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
-        python3.11-dev \
-        libffi-dev \
-        gcc \
-        build-essential \
-        libssl-dev \
-        cargo \
-        pkg-config \
-        && \
-    apt-get clean
 WORKDIR /usr/src/app
 
 COPY setup.cfg pyproject.toml /usr/src/app/
@@ -51,16 +28,27 @@ RUN --mount=type=tmpfs,target=/root/.cargo \
     . /opt/venv/bin/activate && \
     pip install --upgrade pip && \
     pip install --upgrade setuptools_scm && \
+    pip config set global.extra-index-url https://gitlab.com/api/v4/projects/32908244/packages/pypi/simple && \
     pip install --no-cache-dir .
 
 RUN . /opt/venv/bin/activate && \
     pip install --no-cache-dir msgpack ujson
 
 
-FROM base-image
+FROM python:3.11-slim-bookworm@sha256:89c610d12fe12b3e06f35d070f79e57cf14e2bd89c071435ee3678419b691603
 COPY --from=build-image /opt/venv /opt/venv
 COPY --from=build-image /usr/src/app/hydroqc2mqtt /usr/src/app/hydroqc2mqtt
 COPY --from=build-image /opt/venv/bin/hydroqc2mqtt /opt/venv/bin/hydroqc2mqtt
+
+RUN \
+    adduser hq2m \
+        --uid 568 \
+        --group \
+        --system \
+        --disabled-password \
+        --no-create-home
+
+USER hq2m
 
 ENV PATH="/opt/venv/bin:$PATH"
 ENV TZ="America/Toronto" \

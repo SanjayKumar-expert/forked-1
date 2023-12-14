@@ -1,0 +1,136 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":dependencyDashboard"],
+  "branchPrefix": "renovate-",
+  "platform": "gitlab",
+  "pre-commit": {"enabled": true},
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": [".pre-commit-config.yaml"],
+      "matchStrings": [
+        " *- \"(?<depName>[^\n=]*?)==(?<currentValue>[v0-9.]*?)\"",
+        " *- \"(?<depName>[^\n=]*?)==(?<currentValue>[v0-9.]*?)\"\n"
+      ],
+      "datasourceTemplate": "pypi",
+      "versioningTemplate": "pep440"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": [
+        "pip-compile",
+        "pip_requirements",
+        "pip_setup",
+        "pipenv",
+        "poetry",
+        "pyenv",
+        "setup-cfg",
+        "custom.regex"
+      ],
+      "matchFileNames": ["test_requirements.txt", ".pre-commit-config.yaml"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "pinDigest",
+        "digest",
+        "lockFileMaintenance",
+        "rollback",
+        "bump"
+      ],
+      "groupName": "Python devDependencies - non-major",
+      "groupSlug": "python-devdeps-nonmajor",
+      "automerge": true
+    },
+    {
+      "matchManagers": [
+        "pip-compile",
+        "pip_requirements",
+        "pip_setup",
+        "pipenv",
+        "poetry",
+        "pyenv",
+        "setup-cfg",
+        "custom.regex"
+      ],
+      "matchFileNames": ["test_requirements.txt", ".pre-commit-config.yaml"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Python devDependencies - major",
+      "groupSlug": "python-devdeps-major",
+      "automerge": false
+    },
+    {
+      "matchManagers": [
+        "pip-compile",
+        "pip_requirements",
+        "pip_setup",
+        "pipenv",
+        "poetry",
+        "pyenv",
+        "setup-cfg"
+      ],
+      "matchFileNames": ["setup.cfg"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "pinDigest",
+        "digest",
+        "lockFileMaintenance",
+        "rollback",
+        "bump"
+      ],
+      "groupName": "Python dependencies - non-major",
+      "groupSlug": "python-deps-nonmajor",
+      "automerge": true
+    },
+    {
+      "matchManagers": [
+        "pip-compile",
+        "pip_requirements",
+        "pip_setup",
+        "pipenv",
+        "poetry",
+        "pyenv",
+        "setup-cfg"
+      ],
+      "matchFileNames": ["setup.cfg"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Python dependencies - major",
+      "groupSlug": "python-deps-major",
+      "automerge": false
+    },
+    {
+      "matchManagers": ["pre-commit"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "pinDigest",
+        "digest",
+        "lockFileMaintenance",
+        "rollback",
+        "bump"
+      ],
+      "groupName": "Pre-commit Dependencies - non-major",
+      "groupSlug": "precommit-deps-nonmajor",
+      "automerge": true
+    },
+    {
+      "matchManagers": ["pre-commit"],
+      "matchUpdateTypes": ["major"],
+      "groupName": "Pre-commit Dependencies - major",
+      "groupSlug": "precommit-deps-major",
+      "automerge": false
+    },
+    {
+      "description": "Auto merge container digests",
+      "matchDatasources": ["docker"],
+      "automerge": true,
+      "ignoreTests": false,
+      "automergeType": "pr",
+      "matchUpdateTypes": ["digest"]
+    }
+  ]
+}
