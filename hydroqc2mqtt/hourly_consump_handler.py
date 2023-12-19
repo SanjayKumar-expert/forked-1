@@ -392,8 +392,8 @@ class HourlyConsumpHandler:
                         data_date.isoformat(),
                         retry,
                     )
-                    # await self.init_session()
-                    await self._contract._login()
+
+                    await self._contract.init_session()
                     # await self.
                     retry -= 1
                     continue
@@ -537,7 +537,7 @@ class HourlyConsumpHandler:
                         data_date.isoformat(),
                         retry,
                     )
-                    await self._contract._login()
+                    await self._contract.init_session()
                     retry -= 1
                     continue
 

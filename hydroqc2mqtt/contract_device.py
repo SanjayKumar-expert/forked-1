@@ -303,20 +303,16 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
 
         self.logger.info("added %s ...", self.name)
 
-    async def _login(self) -> bool:
-        """Login to HydroQC website."""
-        self.logger.info("Login")
-        try:
-            await self._webuser.close_session()
-            return await self._webuser.login()
-        except hydroqc.error.HydroQcHTTPError:
-            self.logger.error("Can not login to HydroQuebec web site")
-            return False
-
     async def init_session(self) -> bool:
         """Initialize session on HydroQC website."""
-        if self._webuser.session_expired is True:
-            return await self._login()
+        if self._webuser.session_expired:
+            self.logger.info("Login")
+            try:
+                await self._webuser.close_session()
+                return await self._webuser.login()
+            except hydroqc.error.HydroQcHTTPError:
+                self.logger.error("Can not login to HydroQuebec web site")
+                return False
         return True
 
     def _get_object_attribute_value(
