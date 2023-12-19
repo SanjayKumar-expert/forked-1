@@ -14,15 +14,14 @@ from aioresponses import aioresponses
 from hydroqc.hydro_api.consts import (
     AUTH_URL,
     AUTHORIZE_URL,
+    AZB2C_POLICY,
     CONTRACT_LIST_URL,
     CONTRACT_SUMMARY_URL,
     CUSTOMER_INFO_URL,
-    LOGIN_URL_6,
     PORTRAIT_URL,
     RELATION_URL,
-    SECURITY_URL,
-    SESSION_REFRESH_URL,
     SESSION_URL,
+    TOKEN_URL,
 )
 
 from hydroqc2mqtt.__main__ import _parse_cmd
@@ -74,41 +73,36 @@ class TestHistoryConsumption:
         # Prepare http mocking
         with aioresponses(passthrough=[WS_SERVER_URL]) as mres:
             # LOGIN
-            mres.post(
-                AUTH_URL,
-                payload={
-                    "callbacks": [
-                        {"input": [{"value": "username"}]},
-                        {"input": [{"value": "password"}]},
-                    ]
-                },
-            )
-
-            mres.post(
-                AUTH_URL,
-                payload={"tokenId": "FAKE_TOKEN"},
-            )
-
-            fake_scope = "FAKE_SCOPE"
-            fake_oauth2_client_id = "FAKE_OAUTH2_CLIENT_ID"
-            fake_redirect_uri = "https://FAKE_REDIRECTURI.com"
-            # fake_redirect_uri_enc = urllib.parse.quote(fake_redirect_uri, safe="")
+            csrf_token = "FAKECSRFTOKEN"
+            transid = "FAKETRANSID"
+            code = "FAKE_CODE"
+            authorize_url_reg = re.compile(AUTHORIZE_URL + r"\?.*")
             mres.get(
-                SECURITY_URL,
-                repeat=True,
+                authorize_url_reg,
+                body=f'''"csrf":"{csrf_token}","transId":"{transid}"''',
+            )
+
+            mres.post(
+                AUTH_URL + "?tx=FAKETRANSID&p=" + AZB2C_POLICY,
                 payload={
-                    "oauth2": [
-                        {
-                            "clientId": fake_oauth2_client_id,
-                            "redirectUri": fake_redirect_uri,
-                            "scope": fake_scope,
-                        }
-                    ]
+                    "status": "200",
                 },
             )
+
+            url = (
+                "https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab"
+                + "/B2C_1A_PRD_signup_signin/api/CombinedSigninAndSignup/"
+                + "confirmed?rememberMe=false&csrf_token="
+                + csrf_token
+                + "&tx="
+                + transid
+                + "&p="
+                + AZB2C_POLICY
+            )
+            mres.get(url, status=302, headers={"Location": f"code={code}"})
 
             encoded_id_token_data = {
-                "sub": "fake_webuserid",
+                "sub": "fake_webuser_id",
                 "exp": int(time.time()) + 18000,
             }
             encoded_id_token = b".".join(
@@ -117,37 +111,23 @@ class TestHistoryConsumption:
                     base64.b64encode(json.dumps(encoded_id_token_data).encode()),
                 )
             ).decode()
-            access_token_url = SESSION_REFRESH_URL.replace("/silent-refresh", "")
-            callback_url = (
-                f"{access_token_url}#"
-                f"access_token=FAKE_ACCESS_TOKEN&id_token={encoded_id_token}"
-            )
-            reurl3 = re.compile(r"^" + AUTHORIZE_URL + r"\?client_id=.*$")
-            mres.get(reurl3, status=302, headers={"Location": callback_url})
-
-            mres.get(callback_url)
-
-            url5 = LOGIN_URL_6
-            mres.get(url5)
-
-            mres.get(
-                SECURITY_URL,
-                payload={
-                    "oauth2": [
-                        {
-                            "clientId": fake_oauth2_client_id,
-                            "redirectUri": fake_redirect_uri,
-                            "scope": fake_scope,
-                        }
-                    ]
-                },
-            )
-            callback_url = (
-                f"{SESSION_REFRESH_URL}#"
-                f"access_token=FAKE_ACCESS_TOKEN&id_token={encoded_id_token}"
-            )
-            mres.get(reurl3, status=302, headers={"Location": callback_url})
-            mres.get(callback_url)
+            response_payload = {
+                "access_token": encoded_id_token,
+                "id_token": encoded_id_token,
+                "token_type": "Bearer",
+                "not_before": 1702929095,
+                "expires_in": 900,
+                "expires_on": 1702929995,
+                "resource": "09b0ae72-6db8-4ecc-a1be-041b67afc1cd",
+                "id_token_expires_in": 900,
+                "profile_info": "FAKE",
+                "scope": "https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client openid",
+                "refresh_token": encoded_id_token,
+                "refresh_token_expires_in": 86400,
+            }
+            mres.post(TOKEN_URL, payload=response_payload)
+            mres.post(TOKEN_URL, payload=response_payload)
+            mres.post(TOKEN_URL, payload=response_payload)
 
             # DATA
             # TODO make it relative to this file
@@ -213,7 +193,7 @@ class TestHistoryConsumption:
                 # Mocking the send_consumption_statistics method
                 self.send_consumption_statistics_nb_called = 0
 
-                async def mock_send_consptn_statistics(
+                async def mock_send_consptn_stats(
                     stats: list[HAEnergyStatType],
                     consumption_type: str,  # pylint: disable=unused-argument
                     data_date: date,  # pylint: disable=unused-argument
@@ -222,9 +202,7 @@ class TestHistoryConsumption:
                     # We want to ensure that all data sent to WS are correct
                     assert sum(s["state"] for s in stats) == sum(range(0, 24)) * 2
 
-                contract._hch.send_consumption_statistics = (  # type: ignore[assignment]
-                    mock_send_consptn_statistics
-                )
+                contract._hch.send_consumption_statistics = mock_send_consptn_stats  # type: ignore
 
                 # Mock get_hourly_energy
                 async def mock_get_hourly_energy(

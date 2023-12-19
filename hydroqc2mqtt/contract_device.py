@@ -317,6 +317,7 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
         """Initialize session on HydroQC website."""
         if self._webuser.session_expired is True:
             return await self._login()
+        return True
 
     def _get_object_attribute_value(
         self,
