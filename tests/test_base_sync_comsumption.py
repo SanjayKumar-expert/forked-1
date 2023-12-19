@@ -20,20 +20,19 @@ from aioresponses import aioresponses
 from hydroqc.hydro_api.consts import (
     AUTH_URL,
     AUTHORIZE_URL,
+    AZB2C_POLICY,
     CONTRACT_LIST_URL,
     CONTRACT_SUMMARY_URL,
     CUSTOMER_INFO_URL,
     GET_CPC_API_URL,
     HOURLY_CONSUMPTION_API_URL,
     IS_HYDRO_PORTAL_UP_URL,
-    LOGIN_URL_6,
     OUTAGES,
     PERIOD_DATA_URL,
     PORTRAIT_URL,
     RELATION_URL,
-    SECURITY_URL,
-    SESSION_REFRESH_URL,
     SESSION_URL,
+    TOKEN_URL,
 )
 from hydroqc.utils import EST_TIMEZONE
 from packaging import version
@@ -54,9 +53,19 @@ MQTT_DATA_ROOT_TOPIC = os.environ.get("MQTT_DATA_ROOT_TOPIC", "homeassistant")
 TODAY = datetime.today()
 YESTERDAY = TODAY - timedelta(days=1)
 YESTERDAY2 = TODAY - timedelta(days=2)
+TODAY_MINUS_3 = TODAY - timedelta(days=3)
+TODAY_MINUS_4 = TODAY - timedelta(days=4)
+TODAY_MINUS_5 = TODAY - timedelta(days=5)
+TODAY_MINUS_6 = TODAY - timedelta(days=6)
+TODAY_MINUS_7 = TODAY - timedelta(days=7)
 TODAY_STR = TODAY.strftime("%Y-%m-%d")
 YESTERDAY_STR = YESTERDAY.strftime("%Y-%m-%d")
 YESTERDAY2_STR = YESTERDAY2.strftime("%Y-%m-%d")
+TODAY_MINUS_3_STR = TODAY_MINUS_3.strftime("%Y-%m-%d")
+TODAY_MINUS_4_STR = TODAY_MINUS_4.strftime("%Y-%m-%d")
+TODAY_MINUS_5_STR = TODAY_MINUS_5.strftime("%Y-%m-%d")
+TODAY_MINUS_6_STR = TODAY_MINUS_6.strftime("%Y-%m-%d")
+TODAY_MINUS_7_STR = TODAY_MINUS_7.strftime("%Y-%m-%d")
 
 
 async def check_data_in_hass() -> None:
@@ -94,14 +103,14 @@ async def check_data_in_hass() -> None:
         response = await websocket.receive_json()
         assert (
             response["result"]["sensor.hydroqc_home_total_hourly_consumption"][0]["sum"]
-            == 61.94
+            == 433.58
         )
 
 
 class TestLiveConsumption:
     """Test class for Live consumption feature."""
 
-    def test_base_sync_consumption(  # pylint: disable=too-many-locals
+    def test_base_sync_consumption(  # pylint: disable=too-many-locals,too-many-statements
         self,
     ) -> None:
         """Test Sync consumption for hydroqc2mqtt."""
@@ -157,38 +166,33 @@ class TestLiveConsumption:
             )
 
             # LOGIN
-            mres.post(
-                AUTH_URL,
-                payload={
-                    "callbacks": [
-                        {"input": [{"value": "username"}]},
-                        {"input": [{"value": "password"}]},
-                    ]
-                },
-            )
-
-            mres.post(
-                AUTH_URL,
-                payload={"tokenId": "FAKE_TOKEN"},
-            )
-
-            fake_scope = "FAKE_SCOPE"
-            fake_oauth2_client_id = "FAKE_OAUTH2_CLIENT_ID"
-            fake_redirect_uri = "https://FAKE_REDIRECTURI.com"
-            # fake_redirect_uri_enc = urllib.parse.quote(fake_redirect_uri, safe="")
+            csrf_token = "FAKECSRFTOKEN"
+            transid = "FAKETRANSID"
+            code = "FAKE_CODE"
+            authorize_url_reg = re.compile(AUTHORIZE_URL + r"\?.*")
             mres.get(
-                SECURITY_URL,
-                repeat=True,
+                authorize_url_reg,
+                body=f'''"csrf":"{csrf_token}","transId":"{transid}"''',
+            )
+
+            mres.post(
+                AUTH_URL + "?tx=FAKETRANSID&p=" + AZB2C_POLICY,
                 payload={
-                    "oauth2": [
-                        {
-                            "clientId": fake_oauth2_client_id,
-                            "redirectUri": fake_redirect_uri,
-                            "scope": fake_scope,
-                        }
-                    ]
+                    "status": "200",
                 },
             )
+
+            url = (
+                "https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab"
+                + "/B2C_1A_PRD_signup_signin/api/CombinedSigninAndSignup/"
+                + "confirmed?rememberMe=false&csrf_token="
+                + csrf_token
+                + "&tx="
+                + transid
+                + "&p="
+                + AZB2C_POLICY
+            )
+            mres.get(url, status=302, headers={"Location": f"code={code}"})
 
             encoded_id_token_data = {
                 "sub": "fake_webuser_id",
@@ -200,37 +204,23 @@ class TestLiveConsumption:
                     base64.b64encode(json.dumps(encoded_id_token_data).encode()),
                 )
             ).decode()
-            access_token_url = SESSION_REFRESH_URL.replace("/silent-refresh", "")
-            callback_url = (
-                f"{access_token_url}#"
-                f"access_token=FAKE_ACCESS_TOKEN&id_token={encoded_id_token}"
-            )
-            reurl3 = re.compile(r"^" + AUTHORIZE_URL + r"\?client_id=.*$")
-            mres.get(reurl3, status=302, headers={"Location": callback_url})
-
-            mres.get(callback_url)
-
-            url5 = LOGIN_URL_6
-            mres.get(url5)
-
-            mres.get(
-                SECURITY_URL,
-                payload={
-                    "oauth2": [
-                        {
-                            "clientId": fake_oauth2_client_id,
-                            "redirectUri": fake_redirect_uri,
-                            "scope": fake_scope,
-                        }
-                    ]
-                },
-            )
-            callback_url = (
-                f"{SESSION_REFRESH_URL}#"
-                f"access_token=FAKE_ACCESS_TOKEN&id_token={encoded_id_token}"
-            )
-            mres.get(reurl3, status=302, headers={"Location": callback_url})
-            mres.get(callback_url)
+            response_payload = {
+                "access_token": encoded_id_token,
+                "id_token": encoded_id_token,
+                "token_type": "Bearer",
+                "not_before": 1702929095,
+                "expires_in": 900,
+                "expires_on": 1702929995,
+                "resource": "09b0ae72-6db8-4ecc-a1be-041b67afc1cd",
+                "id_token_expires_in": 900,
+                "profile_info": "FAKE",
+                "scope": "https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client openid",
+                "refresh_token": encoded_id_token,
+                "refresh_token_expires_in": 86400,
+            }
+            mres.post(TOKEN_URL, payload=response_payload)
+            mres.post(TOKEN_URL, payload=response_payload)
+            mres.post(TOKEN_URL, payload=response_payload)
 
             # DATA
             # TODO make it relative to this file
@@ -282,15 +272,31 @@ class TestLiveConsumption:
                 "rb",
             ) as fht:
                 payload_12 = json.load(fht)
-                payload_13 = copy.copy(payload_12)
-                payload_12["results"]["dateJour"] = YESTERDAY_STR
-                payload_13["results"]["dateJour"] = TODAY_STR
-            mres.get(
-                f"{HOURLY_CONSUMPTION_API_URL}?date={YESTERDAY_STR}", payload=payload_12
-            )
-            mres.get(
-                f"{HOURLY_CONSUMPTION_API_URL}?date={TODAY_STR}", payload=payload_12
-            )
+                payload_12["results"]["dateJour"] = TODAY_STR
+                payload_12_1 = copy.copy(payload_12)
+                payload_12_1["results"]["dateJour"] = YESTERDAY_STR
+                payload_12_2 = copy.copy(payload_12)
+                payload_12_2["results"]["dateJour"] = YESTERDAY2_STR
+                payload_12_3 = copy.copy(payload_12)
+                payload_12_3["results"]["dateJour"] = TODAY_MINUS_3_STR
+                payload_12_4 = copy.copy(payload_12)
+                payload_12_4["results"]["dateJour"] = TODAY_MINUS_4_STR
+                payload_12_5 = copy.copy(payload_12)
+                payload_12_5["results"]["dateJour"] = TODAY_MINUS_5_STR
+                payload_12_6 = copy.copy(payload_12)
+                payload_12_6["results"]["dateJour"] = TODAY_MINUS_6_STR
+                payload_12_7 = copy.copy(payload_12)
+                payload_12_7["results"]["dateJour"] = TODAY_MINUS_7_STR
+
+            url_pattern = re.compile(HOURLY_CONSUMPTION_API_URL + r"\?date=.*")
+            mres.get(url_pattern, payload=payload_12_7)
+            mres.get(url_pattern, payload=payload_12_6)
+            mres.get(url_pattern, payload=payload_12_5)
+            mres.get(url_pattern, payload=payload_12_4)
+            mres.get(url_pattern, payload=payload_12_3)
+            mres.get(url_pattern, payload=payload_12_2)
+            mres.get(url_pattern, payload=payload_12_1)
+            mres.get(url_pattern, payload=payload_12)
 
             with open("tests/input_http_data/outages.json", "rb") as fht:
                 payload_14 = json.load(fht)
