@@ -3,7 +3,7 @@ import datetime
 import logging
 from typing import TypedDict, cast
 
-import asyncio_mqtt as mqtt
+import aiomqtt as mqtt
 import hydroqc
 import paho.mqtt.client as paho
 from hydroqc.account import Account

@@ -7,7 +7,7 @@ from contextlib import AsyncExitStack
 from datetime import datetime
 from typing import Any, TypedDict
 
-import asyncio_mqtt as mqtt
+import aiomqtt as mqtt
 import hydroqc
 import yaml
 from mqtt_hass_base.daemon import MqttClientDaemon
