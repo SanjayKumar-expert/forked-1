@@ -9,14 +9,14 @@ include:
   - project: "renovate-bot/renovate-runner"
     file: "/templates/renovate-config-validator.gitlab-ci.yml"
 stages:
-- test
-- pypi
-- build
-- tag
+  - test
+  - pypi
+  - build
+  - tag
 sast:
   stage: test
   tags:
-  - hydroqc
+    - hydroqc
 
 variables:
   TZ: America/Toronto
@@ -46,8 +46,6 @@ renovate-config-validator:
       when: on_success
     - when: never
 
-
-
 test-hass-stable:
   stage: test
   services:
@@ -67,7 +65,7 @@ test-hass-stable:
         - |
           mkdir -p .storage && (echo ${HASS_AUTH} | base64 -d > .storage/auth) && (hass --script ensure_config -c /config 2>&1) && (echo 'homeassistant:' >> /config/configuration.yaml) && (echo '  time_zone: America/New_York' >> /config/configuration.yaml) && (echo '  latitude: 45.508888' >> /config/configuration.yaml) && (echo '  longitude: -73.561668' >> /config/configuration.yaml) && hass --script auth add admin password && sleep 1 && /init
   tags:
-  - hydroqc
+    - hydroqc
   image:
     name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
   variables:
@@ -95,19 +93,19 @@ test-hass-stable:
       - collected.env
   rules:
     # Disable if CI_SKIP is set
-    - if: '$CI_SKIP =~ /test-hass-stable/'
+    - if: "$CI_SKIP =~ /test-hass-stable/"
       when: never
     # Disable if it's a tag pipeline
-    - if: '$CI_COMMIT_TAG'
+    - if: "$CI_COMMIT_TAG"
       when: never
     # Enabled for main branch
-    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
       when: on_success
     # Enable for all other branches if it's a MR pipeline
-    - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
+    - if: "$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID"
       when: on_success
     # Make it manual for external MR
-    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+    - if: "$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH"
       when: manual
     - when: never
 
@@ -130,7 +128,7 @@ test-hass-beta:
         - |
           mkdir -p .storage && (echo ${HASS_AUTH} | base64 -d > .storage/auth) && (hass --script ensure_config -c /config 2>&1) && (echo 'homeassistant:' >> /config/configuration.yaml) && (echo '  time_zone: America/New_York' >> /config/configuration.yaml) && (echo '  latitude: 45.508888' >> /config/configuration.yaml) && (echo '  longitude: -73.561668' >> /config/configuration.yaml) && hass --script auth add admin password && sleep 1 && /init
   tags:
-  - hydroqc
+    - hydroqc
   image:
     name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
   variables:
@@ -153,26 +151,26 @@ test-hass-beta:
       - tests_result_junit.xml
   rules:
     # Disable if CI_SKIP is set
-    - if: '$CI_SKIP =~ /test-hass-beta/'
+    - if: "$CI_SKIP =~ /test-hass-beta/"
       when: never
     # Disable if it's a tag pipeline
-    - if: '$CI_COMMIT_TAG'
+    - if: "$CI_COMMIT_TAG"
       when: never
     # Enabled for main branch
-    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
       when: on_success
     # Enable for all other branches if it's a MR pipeline
-    - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
+    - if: "$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID"
       when: on_success
     # Make it manual for external MR
-    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+    - if: "$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH"
       when: manual
     - when: never
 
 promote2pypi:
   stage: pypi
   tags:
-  - hydroqc
+    - hydroqc
   image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
   script:
     - pip install --upgrade pip
@@ -181,9 +179,9 @@ promote2pypi:
     - python3 -m twine check --strict dist/*
     - twine upload --verbose --non-interactive --repository pypi dist/*
   rules:
-    - if: '$CI_SKIP =~ /pypi/'
+    - if: "$CI_SKIP =~ /pypi/"
       when: never
-    - if: '$CI_COMMIT_TAG'
+    - if: "$CI_COMMIT_TAG"
       when: on_success
     - when: never
 
@@ -203,7 +201,7 @@ set-version:
       - collected.env
   rules:
     # Only run when test-hass-stable is disabled
-    - if: '$CI_SKIP =~ /test-hass-stable/'
+    - if: "$CI_SKIP =~ /test-hass-stable/"
       when: on_success
     - when: never
 
@@ -229,31 +227,32 @@ set-version:
         fi
   rules:
     # Disable if CI_SKIP is set
-    - if: '$CI_SKIP =~ /docker/'
+    - if: "$CI_SKIP =~ /docker/"
       when: never
     # Set version for a tag pipeline
-    - if: '$CI_COMMIT_TAG'
+    - if: "$CI_COMMIT_TAG"
       variables:
         HQ2MQTT_VERSION: ${CI_COMMIT_TAG}
       when: on_success
     # Enabled for main branch
-    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
       variables:
         HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
       when: on_success
-    # Enable for all other branches if it's a MR pipeline
-    - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
-      variables:
-        HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
-      when: on_success
-    # Make it manual for renovate MR
-    - if: '$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/'
-      when: manual
+    # Never build renovate MR
+    - if: "$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/"
+      when: never
     # Make it manual for external MR
-    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+    - if: "$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH"
       variables:
         HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
       when: manual
+    # Enable for all other branches if it's a MR pipeline
+    - if: "$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID"
+      variables:
+        HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
+      when: on_success
+
     - when: never
 
 build_amd64:
@@ -302,32 +301,32 @@ docker_tag:
     #- docker buildx imagetools inspect ${CI_REGISTRY_IMAGE}:${IMAGE_TAG} --format "{{json .Manifest}}"
     #- docker manifest push ${CI_REGISTRY_IMAGE}:${IMAGE_TAG}
     - |
-        if [ "$CI_COMMIT_TAG" ]; then
-          docker manifest create ${CI_REGISTRY_IMAGE}:latest ${CI_REGISTRY_IMAGE}/amd64:${CI_COMMIT_SHORT_SHA} ${CI_REGISTRY_IMAGE}/aarch64:${CI_COMMIT_SHORT_SHA}
-          docker manifest inspect ${CI_REGISTRY_IMAGE}:latest
-          docker manifest push ${CI_REGISTRY_IMAGE}:latest
-        fi
+      if [ "$CI_COMMIT_TAG" ]; then
+        docker manifest create ${CI_REGISTRY_IMAGE}:latest ${CI_REGISTRY_IMAGE}/amd64:${CI_COMMIT_SHORT_SHA} ${CI_REGISTRY_IMAGE}/aarch64:${CI_COMMIT_SHORT_SHA}
+        docker manifest inspect ${CI_REGISTRY_IMAGE}:latest
+        docker manifest push ${CI_REGISTRY_IMAGE}:latest
+      fi
   rules:
-      # Tag MR as mr-<branch>
+    # Tag MR as mr-<branch>
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       variables:
         IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}
       when: on_success
       # Tag git tag
-    - if: '$CI_COMMIT_TAG'
+    - if: "$CI_COMMIT_TAG"
       variables:
         IMAGE_TAG: ${CI_COMMIT_TAG}
       when: on_success
       # Tag main branch as beta
-    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+    - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
       variables:
         IMAGE_TAG: beta
       when: on_success
       # Make it manual for renovate MR
-    - if: '$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/'
+    - if: "$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/"
       when: manual
       # Make it manual for external MR
-    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+    - if: "$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH"
       variables:
         IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}
       when: manual
