@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest@sha256:5eb150379ed10d5d6e68baeb05827c8307e9d0cf3f4ecbbb0ccba4efd784d051 as build-image
+FROM registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest@sha256:e6ef50dbb2f351fbd4e20c39512885bdcd62d202f05c8558a4d40ac2d9836763 as build-image
 
 ARG HYDROQC2MQTT_VERSION
 
