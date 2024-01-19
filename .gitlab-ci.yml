@@ -307,27 +307,27 @@ docker_tag:
         docker manifest push ${CI_REGISTRY_IMAGE}:latest
       fi
   rules:
+    # Never tag for renovate MR
+    - if: "$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/"
+      when: never
+    # Make it manual for external MR
+    - if: "$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH"
+      variables:
+        IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}
+      when: manual
     # Tag MR as mr-<branch>
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       variables:
         IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}
       when: on_success
-      # Tag git tag
+    # Tag git tag
     - if: "$CI_COMMIT_TAG"
       variables:
         IMAGE_TAG: ${CI_COMMIT_TAG}
       when: on_success
-      # Tag main branch as beta
+    # Tag main branch as beta
     - if: "$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH"
       variables:
         IMAGE_TAG: beta
       when: on_success
-      # Make it manual for renovate MR
-    - if: "$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/"
-      when: manual
-      # Make it manual for external MR
-    - if: "$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH"
-      variables:
-        IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}
-      when: manual
     - when: never
