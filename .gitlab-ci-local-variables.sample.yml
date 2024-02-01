@@ -1,0 +1,5 @@
+---
+# This can be used to provide variables to the job pipeline when running with gitlab-ci-local.
+KNOWN_HOSTS: '~/.ssh/known_hosts'
+CI_REGISTRY_USER: local-ci
+CI_REGISTRY_PASSWORD: local-ci

@@ -1,0 +1,5 @@
+# variables for gitlab-ci-local
+PRIVILEGED=true
+ULIMIT=8000:16000
+VOLUME=certs:/certs/client /var/run/docker.sock:/var/run/docker.sock
+VARIABLE="DOCKER_TLS_CERTDIR=/certs"

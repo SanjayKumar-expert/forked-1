@@ -123,6 +123,10 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+mypy-txt-report/
+mypy-html-report/
+mypy-junit.xml
+tests_result_junit.xml
 .dmypy.json
 dmypy.json
 
@@ -139,3 +143,6 @@ config.yaml
 
 run.sh
 config.yaml
+
+# vscode
+.vscode/
