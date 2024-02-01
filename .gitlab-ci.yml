@@ -203,6 +203,12 @@ set-version:
     # Only run when test-hass-stable is disabled
     - if: "$CI_SKIP =~ /test-hass-stable/"
       when: on_success
+    # Run on renovate branches on changes to dockerfile or gitlab-ci
+    - if: "$CI_COMMIT_REF_NAME =~ /^renovate-/"
+      changes:
+        - Dockerfile
+        - .gitlab-ci.yml
+      when: on_success
     - when: never
 
 .build_generic: &build_generic
@@ -241,12 +247,16 @@ set-version:
       when: on_success
     # Build on renovate branches on changes to dockerfile or gitlab-ci
     - if: "$CI_COMMIT_REF_NAME =~ /^renovate-/"
+      variables:
+        HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
       changes:
         - Dockerfile
         - .gitlab-ci.yml
       when: on_success
     # Only build renovate MR on changes to dockerfile or gitlab-ci
     - if: "$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/"
+      variables:
+        HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
       changes:
         - Dockerfile
         - .gitlab-ci.yml
@@ -321,6 +331,8 @@ docker_tag:
   rules:
     # Only build renovate MR on changes to dockerfile or gitlab-ci
     - if: "$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/"
+      variables:
+        IMAGE_TAG: mr-${CI_COMMIT_REF_NAME}
       changes:
         - Dockerfile
         - .gitlab-ci.yml
