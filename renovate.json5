@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", ":dependencyDashboard"],
   "branchPrefix": "renovate-",
-  "platform": "gitlab",
+  "platformAutomerge": true,
   "pre-commit": {"enabled": true},
   "customManagers": [
     {
@@ -129,7 +129,7 @@
       "matchDatasources": ["docker"],
       "automerge": true,
       "ignoreTests": false,
-      "automergeType": "pr",
+      "automergeType": "branch",
       "matchUpdateTypes": ["digest"]
     }
   ]

@@ -239,6 +239,18 @@ set-version:
       variables:
         HQ2MQTT_VERSION: ${HYDROQC2MQTT_VERSION_STRIPPED}+${CI_COMMIT_REF_NAME}
       when: on_success
+    # Build on renovate branches on changes to dockerfile or gitlab-ci
+    - if: "$CI_COMMIT_REF_NAME =~ /^renovate-/"
+      changes:
+        - Dockerfile
+        - .gitlab-ci.yml
+      when: on_success
+    # Only build renovate MR on changes to dockerfile or gitlab-ci
+    - if: "$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/"
+      changes:
+        - Dockerfile
+        - .gitlab-ci.yml
+      when: on_success
     # Never build renovate MR
     - if: "$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/"
       when: never
@@ -307,6 +319,12 @@ docker_tag:
         docker manifest push ${CI_REGISTRY_IMAGE}:latest
       fi
   rules:
+    # Only build renovate MR on changes to dockerfile or gitlab-ci
+    - if: "$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/"
+      changes:
+        - Dockerfile
+        - .gitlab-ci.yml
+      when: on_success
     # Never tag for renovate MR
     - if: "$CI_MERGE_REQUEST_IID && $CI_COMMIT_REF_NAME =~ /^renovate-/"
       when: never
