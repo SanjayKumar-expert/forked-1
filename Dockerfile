@@ -35,7 +35,7 @@ RUN . /opt/venv/bin/activate && \
     pip install --no-cache-dir msgpack ujson
 
 
-FROM python:3.11-slim-bookworm@sha256:0b7568850e62c6405d15098486b8fc23d9d6a845b112b866aceaf65fbded2fc1
+FROM python:3.11-slim-bookworm@sha256:ce81dc539f0aedc9114cae640f8352fad83d37461c24a3615b01f081d0c0583a
 COPY --from=build-image /opt/venv /opt/venv
 COPY --from=build-image /usr/src/app/hydroqc2mqtt /usr/src/app/hydroqc2mqtt
 COPY --from=build-image /opt/venv/bin/hydroqc2mqtt /opt/venv/bin/hydroqc2mqtt
