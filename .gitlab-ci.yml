@@ -56,7 +56,7 @@ test-hass-stable:
       command:
         - -c
         - cp mosquitto-no-auth.conf /mosquitto/config/mosquitto.conf && cat /mosquitto/config/mosquitto.conf && /docker-entrypoint.sh mosquitto -c /mosquitto/config/mosquitto.conf
-    - name: homeassistant/home-assistant:2024.5.2
+    - name: homeassistant/home-assistant:2024.5.3
       alias: hass
       entrypoint:
         - bash
