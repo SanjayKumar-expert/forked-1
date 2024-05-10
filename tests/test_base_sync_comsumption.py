@@ -1,4 +1,5 @@
 """Base tests for hydroqc2mqtt."""
+
 import asyncio
 import base64
 import copy

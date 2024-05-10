@@ -1,4 +1,5 @@
 """Module defining HydroQC Contract."""
+
 import datetime
 import logging
 from typing import TypedDict, cast
