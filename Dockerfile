@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest@sha256:39b14052d0e63aef166e48b77ab1d00f219006fe0bad42cbd4fb26a33308b0a5 as build-image
+FROM registry.gitlab.com/hydroqc/hydroqc-base-container/3.12:latest@sha256:b66812346075aabc0ee6cf452d734c28589bbe97a82c179b0a95d3a95c04ad41 as build-image
 
 ARG HYDROQC2MQTT_VERSION
 
@@ -13,7 +13,7 @@ ENV DEB_PYTHON_INSTALL_LAYOUT=deb_system
 ENV DISTRIBUTION_NAME=HYDROQC2MQTT
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_HYDROQC2MQTT=${HYDROQC2MQTT_VERSION}
 
-RUN python3.11 -m venv /opt/venv
+RUN python3.12 -m venv /opt/venv
 
 RUN --mount=type=tmpfs,target=/root/.cargo \
     curl https://sh.rustup.rs -sSf | \
@@ -35,7 +35,7 @@ RUN . /opt/venv/bin/activate && \
     pip install --no-cache-dir msgpack ujson
 
 
-FROM python:3.11-slim-bookworm@sha256:6d2502238109c929569ae99355e28890c438cb11bc88ef02cd189c173b3db07c
+FROM python:3.12-slim-bookworm@sha256:2be8daddbb82756f7d1f2c7ece706aadcb284bf6ab6d769ea695cc3ed6016743
 COPY --from=build-image /opt/venv /opt/venv
 COPY --from=build-image /usr/src/app/hydroqc2mqtt /usr/src/app/hydroqc2mqtt
 COPY --from=build-image /opt/venv/bin/hydroqc2mqtt /opt/venv/bin/hydroqc2mqtt

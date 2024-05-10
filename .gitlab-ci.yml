@@ -67,7 +67,7 @@ test-hass-stable:
   tags:
     - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.12:latest
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
@@ -130,7 +130,7 @@ test-hass-beta:
   tags:
     - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.12:latest
   variables:
     MQTT_HOST: mosquitto
     MQTT_PORT: "1883"
@@ -171,7 +171,7 @@ promote2pypi:
   stage: pypi
   tags:
     - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.12:latest
   script:
     - pip install --upgrade pip
     - pip install --upgrade build setuptools_scm twine
@@ -190,7 +190,7 @@ set-version:
   tags:
     - hydroqc
   image:
-    name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11:latest
+    name: registry.gitlab.com/hydroqc/hydroqc-base-container/3.12:latest
   script:
     - echo HYDROQC2MQTT_VERSION=$(python3 -m setuptools_scm) > collected.env
     - echo HYDROQC2MQTT_VERSION_STRIPPED=$(python3 -m setuptools_scm --strip-dev) >> collected.env
