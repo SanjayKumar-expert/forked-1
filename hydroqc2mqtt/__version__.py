@@ -1,4 +1,5 @@
 """Hydroqc2mqtt version."""
+
 from importlib.metadata import PackageNotFoundError, version
 
 try:

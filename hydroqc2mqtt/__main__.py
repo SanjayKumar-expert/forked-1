@@ -1,4 +1,5 @@
 """Module defining entrypoint."""
+
 import argparse
 import asyncio
 import os

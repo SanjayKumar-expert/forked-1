@@ -1,4 +1,5 @@
 """Module defining HydroQC Contract."""
+
 import asyncio
 import copy
 import datetime
