@@ -213,9 +213,9 @@ set-version:
 
 .build_generic: &build_generic
   stage: build
-  image: docker:24.0
+  image: docker:26.1
   services:
-    - docker:24.0-dind
+    - docker:26.1-dind
   script:
     - docker version
     - echo ${BUILD-ARG}
@@ -299,9 +299,9 @@ build_aarch64:
 
 docker_tag:
   stage: tag
-  image: docker:24.0
+  image: docker:26.1
   services:
-    - docker:24.0-dind
+    - docker:26.1-dind
   script:
     - docker version
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
