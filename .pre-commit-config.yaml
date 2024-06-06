@@ -42,7 +42,7 @@ repos:
       - "types-PyYAML==6.0.12.20240311"
       - "pytest-stub==1.1.0"
       - "types-paho-mqtt==1.6.0.20240321"
-      - "homeassistant-stubs==2024.5.5"
+      - "homeassistant-stubs==2024.6.0"
       - "Hydro_Quebec_API_Wrapper==3.2.0"
       - "mqtt-hass-base==4.3.0"
       - "aioresponses==0.7.6"
