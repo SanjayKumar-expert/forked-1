@@ -25,7 +25,7 @@ RUN uv pip install --upgrade pip uv && \
     uv pip install . \
     uv pip install msgpack ujson
 
-FROM python:3.12-slim-bookworm@sha256:15bad989b293be1dd5eb26a87ecacadaee1559f98e29f02bf6d00c8d86129f39
+FROM python:3.12-slim-bookworm@sha256:ad48727987b259854d52241fac3bc633574364867b8e20aec305e6e7f4028b26
 
 COPY --from=build-image /opt/venv/pyvenv.cfg /opt/venv/pyvenv.cfg
 COPY --from=build-image /opt/venv/lib /opt/venv/lib
