@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/hydroqc/hydroqc-base-container/3.12:latest@sha256:d8985672e512080c541beeab0da37aa166a41b24ab9f0cf86bed4944cd743fae as build-image
+FROM registry.gitlab.com/hydroqc/hydroqc-base-container/3.12:latest@sha256:d8985672e512080c541beeab0da37aa166a41b24ab9f0cf86bed4944cd743fae AS build-image
 
 ARG HYDROQC2MQTT_VERSION
 
@@ -21,9 +21,8 @@ RUN uv venv /opt/venv
 ENV VIRTUAL_ENV=/opt/venv
 
 RUN uv pip install --upgrade pip uv && \
-    uv pip install --upgrade setuptools_scm && \
-    uv pip install . \
-    uv pip install msgpack ujson
+    uv pip install -e .
+    #uv pip install msgpack ujson
 
 FROM python:3.12-slim-bookworm@sha256:ad48727987b259854d52241fac3bc633574364867b8e20aec305e6e7f4028b26
 
