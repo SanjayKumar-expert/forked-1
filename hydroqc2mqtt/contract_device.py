@@ -12,6 +12,7 @@ from hydroqc.contract import ContractDCPC, ContractDPC, ContractDT
 from hydroqc.contract.common import Contract
 from hydroqc.customer import Customer
 from hydroqc.peak.cpc.consts import DEFAULT_PRE_HEAT_DURATION
+from hydroqc.public_client import PublicClient
 from hydroqc.webuser import WebUser
 from mqtt_hass_base.device import MqttDevice
 from mqtt_hass_base.entity import (
@@ -71,6 +72,7 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
     _customer: Customer | None
     _account: Account | None
     _contract: Contract | None
+    _webuser: WebUser | None
 
     def __init__(
         self,
@@ -92,13 +94,22 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
         )
         self._ws_query_id = 1
         self._config = config
-        self._webuser = WebUser(
-            config["username"],
-            config["password"],
-            config.get("verify_ssl", True),
-            log_level=config.get("log_level", "INFO"),
-            http_log_level=config.get("http_log_level", "WARNING"),
-        )
+
+        if all((config.get("username"), config.get("password"))):
+            self._open_data_mode = False
+            self._webuser = WebUser(
+                config["username"],
+                config["password"],
+                config.get("verify_ssl", True),
+                log_level=config.get("log_level", "INFO"),
+                http_log_level=config.get("http_log_level", "WARNING"),
+            )
+        else:
+            self._open_data_mode = True
+            self._webuser = None
+            logger.warning(
+                "Open data only mode activated - no username/password detected"
+            )
         self.sw_version = VERSION
         self.manufacturer = "hydroqc"
         self._config_rate: str | None = self._config.get("rate")
@@ -166,6 +177,15 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
             self,
         )
 
+        self.public_client = PublicClient(
+            rate_code=self._config_rate, rate_option_code=self._config_rate_option
+        )
+
+    @property
+    def open_data_mode_only(self) -> bool:
+        """Return true if open data only mode is activated."""
+        return self._open_data_mode
+
     @property
     def config_rate(self) -> str | None:
         """Get Contract rate from config."""
@@ -206,7 +226,14 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
 
     async def check_hq_portal_status(self) -> bool:
         """Check if the HydroQuebec website is up and store the data in an attribute."""
-        return await self._webuser.check_hq_portal_status()
+        if self.open_data_mode_only:
+            return False
+        return await self.public_client.check_hq_portal_status()
+
+    async def fetch_open_data(self) -> None:
+        """Check if the HydroQuebec website is up and store the data in an attribute."""
+        self.logger.debug("Trying to fetch open data...")
+        await self.public_client.fetch_peak_data()
 
     async def add_entities(self) -> None:
         """Add Home Assistant entities."""
@@ -306,13 +333,19 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
 
     async def init_session(self) -> bool:
         """Initialize session on HydroQC website."""
+        if self._webuser is None:
+            return False
         if self._webuser.session_expired:
             self.logger.info("Login")
             try:
                 await self._webuser.close_session()
-                return await self._webuser.login()
+                logged = await self._webuser.login()
+                self._open_data_mode = not logged
+                return logged
             except hydroqc.error.HydroQcHTTPError:
                 self.logger.error("Can not login to HydroQuebec web site")
+                self.logger.warning("Falling back to open data mode")
+                self._open_data_mode = True
                 return False
         return True
 
@@ -334,7 +367,23 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
         customer = self._customer
         account = self._account
         contract = self._contract
-        if None in (customer, account, contract):
+        public_client = self.public_client
+        if None in (customer, account, contract) and datasource[0] in (
+            "customer",
+            "account",
+            "contract",
+        ):
+            if self.open_data_mode_only:
+                self.logger.debug(
+                    "Open data only mode activated - Skipping %s", sensor_key
+                )
+                return None
+            self.logger.info(
+                "E0017: Contract data was never fetch, "
+                "we need to get valid data at least one time before updating sensor %s.",
+                sensor_key,
+            )
+            return None
             raise Hydroqc2MqttError(
                 "E0017: Contract data was never fetch, "
                 "we need to get valid data at least one time before updating sensors."
@@ -346,11 +395,14 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
         in_winter_credit_season = False
 
         if self.rate_option == "CPC":
-            contract = cast(ContractDCPC, contract)
+            tmp_obj: ContractDCPC | PublicClient = public_client
+            if contract is not None:
+                tmp_obj = cast(ContractDCPC, contract)
+            assert tmp_obj.peak_handler is not None
             in_winter_credit_season = (
-                contract.peak_handler.winter_start_date.date()
+                tmp_obj.peak_handler.winter_start_date.date()
                 <= today
-                <= contract.peak_handler.winter_end_date.date()
+                <= tmp_obj.peak_handler.winter_end_date.date()
             )
         reason = None
         ele = ""
@@ -431,9 +483,6 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
             entity = getattr(self, sensor_key)
             # Get object path to get the value of the current entity
             datasource = sensor_config[sensor_key]["data_source"].split(".")
-            # Get object path to get the value of the attributes of the current entity
-            attr_dss = sensor_config[sensor_key].get("attributes", {})
-
             value = self._get_object_attribute_value(
                 datasource,
                 sensor_list,
@@ -441,6 +490,12 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
                 sensor_type,
             )
 
+            if value is None:
+                await entity.send_not_available()
+                continue
+
+            # Get object path to get the value of the attributes of the current entity
+            attr_dss = sensor_config[sensor_key].get("attributes", {})
             attributes = {}
             for attr_key, attr_ds in attr_dss.items():
                 datasource = attr_ds.split(".")
@@ -452,16 +507,16 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
                 )
                 attributes[attr_key] = attr_value
 
-            if value is None:
-                await entity.send_not_available()
-            else:
-                await entity.send_state(value, attributes)
-                await entity.send_available()
+            await entity.send_state(value, attributes)
+            await entity.send_available()
 
     async def update(self, hydro_is_up: bool) -> None:
         """Update Home Assistant entities."""
         self.logger.info("Starting sensors update procedure")
         self._hydro_is_up = hydro_is_up
+        # Set pre heat duration for public client peak handler
+        if self.public_client.peak_handler:
+            self.public_client.peak_handler.set_preheat_duration(self._preheat_duration)
         # TODO if any api calls failed, we should NOT crash and set sensors to not_available
         # Fetch latest data
         if self._hydro_is_up:
@@ -497,8 +552,10 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
                 return
         else:
             self.logger.warning(
-                "Hydro-Québec website seems don't, I will not trying to fetch data."
+                "Hydro-Québec website seems down, I will not trying to fetch data."
             )
+
+        await self.fetch_open_data()
 
         # history sensors
         if self._hch.enabled:
@@ -513,7 +570,9 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
 
     async def close(self) -> None:
         """Close HydroQC web session."""
-        await self._webuser.close_session()
+        if self._webuser:
+            await self._webuser.close_session()
+        await self.public_client.close_session()
 
     async def _command_callback(
         self,
@@ -532,6 +591,7 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
 
     async def get_contract(self) -> tuple[Customer, Account, Contract]:
         """Get contract object."""
+        assert self._webuser is not None
         await self._webuser.get_info()
         await self._webuser.fetch_customers_info()
         self._customer = self._webuser.get_customer(self._customer_id)

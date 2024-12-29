@@ -12,6 +12,7 @@ class SensorType(TypedDict, total=False):
 
     name: str
     data_source: str
+    data_sources: list[str]
     device_class: str | None
     expire_after: int
     force_update: bool
@@ -325,7 +326,7 @@ SENSORS: dict[str, SensorType] = (
         # FlexD
         "dpc_state": {
             "name": "Current DPC period detail",
-            "data_source": "contract.peak_handler.current_state",
+            "data_source": "public_client.peak_handler.current_state",
             "device_class": None,
             "expire_after": 0,
             "force_update": False,
@@ -336,7 +337,7 @@ SENSORS: dict[str, SensorType] = (
         },
         "dpc_next_peak_start": {
             "name": "Next peak start",
-            "data_source": "contract.peak_handler.next_peak.start_date",
+            "data_source": "public_client.peak_handler.next_peak.start_date",
             "device_class": "timestamp",
             "expire_after": 0,
             "force_update": False,
@@ -346,7 +347,7 @@ SENSORS: dict[str, SensorType] = (
         },
         "dpc_next_peak_end": {
             "name": "Next peak end",
-            "data_source": "contract.peak_handler.next_peak.end_date",
+            "data_source": "public_client.peak_handler.next_peak.end_date",
             "device_class": "timestamp",
             "expire_after": 0,
             "force_update": False,
@@ -356,7 +357,7 @@ SENSORS: dict[str, SensorType] = (
         },
         "dpc_next_pre_heat_start": {
             "name": "Next Pre-heat start",
-            "data_source": "contract.peak_handler.next_peak.preheat.start_date",
+            "data_source": "public_client.peak_handler.next_peak.preheat.start_date",
             "device_class": "timestamp",
             "expire_after": 0,
             "force_update": False,
@@ -391,7 +392,7 @@ SENSORS: dict[str, SensorType] = (
         # Winter credits
         "wc_state": {
             "name": "Current WC period detail",
-            "data_source": "contract.peak_handler.current_state",
+            "data_source": "public_client.peak_handler.current_state",
             "device_class": None,
             "expire_after": 0,
             "force_update": False,
@@ -426,7 +427,7 @@ SENSORS: dict[str, SensorType] = (
         },
         "wc_next_anchor_start": {
             "name": "Next anchor start",
-            "data_source": "contract.peak_handler.next_peak.anchor.start_date",
+            "data_source": "public_client.peak_handler.next_peak.anchor.start_date",
             "device_class": "timestamp",
             "expire_after": 0,
             "force_update": False,
@@ -434,12 +435,12 @@ SENSORS: dict[str, SensorType] = (
             "sub_mqtt_topic": "wintercredits/next/anchor",
             "rates": ["DCPC"],
             "attributes": {
-                "critical": "contract.peak_handler.next_peak.is_critical",
+                "critical": "public_client.peak_handler.next_peak.is_critical",
             },
         },
         "wc_next_anchor_end": {
             "name": "Next anchor end",
-            "data_source": "contract.peak_handler.next_peak.anchor.end_date",
+            "data_source": "public_client.peak_handler.next_peak.anchor.end_date",
             "device_class": "timestamp",
             "expire_after": 0,
             "force_update": False,
@@ -447,12 +448,12 @@ SENSORS: dict[str, SensorType] = (
             "sub_mqtt_topic": "wintercredits/next/anchor",
             "rates": ["DCPC"],
             "attributes": {
-                "critical": "contract.peak_handler.next_peak.is_critical",
+                "critical": "public_client.peak_handler.next_peak.is_critical",
             },
         },
         "wc_next_peak_start": {
             "name": "Next peak start",
-            "data_source": "contract.peak_handler.next_peak.start_date",
+            "data_source": "public_client.peak_handler.next_peak.start_date",
             "device_class": "timestamp",
             "expire_after": 0,
             "force_update": False,
@@ -460,12 +461,12 @@ SENSORS: dict[str, SensorType] = (
             "sub_mqtt_topic": "wintercredits/next/peak",
             "rates": ["DCPC"],
             "attributes": {
-                "critical": "contract.peak_handler.next_peak.is_critical",
+                "critical": "public_client.peak_handler.next_peak.is_critical",
             },
         },
         "wc_next_peak_end": {
             "name": "Next peak end",
-            "data_source": "contract.peak_handler.next_peak.end_date",
+            "data_source": "public_client.peak_handler.next_peak.end_date",
             "device_class": "timestamp",
             "expire_after": 0,
             "force_update": False,
@@ -473,12 +474,12 @@ SENSORS: dict[str, SensorType] = (
             "sub_mqtt_topic": "wintercredits/next/peak",
             "rates": ["DCPC"],
             "attributes": {
-                "critical": "contract.peak_handler.next_peak.is_critical",
+                "critical": "public_client.peak_handler.next_peak.is_critical",
             },
         },
         "wc_next_critical_peak_start": {
             "name": "Next critical peak start",
-            "data_source": "contract.peak_handler.next_critical_peak.start_date",
+            "data_source": "public_client.peak_handler.next_critical_peak.start_date",
             "device_class": "timestamp",
             "expire_after": 0,
             "force_update": False,
@@ -488,7 +489,7 @@ SENSORS: dict[str, SensorType] = (
         },
         "wc_next_critical_peak_end": {
             "name": "Next critical peak end",
-            "data_source": "contract.peak_handler.next_critical_peak.end_date",
+            "data_source": "public_client.peak_handler.next_critical_peak.end_date",
             "device_class": "timestamp",
             "expire_after": 0,
             "force_update": False,
@@ -498,7 +499,7 @@ SENSORS: dict[str, SensorType] = (
         },
         "wc_next_pre_heat_start": {
             "name": "Next Pre-heat start",
-            "data_source": "contract.peak_handler.next_peak.preheat.start_date",
+            "data_source": "public_client.peak_handler.next_peak.preheat.start_date",
             "device_class": "timestamp",
             "expire_after": 0,
             "force_update": False,
@@ -506,7 +507,7 @@ SENSORS: dict[str, SensorType] = (
             "sub_mqtt_topic": "wintercredits/state",
             "rates": ["DCPC"],
             "attributes": {
-                "critical": "contract.peak_handler.next_peak.is_critical",
+                "critical": "public_client.peak_handler.next_peak.is_critical",
             },
         },
         # Yesterday
@@ -628,7 +629,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         "wc_critical": {
             # == wc_next_peak_critical
             "name": "Critical",
-            "data_source": "contract.peak_handler.next_peak.is_critical",
+            "data_source": "public_client.peak_handler.next_peak.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:flash-alert",
@@ -637,7 +638,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "wc_critical_peak_in_progress": {
             "name": "Critical peak in progress",
-            "data_source": "contract.peak_handler.current_peak_is_critical",
+            "data_source": "public_client.peak_handler.current_peak_is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:flash-alert",
@@ -646,7 +647,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "wc_pre_heat": {
             "name": "Pre-heat In Progress",
-            "data_source": "contract.peak_handler.preheat_in_progress",
+            "data_source": "public_client.peak_handler.preheat_in_progress",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:flash-alert",
@@ -656,7 +657,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         "wc_next_anchor_critical": {
             "name": "Next Anchor Period Critical",
             # Est-ce que la période d'ancrage à venir est lié à une pointe critique"
-            "data_source": "contract.peak_handler.next_anchor.is_critical",
+            "data_source": "public_client.peak_handler.next_anchor.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:flash-alert",
@@ -667,7 +668,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
             # == wc_critical
             # Est-ce que la prochaine période de pointe est critique true/false
             "name": "Next Peak Period Critical",
-            "data_source": "contract.peak_handler.next_peak.is_critical",
+            "data_source": "public_client.peak_handler.next_peak.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:flash-alert",
@@ -677,7 +678,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         "wc_upcoming_critical_peak": {
             # True si au moins un peaks donnés par l'API d'hydroQuebec n'est pas encore terminé
             "name": "Upcoming Critical Peak",
-            "data_source": "contract.peak_handler.is_any_critical_peak_coming",
+            "data_source": "public_client.peak_handler.is_any_critical_peak_coming",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:flash-alert",
@@ -686,7 +687,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "wc_critical_morning_peak_today": {
             "name": "Critical Morning Peak Today",
-            "data_source": "contract.peak_handler.today_morning_peak.is_critical",
+            "data_source": "public_client.peak_handler.today_morning_peak.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:message-flash",
@@ -695,7 +696,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "wc_critical_evening_peak_today": {
             "name": "Critical Evening Peak Today",
-            "data_source": "contract.peak_handler.today_evening_peak.is_critical",
+            "data_source": "public_client.peak_handler.today_evening_peak.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:message-flash",
@@ -704,7 +705,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "wc_critical_morning_peak_tomorrow": {
             "name": "Critical Morning Peak tomorrow",
-            "data_source": "contract.peak_handler.tomorrow_morning_peak.is_critical",
+            "data_source": "public_client.peak_handler.tomorrow_morning_peak.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:message-flash",
@@ -713,7 +714,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "wc_critical_evening_peak_tomorrow": {
             "name": "Critical Evening Peak tomorrow",
-            "data_source": "contract.peak_handler.tomorrow_evening_peak.is_critical",
+            "data_source": "public_client.peak_handler.tomorrow_evening_peak.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:message-flash",
@@ -723,7 +724,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         # DPC
         "dpc_pre_heat": {
             "name": "Pre-heat In Progress",
-            "data_source": "contract.peak_handler.preheat_in_progress",
+            "data_source": "public_client.peak_handler.preheat_in_progress",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:flash-alert",
@@ -732,7 +733,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "dpc_peak_in_progress": {
             "name": "Critical peak in progress",
-            "data_source": "contract.peak_handler.peak_in_progress",
+            "data_source": "public_client.peak_handler.peak_in_progress",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:flash-alert",
@@ -741,7 +742,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "dpc_critical_morning_peak_today": {
             "name": "Critical Morning Peak Today",
-            "data_source": "contract.peak_handler.today_morning_peak.is_critical",
+            "data_source": "public_client.peak_handler.today_morning_peak.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:message-flash",
@@ -750,7 +751,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "dpc_critical_evening_peak_today": {
             "name": "Critical Evening Peak Today",
-            "data_source": "contract.peak_handler.today_evening_peak.is_critical",
+            "data_source": "public_client.peak_handler.today_evening_peak.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:message-flash",
@@ -759,7 +760,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "dpc_critical_morning_peak_tomorrow": {
             "name": "Critical Morning Peak tomorrow",
-            "data_source": "contract.peak_handler.tomorrow_morning_peak.is_critical",
+            "data_source": "public_client.peak_handler.tomorrow_morning_peak.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:message-flash",
@@ -768,7 +769,7 @@ BINARY_SENSORS: dict[str, BinarySensorType] = (
         },
         "dpc_critical_evening_peak_tomorrow": {
             "name": "Critical Evening Peak tomorrow",
-            "data_source": "contract.peak_handler.tomorrow_evening_peak.is_critical",
+            "data_source": "public_client.peak_handler.tomorrow_evening_peak.is_critical",
             "expire_after": 0,
             "force_update": False,
             "icon": "mdi:message-flash",

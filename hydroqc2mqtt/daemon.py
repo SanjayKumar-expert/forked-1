@@ -6,7 +6,7 @@ import re
 import sys
 from contextlib import AsyncExitStack
 from datetime import datetime
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 
 import aiomqtt as mqtt
 import hydroqc
@@ -70,7 +70,7 @@ class Hydroqc2Mqtt(MqttClientDaemon):
         mqtt_port: int,
         mqtt_username: str,
         mqtt_password: str,
-        mqtt_transport: str,
+        mqtt_transport: Literal["tcp", "websockets", "unix"] | None,
         mqtt_ssl_enabled: bool,
         mqtt_websocket_path: str,
         mqtt_discovery_root_topic: str,
@@ -225,17 +225,17 @@ class Hydroqc2Mqtt(MqttClientDaemon):
             )
             self.logger.warning(exp)
 
+        # Handle reconnection needed
+        if self._needs_mqtt_reconnection:
+            self.logger.info("Mqtt trying to reconnect")
+            await self._mqtt_connect(stack)
+            self.logger.info("Reinit contracts objects")
+            for contract in self.contracts:
+                contract.set_mqtt_client(self.mqtt_client)
+            self._needs_mqtt_reconnection = False
+
         if hydro_is_up:
             try:
-                # Handle reconnection needed
-                if self._needs_mqtt_reconnection:
-                    self.logger.info("Mqtt trying to reconnect")
-                    await self._mqtt_connect(stack)
-                    self.logger.info("Reinit contracts objects")
-                    for contract in self.contracts:
-                        contract.set_mqtt_client(self.mqtt_client)
-                    self._needs_mqtt_reconnection = False
-
                 # Connect to contracts
                 for contract in self.contracts:
                     await contract.init_session()
