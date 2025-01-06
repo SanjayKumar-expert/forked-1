@@ -319,13 +319,13 @@ docker_tag:
                 echo "Build for ${PLATFORM} not available for this run."
             fi
         done
-    - docker buildx imagetools inspect ${CI_REGISTRY_IMAGE}:${IMAGE_TAG} --format "{{json .Manifest}}"
     - docker manifest push ${CI_REGISTRY_IMAGE}:${IMAGE_TAG}
+    - docker buildx imagetools inspect ${CI_REGISTRY_IMAGE}:${IMAGE_TAG} --format "{{json .Manifest}}"
     - |
       if [ "$CI_COMMIT_TAG" ]; then
         docker manifest create ${CI_REGISTRY_IMAGE}:latest ${CI_REGISTRY_IMAGE}/amd64:${CI_COMMIT_SHORT_SHA} ${CI_REGISTRY_IMAGE}/aarch64:${CI_COMMIT_SHORT_SHA}
-        docker manifest inspect ${CI_REGISTRY_IMAGE}:latest
         docker manifest push ${CI_REGISTRY_IMAGE}:latest
+        docker manifest inspect ${CI_REGISTRY_IMAGE}:latest
       fi
   rules:
     # Only build renovate MR on changes to dockerfile or gitlab-ci

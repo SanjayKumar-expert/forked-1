@@ -1,49 +1,39 @@
-FROM registry.gitlab.com/hydroqc/hydroqc-base-container/3.12:latest@sha256:d8985672e512080c541beeab0da37aa166a41b24ab9f0cf86bed4944cd743fae AS build-image
+FROM registry.gitlab.com/hydroqc/hydroqc-base-container/3.12:latest AS builder
 
 ARG HYDROQC2MQTT_VERSION
 
-WORKDIR /usr/src/app
-
-COPY setup.cfg pyproject.toml /usr/src/app/
-COPY hydroqc2mqtt /usr/src/app/hydroqc2mqtt
-
-# See https://github.com/pypa/setuptools/issues/3269
-ENV DEB_PYTHON_INSTALL_LAYOUT=deb_system
-
-ENV DISTRIBUTION_NAME=HYDROQC2MQTT
 ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_HYDROQC2MQTT=${HYDROQC2MQTT_VERSION}
-ENV UV_NO_CACHE=true
 
-# Uncomment when using dev builds of hydroqc-api-wrapper in setup.cfg
-# ENV UV_EXTRA_INDEX_URL=https://gitlab.com/api/v4/projects/32908244/packages/pypi/simple
+# UV specific configs
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/app
 
-RUN uv venv /opt/venv
-ENV VIRTUAL_ENV=/opt/venv
+WORKDIR /build
 
-RUN uv pip install --upgrade pip uv && \
-    uv pip install -e .
-    #uv pip install msgpack ujson
+# We install the project dependencies first to take advantage of Docker layer caching
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project --no-dev --no-editable
 
-FROM python:3.12-slim-bookworm@sha256:ad48727987b259854d52241fac3bc633574364867b8e20aec305e6e7f4028b26
+# Copy the files needed to install the project
+COPY setup.cfg pyproject.toml uv.lock /build/
+COPY hydroqc2mqtt /build/hydroqc2mqtt
 
-COPY --from=build-image /opt/venv/pyvenv.cfg /opt/venv/pyvenv.cfg
-COPY --from=build-image /opt/venv/lib /opt/venv/lib
-COPY --from=build-image /opt/venv/bin /opt/venv/bin
+# Install the project in the venv
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev --no-editable
 
-RUN \
-    adduser hq2m \
-        --uid 568 \
-        --group \
-        --system \
-        --disabled-password \
-        --no-create-home
+FROM python:3.12-slim-bookworm
 
-USER hq2m
-
-ENV PATH="/opt/venv/bin:$PATH"
+COPY --from=builder --chown=nobody:nogroup /app /app
+WORKDIR /app
+USER nobody:nogroup
+ENV PATH="/app/bin:$PATH"
 ENV TZ="America/Toronto" \
     MQTT_DISCOVERY_DATA_TOPIC="homeassistant" \
     MQTT_DATA_ROOT_TOPIC="hydroqc" \
     SYNC_FREQUENCY=600
 
-CMD [ "/opt/venv/bin/hydroqc2mqtt" ]
+CMD ["hydroqc2mqtt"]
