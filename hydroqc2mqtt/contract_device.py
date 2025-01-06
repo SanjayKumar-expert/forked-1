@@ -95,7 +95,19 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
         self._ws_query_id = 1
         self._config = config
 
-        if all((config.get("username"), config.get("password"))):
+        self._customer_id = ""
+        self._account_id = ""
+        self._contract_id = ""
+        if all(
+            (
+                config.get("username"),
+                config.get("password"),
+                config.get("customer"),
+                config.get("account"),
+                config.get("contract"),
+                config.get("rate"),
+            )
+        ):
             self._open_data_mode = False
             self._webuser = WebUser(
                 config["username"],
@@ -104,11 +116,18 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
                 log_level=config.get("log_level", "INFO"),
                 http_log_level=config.get("http_log_level", "WARNING"),
             )
-        else:
+            self._customer_id = str(config["customer"])
+            self._account_id = str(config["account"])
+            self._contract_id = str(config["contract"])
+        elif config.get("rate"):
             self._open_data_mode = True
             self._webuser = None
             logger.warning(
                 "Open data only mode activated - no username/password detected"
+            )
+        else:
+            raise Hydroqc2MqttError(
+                "Missing too many settings for authenticated mode and for open data mode either."
             )
         self.sw_version = VERSION
         self.manufacturer = "hydroqc"
@@ -116,11 +135,8 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
         self._contract_rate: str | None = None
         self._config_rate_option: str | None = self._config.get("rate_option")
         self._contract_rate_option: str | None = None
-        self._customer_id = str(self._config["customer"])
         self._customer = None
-        self._account_id = str(config["account"])
         self._account = None
-        self._contract_id = str(config["contract"])
         self._contract = None
         self._home_assistant_websocket_url = config.get("home_assistant_websocket_url")
         self._home_assistant_token = config.get("home_assistant_token")
@@ -368,26 +384,22 @@ class HydroqcContractDevice(MqttDevice):  # pylint: disable=too-many-instance-at
         account = self._account
         contract = self._contract
         public_client = self.public_client
-        if None in (customer, account, contract) and datasource[0] in (
+        if None in {customer, account, contract} and datasource[0] in {
             "customer",
             "account",
             "contract",
-        ):
+        }:
             if self.open_data_mode_only:
                 self.logger.debug(
                     "Open data only mode activated - Skipping %s", sensor_key
                 )
                 return None
             self.logger.info(
-                "E0017: Contract data was never fetch, "
+                "Contract data was never fetch, "
                 "we need to get valid data at least one time before updating sensor %s.",
                 sensor_key,
             )
             return None
-            raise Hydroqc2MqttError(
-                "E0017: Contract data was never fetch, "
-                "we need to get valid data at least one time before updating sensors."
-            )
 
         today = datetime.date.today()
         data_obj = locals()[datasource[0]]

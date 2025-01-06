@@ -55,3 +55,6 @@ include = ["hydroqc2mqtt*"]
 
 [project.scripts]
 hydroqc2mqtt = "hydroqc2mqtt.__main__:main"
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "module"

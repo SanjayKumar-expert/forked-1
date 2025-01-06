@@ -19,6 +19,7 @@ from hydroqc.hydro_api.consts import (
     CUSTOMER_INFO_URL,
     GET_CPC_API_URL,
     IS_HYDRO_PORTAL_UP_URL,
+    OPEN_DATA_PEAK_URL,
     OUTAGES,
     PERIOD_DATA_URL,
     PORTRAIT_URL,
@@ -26,6 +27,10 @@ from hydroqc.hydro_api.consts import (
     SESSION_URL,
     TOKEN_URL,
 )
+from paho.mqtt.client import CallbackAPIVersion  # type:ignore[attr-defined]
+from paho.mqtt.client import ConnectFlags
+from paho.mqtt.properties import Properties
+from paho.mqtt.reasoncodes import ReasonCode
 
 from hydroqc2mqtt.__main__ import main
 from hydroqc2mqtt.__version__ import VERSION
@@ -44,7 +49,9 @@ MQTT_DATA_ROOT_TOPIC = os.environ.get("MQTT_DATA_ROOT_TOPIC", "homeassistant")
 def test_base() -> None:  # pylint: disable=too-many-locals
     """Base test for hydroqc2mqtt."""
     # Prepare MQTT Client
-    client = mqtt.Client("hydroqc-test")
+    client = mqtt.Client(
+        client_id="hydroqc-test", callback_api_version=CallbackAPIVersion.VERSION2
+    )
     client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 
     expected_results = {}
@@ -58,8 +65,9 @@ def test_base() -> None:  # pylint: disable=too-many-locals
     def on_connect(
         client: mqtt.Client,
         userdata: dict[str, Any] | None,  # pylint: disable=unused-argument
-        flags: dict[str, Any],  # pylint: disable=unused-argument
-        rc_: int,  # pylint: disable=unused-argument
+        flags: ConnectFlags,  # pylint: disable=unused-argument
+        rc_: ReasonCode,  # pylint: disable=unused-argument
+        properties: Properties,  # pylint: disable=unused-argument
     ) -> None:  # pylint: disable=unused-argument
         for topic in expected_results:
             client.subscribe(topic)
@@ -73,7 +81,7 @@ def test_base() -> None:  # pylint: disable=too-many-locals
     ) -> None:
         collected_results[msg.topic] = msg.payload
 
-    client.on_connect = on_connect
+    client.on_connect = on_connect  # type:ignore[assignment]
     client.on_message = on_message
     client.connect_async(MQTT_HOST, MQTT_PORT, keepalive=60)
     client.loop_start()
@@ -186,6 +194,10 @@ def test_base() -> None:  # pylint: disable=too-many-locals
         with open("tests/input_http_data/outages.json", "rb") as fht:
             payload_14 = json.load(fht)
         mres.get(OUTAGES + "6666666666", payload=payload_14)
+
+        with open("tests/input_http_data/pointeshivernales.json", "rb") as fht:
+            payload_15 = json.load(fht)
+        mres.get(OPEN_DATA_PEAK_URL, payload=payload_15)
 
         # Run main loop once
         del sys.argv[1:]

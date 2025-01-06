@@ -7,10 +7,12 @@ import os
 import re
 import sys
 import time
+from collections.abc import AsyncGenerator
 from contextlib import AsyncExitStack
 from datetime import date, datetime, timedelta
 
 import pytest
+import pytest_asyncio
 from aioresponses import aioresponses
 from hydroqc.hydro_api.consts import (
     AUTH_URL,
@@ -51,6 +53,7 @@ YESTERDAY_STR = YESTERDAY.strftime("%Y-%m-%d")
 YESTERDAY2_STR = YESTERDAY2.strftime("%Y-%m-%d")
 
 
+@pytest.mark.asyncio(loop_scope="class")
 class TestHistoryConsumption:
     """Test class for Live consumption feature."""
 
@@ -60,9 +63,40 @@ class TestHistoryConsumption:
     def setup_method(self) -> None:
         """Set up test method."""
 
-    @pytest.mark.asyncio
+    @pytest_asyncio.fixture(loop_scope="class", scope="class")
+    async def daemon(self) -> AsyncGenerator[Hydroqc2Mqtt]:
+        """Fixture to keep the webuser instance through all tests."""
+        del sys.argv[1:]
+        sys.argv.append("--run-once")
+        cmd_args = _parse_cmd()
+        daemon = Hydroqc2Mqtt(
+            mqtt_host=cmd_args.mqtt_host,
+            mqtt_port=cmd_args.mqtt_port,
+            mqtt_username=cmd_args.mqtt_username,
+            mqtt_password=cmd_args.mqtt_password,
+            mqtt_transport="tcp",
+            mqtt_ssl_enabled=False,
+            mqtt_websocket_path="",
+            mqtt_discovery_root_topic=cmd_args.mqtt_discovery_root_topic,
+            mqtt_data_root_topic=cmd_args.mqtt_data_root_topic,
+            config_file=cmd_args.config,
+            run_once=cmd_args.run_once,
+            log_level=cmd_args.log_level,
+            http_log_level=cmd_args.http_log_level,
+            hq_username=cmd_args.hq_username,
+            hq_password=cmd_args.hq_password,
+            hq_name=cmd_args.hq_name,
+            hq_customer_id=cmd_args.hq_customer_id,
+            hq_account_id=cmd_args.hq_account_id,
+            hq_contract_id=cmd_args.hq_contract_id,
+        )
+        yield daemon
+        if daemon.contracts and daemon.contracts[0]._webuser:
+            await daemon.contracts[0]._webuser.close_session()
+
     async def test_base_sync_consumption(  # pylint: disable=too-many-locals
         self,
+        daemon: Hydroqc2Mqtt,
     ) -> None:
         """Test Sync consumption for hydroqc2mqtt."""
         os.environ["HQ2M_CONTRACTS_0_SYNC_HOURLY_CONSUMPTION_ENABLED"] = "true"
@@ -161,49 +195,19 @@ class TestHistoryConsumption:
             # Run Daemon manually
             del sys.argv[1:]
             sys.argv.append("--run-once")
-            cmd_args = _parse_cmd()
-            daemon = Hydroqc2Mqtt(
-                mqtt_host=cmd_args.mqtt_host,
-                mqtt_port=cmd_args.mqtt_port,
-                mqtt_username=cmd_args.mqtt_username,
-                mqtt_password=cmd_args.mqtt_password,
-                mqtt_transport="tcp",
-                mqtt_ssl_enabled=False,
-                mqtt_websocket_path="",
-                mqtt_discovery_root_topic=cmd_args.mqtt_discovery_root_topic,
-                mqtt_data_root_topic=cmd_args.mqtt_data_root_topic,
-                config_file=cmd_args.config,
-                run_once=cmd_args.run_once,
-                log_level=cmd_args.log_level,
-                http_log_level=cmd_args.http_log_level,
-                hq_username=cmd_args.hq_username,
-                hq_password=cmd_args.hq_password,
-                hq_name=cmd_args.hq_name,
-                hq_customer_id=cmd_args.hq_customer_id,
-                hq_account_id=cmd_args.hq_account_id,
-                hq_contract_id=cmd_args.hq_contract_id,
-            )
 
             daemon.must_run = True
             # Get contract
             async with AsyncExitStack() as stack:
                 await daemon._mqtt_connect(stack)
                 await daemon._init_main_loop(stack)
+
                 contract = daemon.contracts[0]
+                await contract.get_contract()
+                await contract.add_entities()
 
                 # Mocking the send_consumption_statistics method
                 self.send_consumption_statistics_nb_called = 0
-
-                async def mock_send_consptn_stats(
-                    stats: list[HAEnergyStatType],
-                    consumption_type: str,  # pylint: disable=unused-argument
-                    data_date: date,  # pylint: disable=unused-argument
-                ) -> None:
-                    self.send_consumption_statistics_nb_called += 1
-                    # We want to ensure that all data sent to WS are correct
-                    assert sum(s["state"] for s in stats) == sum(range(0, 24)) * 2
-
-                contract._hch.send_consumption_statistics = mock_send_consptn_stats  # type: ignore
 
                 # Mock get_hourly_energy
                 async def mock_get_hourly_energy(
@@ -249,12 +253,27 @@ class TestHistoryConsumption:
                     data.insert(0, header)
                     return data
 
-                contract._webuser.customers[0].accounts[0].contracts[  # type: ignore
+                assert contract._webuser is not None
+                contract._webuser.customers[0].accounts[0].contracts[
                     0
-                ].get_hourly_energy = mock_get_hourly_energy  # type: ignore
+                ].get_hourly_energy = mock_get_hourly_energy  # type:ignore
 
                 # Connecting to the contract
-                await contract.init_session()
+                # await contract.init_session()
+                @pytest.mark.asyncio(loop_scope="class")
+                async def mock_send_consptn_stats(
+                    stats: list[HAEnergyStatType],
+                    consumption_type: str,  # pylint: disable=unused-argument
+                    data_date: date,  # pylint: disable=unused-argument
+                ) -> None:
+                    self.send_consumption_statistics_nb_called += 1
+                    # We want to ensure that all data sent to WS are correct
+                    assert sum(s["state"] for s in stats) == sum(range(0, 24)) * 2
+
+                contract._hch.send_consumption_statistics = (  # type:ignore
+                    mock_send_consptn_stats
+                )
+
                 # Starting importing data
                 await contract._hch.get_hourly_consumption_history()
 
