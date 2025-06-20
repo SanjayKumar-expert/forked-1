@@ -9,18 +9,39 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "hydroqc2mqtt"
 dynamic = ["version", "dependencies"]
-description = "Daemon managing hydroqc sensors through MQTT"
+description = "Extract data from Hydro-Quebec accounts and publish to MQTT with Home Assistant integration"
 readme = "README.md"
 authors = [
-    {name = "Hydroqc Team", email = "info@hydroqc.ca"}
+    {name = "Hydroqc Team", email = "info@hydroqc.ca"},
+    {name = "SanjayKumar-expert", email = ""}
 ]
 license = {text = "AGPL-3.0-or-later"}
 classifiers = [
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Operating System :: OS Independent",
+    "Topic :: Home Automation",
+    "Topic :: System :: Monitoring",
+    "Topic :: Communications",
+    "Intended Audience :: End Users/Desktop",
+    "Environment :: No Input/Output (Daemon)",
 ]
-keywords = ["hydro-quebec", "mqtt", "homeassistant", "hydroqc"]
+keywords = [
+    "hydro-quebec", 
+    "mqtt", 
+    "homeassistant", 
+    "home-assistant",
+    "hydroqc", 
+    "energy-monitoring", 
+    "smart-home", 
+    "iot",
+    "electricity",
+    "consumption",
+    "quebec",
+    "canada"
+]
 
 requires-python = ">=3.12.0"
 # https://github.com/renovatebot/renovate/issues/10187
@@ -39,9 +60,13 @@ requires-python = ">=3.12.0"
 #]
 
 [project.urls]
-"Source Code" = "https://gitlab.com/hydroqc/hydroqc2mqtt"
-"Bug Reports" = "https://gitlab.com/hydroqc/hydroqc2mqtt/-/issues"
-"Home-page"   = "https://hydroqc.ca"
+"Homepage" = "https://hydroqc.ca"
+"Documentation" = "https://hydroqc.ca"
+"Source Code" = "https://github.com/SanjayKumar-expert/forked-1"
+"Bug Reports" = "https://github.com/SanjayKumar-expert/forked-1/issues"
+"Repository" = "https://github.com/SanjayKumar-expert/forked-1"
+"Discussions" = "https://discord.gg/2NrWKC7sfF"
+"Funding" = "https://hydroqc.ca/en/donations"
 
 [tool.setuptools]
 platforms = ["any"]

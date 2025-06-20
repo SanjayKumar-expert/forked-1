@@ -1,0 +1,4 @@
+# GitHub Sponsors funding configuration
+# This file enables the "Sponsor" button on your GitHub repository
+
+custom: ["https://hydroqc.ca/en/donations"] 
