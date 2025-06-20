@@ -25,7 +25,7 @@ COPY hydroqc2mqtt /build/hydroqc2mqtt
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-editable
 
-FROM python:3.12-slim-bookworm
+FROM python:3.13-slim-bookworm
 
 COPY --from=builder --chown=nobody:nogroup /app /app
 WORKDIR /app
