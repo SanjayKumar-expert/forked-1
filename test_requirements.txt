@@ -5,7 +5,7 @@ pytest==8.3.3
 pytest-cov==6.0.0
 pytest-asyncio==0.24.0
 pytest-timeout==2.3.1
-aioresponses==0.7.6
+aioresponses==0.7.8
 black==25.1.0
 pytest-aiohttp==1.0.5
 mypy==1.11.2
